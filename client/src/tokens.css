@@ -1,64 +1,56 @@
 :root {
-  /* Screen System */
-  --screen-xs: 320px;
-  --screen-sm: 480px;
-  --screen-md: 768px;
-  --screen-lg: 1024px;
-  --screen-xl: 1280px;
-  --screen-2xl: 1536px;
-
-  /* Aether Marketplace — Flipkart-inspired High Conversion Palette */
-  --bg-primary: #ffffff; 
-  --bg-secondary: #f1f3f6; /* Flipkart Light Gray Section Background */
-  --bg-surface: #ffffff;
-  --bg-elevated: #ffffff;
+  /* Color Tokens - ecom.me Premium Identity */
+  --bg-primary: #ffffff; /* Pure white background */
+  --bg-secondary: #f7f7f8; /* Cards, sidebars, section fills */
+  --bg-tertiary: #f0f0f2; /* Hover states and subtle depth */
   
-  --accent-primary: #2874f0; /* Flipkart Blue */
-  --accent-secondary: #fb641b; /* Flipkart Orange (Buy Now) */
-  --accent-warning: #ff9f00; /* Flipkart Yellow (Add to Cart) */
-  --accent-success: #388e3c; /* Flipkart Green */
-  --accent-error: #ff6161;
+  --border-default: #e8e8ec; /* Card and input borders */
+  --border-strong: #d0d0d8; /* Dividers and emphasis borders */
   
-  --text-main: #212121; /* Flipkart Black */
-  --text-muted: #878787; /* Flipkart Muted Gray */
-  --text-dim: #9e9e9e;
-  --border-main: #e0e0e0;
+  --text-primary: #111118; /* Near black headings */
+  --text-secondary: #52525e; /* Labels, metadata */
+  --text-muted: #9898a6; /* Placeholders, hints */
+  
+  --accent-primary: #0066ff; /* ecom.me Brand Blue */
+  --accent-hover: #0052cc; /* Darker blue */
+  --accent-light: #e8f0ff; /* Light blue highlights */
+  
+  --warning: #ff6b00; /* Warm orange (Deals/Urgency) */
+  --warning-light: #fff3e8; /* Deal badges background */
+  
+  --success: #00a86b; /* In-stock / Confirmation */
+  --danger: #ff3355; /* Out-of-stock / Errors */
+  --rating: #ffb800; /* Star ratings */
 
-  /* Functional Typography */
-  --font-size-h1: 2.25rem;
-  --font-size-h2: 1.75rem;
-  --font-size-h3: 1.25rem;
-  --font-size-body: 14px;
-  --font-size-small: 12px;
-  --font-size-tiny: 10px;
-
-  --font-display: 'Inter', sans-serif;
+  /* Typography Scale */
+  --font-display: 'Plus Jakarta Sans', sans-serif;
   --font-body: 'Inter', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
+
+  --h1-size: 2.5rem;
+  --h1-weight: 700;
+  --h2-size: 2rem;
+  --h2-weight: 600;
+  --h3-size: 1.5rem;
+  --h3-weight: 600;
+  --h4-size: 1.25rem;
+  --h4-weight: 500;
+  --body-size: 1rem;
+  --body-weight: 400;
+  --small-size: 0.875rem;
+  --caption-size: 0.75rem;
 
   /* Layout & Spacing */
   --nav-r1-height: 64px;
   --nav-r2-height: 40px;
-  --nav-r3-height: 32px;
-  --container-max: 1500px;
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 16px;
-
-  /* Shadows for Dark Surface */
-  --shadow-sm: 0 2px 8px rgba(0,0,0,0.4);
-  --shadow-lg: 0 12px 32px rgba(0,0,0,0.6);
-}
-
-.marketplace-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-main);
-  border-radius: var(--radius-sm);
-  transition: transform 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out);
-}
-
-.marketplace-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-lg);
-  border-color: var(--accent-primary);
+  --nav-r3-height: 36px;
+  --container-max: 1400px;
+  
+  /* Visual Details */
+  --radius-pill: 9999px;
+  --radius-pro: 12px;
+  --radius-img: 8px;
+  
+  --shadow-hover: 0 4px 24px rgba(0, 0, 0, 0.08);
+  --transition-smooth: 200ms ease-out;
 }

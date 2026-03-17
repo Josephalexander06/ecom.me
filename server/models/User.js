@@ -5,25 +5,23 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   isAdmin: { type: Boolean, default: false },
+  isSeller: { type: Boolean, default: false },
+  sellerStatus: { 
+    type: String, 
+    enum: ['None', 'Pending', 'Approved', 'Rejected'], 
+    default: 'None' 
+  },
   
-  // Experience Preferences - Enum validated
-  moodPreference: { 
-    type: String, 
-    enum: ['Explore', 'Gift', 'Upgrade', 'Essentials', 'Luxury'],
-    default: 'Explore'
-  },
-  viewPreference: { 
-    type: String, 
-    enum: ['Editorial', '360', 'Spatial'],
-    default: 'Editorial'
-  },
-
   wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
+  recentlyViewed: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
   
-  recentlyViewed: {
-    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
-    validate: [val => val.length <= 5, '{PATH} exceeds the limit of 5']
-  }
+  savedAddresses: [{
+    street: String,
+    city: String,
+    state: String,
+    zipCode: String,
+    isDefault: { type: Boolean, default: false }
+  }]
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);

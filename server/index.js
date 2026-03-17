@@ -3,8 +3,9 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const path = require('path');
 
-dotenv.config();
+dotenv.config({ path: path.join(__dirname, '.env') });
 
 const http = require('http');
 const { Server } = require('socket.io');
@@ -30,23 +31,23 @@ app.use(cors({
 
 // Socket.io Real-time Logic
 io.on('connection', (socket) => {
-  console.log('Neural Link Established:', socket.id);
+  console.log('ecom.me User Connection:', socket.id);
   
   socket.on('disconnect', () => {
-    console.log('Neural Link Decoupled:', socket.id);
+    console.log('ecom.me User Disconnected:', socket.id);
   });
 });
 
-// Simulation: Live Neural Activity (Broadcast every 10s)
+// Broadcast trending activity
 setInterval(() => {
   const activities = [
-    'Neural sync from Neo-Tokyo node',
-    'Cognitive expansion packet received',
-    'Inventory shift in Sector-4',
-    'Uplink verification successful'
+    'New order for Wireless Headphones',
+    'Someone in New York just joined as a Seller',
+    'Flash Deal starting in 5 minutes',
+    'Premium Member discount active'
   ];
   const activity = activities[Math.floor(Math.random() * activities.length)];
-  io.emit('neural-activity', {
+  io.emit('activity-stream', {
     id: Date.now(),
     message: activity,
     timestamp: new Date().toISOString()
@@ -56,20 +57,24 @@ setInterval(() => {
 // Routes
 const productRoutes = require('./routes/productRoutes');
 const orderRoutes = require('./routes/orderRoutes');
+const authRoutes = require('./routes/authRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Basic Route
 app.get('/', (req, res) => {
-  res.json({ message: 'AETHER Neural-API Active' });
+  res.json({ message: 'ecom.me API Core Active' });
 });
 
 const PORT = process.env.PORT || 5000;
 
 // Database Connection
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('Connected to AETHER Neural-Core (MongoDB)'))
+  .then(() => console.log('Connected to ecom.me Core (MongoDB)'))
   .catch((err) => console.error('Connection Error:', err));
 
 server.listen(PORT, () => {

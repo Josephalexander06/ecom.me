@@ -111,35 +111,74 @@ router.get('/analytics', async (req, res) => {
   }
 });
 
-// Get all products with filters
+// Get all products with filters and facet counts
 router.get('/', async (req, res) => {
   try {
-    const { category, minPrice, maxPrice, sort, query: searchQuery } = req.query;
-    let query = {};
-
-    if (category) query.category = category;
+    const { category, brand, minPrice, maxPrice, sort, query: searchQuery } = req.query;
+    
+    // Build Match Stage
+    let matchStage = {};
+    if (category && category !== 'All') matchStage.category = category;
+    if (brand && brand !== 'All') matchStage.brand = brand;
     if (minPrice || maxPrice) {
-      query.price = {};
-      if (minPrice) query.price.$gte = Number(minPrice);
-      if (maxPrice) query.price.$lte = Number(maxPrice);
+      matchStage.price = {};
+      if (minPrice) matchStage.price.$gte = Number(minPrice);
+      if (maxPrice) matchStage.price.$lte = Number(maxPrice);
     }
     if (searchQuery) {
-      query.$or = [
+      matchStage.$or = [
         { name: { $regex: searchQuery, $options: 'i' } },
         { brand: { $regex: searchQuery, $options: 'i' } },
-        { category: { $regex: searchQuery, $options: 'i' } },
-        { description: { $regex: searchQuery, $options: 'i' } }
+        { category: { $regex: searchQuery, $options: 'i' } }
       ];
     }
 
-    let sortOptions = { createdAt: -1 };
-    if (sort === 'price-low') sortOptions = { price: 1 };
-    if (sort === 'price-high') sortOptions = { price: -1 };
+    // Build Sort Stage
+    let sortStage = { createdAt: -1 };
+    if (sort === 'price-low') sortStage = { price: 1 };
+    if (sort === 'price-high') sortStage = { price: -1 };
+    if (sort === 'rating') sortStage = { averageRating: -1 };
 
-    const products = await Product.find(query).sort(sortOptions);
-    res.json(products);
+    const results = await Product.aggregate([
+      { $match: matchStage },
+      {
+        $facet: {
+          products: [
+            { $sort: sortStage },
+            { $limit: 50 } // Limit for results
+          ],
+          categories: [
+             { $group: { _id: '$category', count: { $sum: 1 } } }
+          ],
+          brands: [
+             { $group: { _id: '$brand', count: { $sum: 1 } } }
+          ],
+          stats: [
+            {
+              $group: {
+                _id: null,
+                min: { $min: '$price' },
+                max: { $max: '$price' },
+                avg: { $avg: '$price' }
+              }
+            }
+          ]
+        }
+      }
+    ]);
+
+    const finalResult = {
+      products: results[0].products,
+      facets: {
+        categories: results[0].categories,
+        brands: results[0].brands,
+        priceRange: results[0].stats[0] || { min: 0, max: 0 }
+      }
+    };
+
+    res.json(finalResult);
   } catch (err) {
-    res.status(500).json({ message: 'Sync Error', error: err.message });
+    res.status(500).json({ message: 'Aggregation Failed', error: err.message });
   }
 });
 

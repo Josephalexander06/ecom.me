@@ -24,6 +24,7 @@ const readJSON = (key, fallback) => {
 
 export const StoreProvider = ({ children }) => {
   const [products, setProducts] = useState([]);
+  const [facets, setFacets] = useState({ categories: [], brands: [], priceRange: { min: 0, max: 0 } });
   const [isUsingFallback, setIsUsingFallback] = useState(false);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [cart, setCart] = useState(() => readJSON(CART_KEY, []));
@@ -35,7 +36,11 @@ export const StoreProvider = ({ children }) => {
       const response = await fetch(`${API_BASE}/products`);
       if (!response.ok) throw new Error('Failed to fetch products');
       const data = await response.json();
-      if (!Array.isArray(data) || data.length === 0) {
+      if (data.products && Array.isArray(data.products)) {
+        setProducts(data.products);
+        setFacets(data.facets || { categories: [], brands: [], priceRange: { min: 0, max: 0 } });
+        setIsUsingFallback(false);
+      } else if (!Array.isArray(data) || data.length === 0) {
         setProducts(fallbackProducts);
         setIsUsingFallback(true);
       } else {
@@ -123,8 +128,9 @@ export const StoreProvider = ({ children }) => {
 
   const clearCart = () => setCart([]);
 
-  const placeOrder = async ({ shippingAddress, paymentMethod }) => {
+  const placeOrder = async ({ shippingAddress, paymentMethod, shippingAmount = 0 }) => {
     if (!cart.length) throw new Error('Cart is empty');
+    const finalTotal = Number((cartSubtotal + Number(shippingAmount || 0)).toFixed(2));
 
     const payload = {
       items: cart.map((item) => ({
@@ -133,7 +139,7 @@ export const StoreProvider = ({ children }) => {
         price: item.price,
         quantity: item.quantity
       })),
-      totalAmount: Number(cartSubtotal.toFixed(2)),
+      totalAmount: finalTotal,
       userId: USER_ID,
       paymentMethod: paymentMethod || 'Card'
     };
@@ -224,6 +230,7 @@ export const StoreProvider = ({ children }) => {
 
   const value = {
     products,
+    facets,
     loadingProducts,
     isUsingFallback,
     categories,

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useStore } from '../../context/StoreContext';
 
 const AddProduct = () => {
@@ -46,19 +47,19 @@ const AddProduct = () => {
 
   return (
     <div className="max-w-[900px] mx-auto px-3 md:px-6 py-6">
-      <div className="bg-white border rounded-lg p-4 md:p-6">
+      <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} className="neo-panel rounded-3xl p-4 md:p-6">
         <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-bold">Add Product</h1>
-          <Link to="/seller/dashboard" className="text-sm text-[#007185] hover:underline">
+          <h1 className="text-2xl font-bold text-white">Create Product Node</h1>
+          <Link to="/seller/dashboard" className="text-sm text-cyan-200 hover:text-cyan-100">
             Back to Seller Dashboard
           </Link>
         </div>
 
         <form onSubmit={onSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <input name="name" value={form.name} onChange={onChange} placeholder="Product name" className="border rounded px-3 py-2" required />
-          <input name="brand" value={form.brand} onChange={onChange} placeholder="Brand" className="border rounded px-3 py-2" required />
+          <input name="name" value={form.name} onChange={onChange} placeholder="Product name" className="rounded-lg px-3 py-2 bg-[#0b1530] border border-cyan-200/30" required />
+          <input name="brand" value={form.brand} onChange={onChange} placeholder="Brand" className="rounded-lg px-3 py-2 bg-[#0b1530] border border-cyan-200/30" required />
 
-          <select name="category" value={form.category} onChange={onChange} className="border rounded px-3 py-2">
+          <select name="category" value={form.category} onChange={onChange} className="rounded-lg px-3 py-2 bg-[#0b1530] border border-cyan-200/30">
             <option>Electronics</option>
             <option>Fashion</option>
             <option>Home & Kitchen</option>
@@ -68,16 +69,16 @@ const AddProduct = () => {
             <option>Beauty</option>
           </select>
 
-          <input name="price" type="number" min="0" step="0.01" value={form.price} onChange={onChange} placeholder="Price" className="border rounded px-3 py-2" required />
-          <input name="stock" type="number" min="0" value={form.stock} onChange={onChange} placeholder="Stock" className="border rounded px-3 py-2" required />
-          <input name="image" value={form.image} onChange={onChange} placeholder="Image URL (optional)" className="border rounded px-3 py-2" />
+          <input name="price" type="number" min="0" step="0.01" value={form.price} onChange={onChange} placeholder="Price" className="rounded-lg px-3 py-2 bg-[#0b1530] border border-cyan-200/30" required />
+          <input name="stock" type="number" min="0" value={form.stock} onChange={onChange} placeholder="Stock" className="rounded-lg px-3 py-2 bg-[#0b1530] border border-cyan-200/30" required />
+          <input name="image" value={form.image} onChange={onChange} placeholder="Image URL (optional)" className="rounded-lg px-3 py-2 bg-[#0b1530] border border-cyan-200/30" />
 
           <textarea
             name="description"
             value={form.description}
             onChange={onChange}
             placeholder="Description"
-            className="border rounded px-3 py-2 md:col-span-2"
+            className="rounded-lg px-3 py-2 bg-[#0b1530] border border-cyan-200/30 md:col-span-2"
             rows={4}
             required
           />
@@ -85,12 +86,12 @@ const AddProduct = () => {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="md:col-span-2 bg-[#131921] text-white py-2 rounded-md disabled:opacity-60"
+            className="md:col-span-2 neo-button py-2 rounded-lg disabled:opacity-60"
           >
             {isSubmitting ? 'Saving...' : 'Save Product'}
           </button>
         </form>
-      </div>
+      </motion.div>
     </div>
   );
 };

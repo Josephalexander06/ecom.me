@@ -1,107 +1,145 @@
-import React, { useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { motion } from 'framer-motion';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+// Layout Components
+import HeroCarousel from '../components/home/HeroCarousel';
+import CategoryQuickLinks from '../components/home/CategoryQuickLinks';
+import DealsSection from '../components/home/DealsSection';
+import ProductRow from '../components/home/ProductRow';
+import CategoryPanels from '../components/home/CategoryPanels';
+import WideBanner from '../components/home/WideBanner';
+import SellerSpotlight from '../components/home/SellerSpotlight';
+
+// State & Data
 import { useStore } from '../context/StoreContext';
+import { useAuthStore } from '../context/stores';
+
+gsap.registerPlugin(ScrollTrigger);
 
 const Home = () => {
-  const { products, addToCart, categories, loadingProducts } = useStore();
+  const { products, loadingProducts } = useStore();
+  const { user } = useAuthStore();
 
-  const deals = useMemo(
-    () => products.filter((product) => product.isDeal && product.dealPrice).slice(0, 4),
-    [products]
-  );
-
-  const featured = useMemo(() => products.slice(0, 8), [products]);
+  // Animation setup for section reveals
+  useEffect(() => {
+    if (loadingProducts) return;
+    
+    const sections = gsap.utils.toArray('.animate-section');
+    sections.forEach((section, i) => {
+      gsap.fromTo(
+        section,
+        { 
+          opacity: 0, 
+          y: 40,
+          scale: 0.98,
+          filter: 'blur(10px)'
+        },
+        {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          filter: 'blur(0px)',
+          duration: 1.2,
+          ease: 'expo.out',
+          scrollTrigger: {
+            trigger: section,
+            start: 'top 90%',
+            end: 'top 70%',
+            scrub: 1,
+            toggleActions: 'play none none none',
+          },
+        }
+      );
+    });
+  }, [loadingProducts]);
 
   return (
-    <div className="max-w-[1400px] mx-auto px-3 md:px-6 py-4 md:py-6 space-y-6">
-      <section className="bg-gradient-to-r from-[#37475A] to-[#232F3E] rounded-lg text-white p-6 md:p-10">
-        <p className="text-xs uppercase tracking-wide text-gray-200">Big Savings Week</p>
-        <h1 className="text-2xl md:text-4xl font-bold mt-2">Everything You Need, Delivered Fast</h1>
-        <p className="text-sm md:text-base text-gray-100 mt-3 max-w-2xl">
-          Shop electronics, home essentials, fashion, and more with an experience inspired by top ecommerce marketplaces.
-        </p>
-        <Link
-          to="/products"
-          className="inline-block mt-5 bg-[#ffd814] hover:bg-[#f7ca00] text-black px-5 py-2.5 rounded-md font-semibold"
-        >
-          Start Shopping
-        </Link>
+    <div className="bg-white min-h-screen flex flex-col space-y-0 pb-12">
+      {/* 1. Hero Carousel (380px) */}
+      <section className="animate-section">
+        <HeroCarousel />
       </section>
 
-      <section className="bg-white rounded-lg border p-4">
-        <h2 className="font-bold text-lg mb-3">Shop by Category</h2>
-        <div className="flex flex-wrap gap-2">
-          {categories.slice(1).map((category) => (
-            <Link
-              key={category}
-              to={`/products?category=${encodeURIComponent(category)}`}
-              className="px-3 py-1.5 text-sm border rounded-full hover:border-[#ff9900] hover:text-[#B12704]"
-            >
-              {category}
-            </Link>
-          ))}
+      {/* 2. Category Quick Links (120px) */}
+      <section className="bg-white border-y border-border-default h-[120px] flex items-center animate-section">
+        <CategoryQuickLinks />
+      </section>
+
+      {/* 3. Deals of the Day (450px) */}
+      <section className="bg-surface-secondary py-12 animate-section">
+        <div className="max-w-[1400px] mx-auto px-4 md:px-8">
+          <DealsSection products={products.filter(p => p.isDeal)} />
         </div>
       </section>
 
-      <section className="bg-white rounded-lg border p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-bold text-lg">Today&apos;s Deals</h2>
-          <Link to="/products?sort=deals" className="text-sm text-[#007185] hover:underline">
-            See all deals
-          </Link>
+      {/* 4. Recommended For You (420px) */}
+      <section className="py-12 animate-section">
+        <div className="max-w-[1400px] mx-auto px-4 md:px-8">
+          <ProductRow 
+            eyebrow="PERSONALISED" 
+            title="Recommended For You" 
+            products={products.slice(0, 10)} 
+          />
         </div>
+      </section>
 
-        {loadingProducts ? (
-          <p className="text-sm text-gray-600">Loading products...</p>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {deals.map((product) => (
-              <article key={product._id || product.id} className="border rounded-md p-3">
-                <Link to={`/product/${product._id || product.id}`}>
-                  <img src={product.images?.[0]} alt={product.name} className="w-full h-32 object-cover rounded" />
-                  <h3 className="mt-2 text-sm font-medium line-clamp-2 min-h-10">{product.name}</h3>
-                </Link>
-                <div className="mt-2">
-                  <p className="text-[#B12704] font-semibold">${Number(product.dealPrice).toFixed(2)}</p>
-                  <p className="text-xs text-gray-500 line-through">${Number(product.price).toFixed(2)}</p>
-                </div>
-                <button
-                  onClick={() => addToCart(product, 1)}
-                  className="mt-2 w-full bg-[#ffd814] hover:bg-[#f7ca00] text-black text-sm py-1.5 rounded"
-                >
-                  Add to Cart
-                </button>
-              </article>
-            ))}
+      {/* 5. Category Exploration Panels (500px) */}
+      <section className="py-12 bg-surface-secondary/50 animate-section">
+        <div className="max-w-[1400px] mx-auto px-4 md:px-8">
+          <CategoryPanels />
+        </div>
+      </section>
+
+      {/* 6. Wide Promotional Banner (180px) */}
+      <section className="px-4 md:px-8 pb-12 animate-section">
+        <div className="max-w-[1400px] mx-auto">
+          <WideBanner />
+        </div>
+      </section>
+
+      {/* 7. Bestsellers (420px) */}
+      <section className="pb-12 animate-section">
+        <div className="max-w-[1400px] mx-auto px-4 md:px-8">
+          <ProductRow 
+            eyebrow="POPULAR" 
+            title="Bestsellers" 
+            products={products.sort((a, b) => b.soldCount - a.soldCount).slice(0, 10)} 
+          />
+        </div>
+      </section>
+
+      {/* 8. New Arrivals (420px) */}
+      <section className="pb-12 animate-section">
+        <div className="max-w-[1400px] mx-auto px-4 md:px-8">
+          <ProductRow 
+            eyebrow="JUST IN" 
+            title="New Arrivals" 
+            products={products.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 10)} 
+          />
+        </div>
+      </section>
+
+      {/* 9. Seller Spotlight (320px) */}
+      <section className="py-12 bg-brand-light/30 animate-section">
+        <div className="max-w-[1400px] mx-auto px-4 md:px-8">
+          <SellerSpotlight />
+        </div>
+      </section>
+
+      {/* 10. Recently Viewed — Only if user is logged in or has history */}
+      {(user?.recentlyViewed?.length > 0 || true) && (
+        <section className="py-12 animate-section">
+          <div className="max-w-[1400px] mx-auto px-4 md:px-8">
+            <ProductRow 
+              eyebrow="YOUR HISTORY" 
+              title="Recently Viewed" 
+              products={products.slice(5, 12)} 
+            />
           </div>
-        )}
-      </section>
-
-      <section className="bg-white rounded-lg border p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-bold text-lg">Popular Products</h2>
-          <Link to="/products" className="text-sm text-[#007185] hover:underline">
-            Explore all
-          </Link>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {featured.map((product) => (
-            <article key={product._id || product.id} className="border rounded-md p-3">
-              <Link to={`/product/${product._id || product.id}`}>
-                <img src={product.images?.[0]} alt={product.name} className="w-full h-36 object-cover rounded" />
-                <h3 className="mt-2 text-sm font-medium line-clamp-2 min-h-10">{product.name}</h3>
-              </Link>
-              <p className="mt-1 font-semibold text-[#B12704]">${Number(product.price).toFixed(2)}</p>
-              <button
-                onClick={() => addToCart(product, 1)}
-                className="mt-2 w-full bg-[#ffd814] hover:bg-[#f7ca00] text-black text-sm py-1.5 rounded"
-              >
-                Add to Cart
-              </button>
-            </article>
-          ))}
-        </div>
-      </section>
+        </section>
+      )}
     </div>
   );
 };

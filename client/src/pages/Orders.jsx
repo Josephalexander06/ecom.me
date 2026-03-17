@@ -1,41 +1,106 @@
 import React, { useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Package, ChevronRight, Clock, CheckCircle2, Truck } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
+import EmptyState from '../components/ui/EmptyState';
+
+const OrderCard = ({ order, index }) => {
+  const statusColors = {
+    'Order Placed': 'bg-brand-light text-brand-primary',
+    'Processing': 'bg-warning-light text-warning',
+    'Shipped': 'bg-success-light text-success',
+    'Delivered': 'bg-success-light text-success',
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.1 }}
+      className="bg-white border border-border-default rounded-pro overflow-hidden mb-6"
+    >
+      <div className="bg-surface-secondary px-6 py-4 flex flex-wrap items-center justify-between gap-4 border-b border-border-default">
+        <div className="flex gap-8">
+          <div>
+            <p className="text-[10px] font-bold text-text-muted uppercase tracking-wider">Order Placed</p>
+            <p className="text-small font-bold text-text-primary">March 21, 2035</p>
+          </div>
+          <div>
+            <p className="text-[10px] font-bold text-text-muted uppercase tracking-wider">Total</p>
+            <p className="text-small font-bold text-text-primary">${Number(order.totalAmount || 0).toFixed(2)}</p>
+          </div>
+          <div>
+            <p className="text-[10px] font-bold text-text-muted uppercase tracking-wider">Ship To</p>
+            <p className="text-small font-bold text-brand-primary cursor-pointer hover:underline">Alex Johnson</p>
+          </div>
+        </div>
+        <div>
+          <p className="text-[10px] font-bold text-text-muted uppercase tracking-wider text-right">Order # {order._id.slice(-12).toUpperCase()}</p>
+          <div className="flex items-center gap-2 mt-0.5 justify-end">
+             <button className="text-caption font-bold text-brand-primary hover:underline">View invoice</button>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-6">
+        <div className="flex items-start justify-between mb-6">
+          <div className="flex items-center gap-3">
+             <div className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase flex items-center gap-1.5 ${statusColors[order.status] || 'bg-brand-light text-brand-primary'}`}>
+               {order.status === 'Shipped' ? <Truck size={12} /> : <Clock size={12} />}
+               {order.status || 'Processing'}
+             </div>
+             <p className="text-small font-bold text-text-primary">Arriving Tuesday</p>
+          </div>
+          <button className="bg-brand-primary text-white px-4 py-2 rounded-lg text-caption font-bold hover:bg-brand-hover transition-colors">
+            Track Package
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          {(order.items || []).map((item) => (
+            <div key={item.productId} className="flex gap-4 items-center">
+              <div className="w-20 h-20 bg-surface-secondary rounded-lg border border-border-default overflow-hidden flex-shrink-0">
+                <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+              </div>
+              <div className="flex-1">
+                <p className="text-small font-bold text-text-primary line-clamp-1">{item.name}</p>
+                <p className="text-caption text-text-muted mt-1">Quantity: {item.quantity}</p>
+                <button className="mt-2 text-caption font-bold text-brand-primary py-1.5 px-3 border border-border-default rounded-lg hover:bg-surface-secondary transition-colors">
+                   Buy it again
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </motion.div>
+  );
+};
 
 const Orders = () => {
   const { orders, loadOrders } = useStore();
 
   useEffect(() => {
     loadOrders();
-  }, []);
+  }, [loadOrders]);
 
   return (
-    <div className="max-w-[1200px] mx-auto px-3 md:px-6 py-6">
-      <div className="bg-white border rounded-lg p-4 md:p-6">
-        <h1 className="text-2xl font-bold">Your Orders</h1>
+    <div className="bg-surface-primary min-h-screen py-12">
+      <div className="max-w-[1000px] mx-auto px-4 md:px-8">
+        <h1 className="text-h2 font-display text-text-primary mb-8 underline decoration-brand-primary decoration-4 underline-offset-8">
+          Your Orders
+        </h1>
 
         {orders.length === 0 ? (
-          <div className="mt-4 text-sm text-gray-600">
-            No orders yet. <Link to="/products" className="text-[#007185] hover:underline">Start shopping</Link>
-          </div>
+          <EmptyState 
+            type="orders" 
+            actionLabel="Return to Shop" 
+            actionLink="/products" 
+          />
         ) : (
-          <div className="mt-4 space-y-4">
-            {orders.map((order) => (
-              <article key={order._id} className="border rounded-md p-4">
-                <div className="flex flex-wrap gap-4 justify-between text-sm">
-                  <p><span className="text-gray-500">Order ID:</span> {order._id}</p>
-                  <p><span className="text-gray-500">Status:</span> {order.status || 'Order Placed'}</p>
-                  <p><span className="text-gray-500">Total:</span> ${Number(order.totalAmount || 0).toFixed(2)}</p>
-                </div>
-                <div className="mt-3 space-y-2">
-                  {(order.items || []).map((item) => (
-                    <div key={`${order._id}-${item.productId}`} className="text-sm flex justify-between border-t pt-2">
-                      <span>{item.name} x {item.quantity}</span>
-                      <span>${Number(item.price * item.quantity).toFixed(2)}</span>
-                    </div>
-                  ))}
-                </div>
-              </article>
+          <div className="space-y-2">
+            {orders.map((order, index) => (
+              <OrderCard key={order._id} order={order} index={index} />
             ))}
           </div>
         )}

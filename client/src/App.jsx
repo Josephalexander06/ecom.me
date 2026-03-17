@@ -1,10 +1,14 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
+import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import Navbar from './components/ui/Navbar';
 import Footer from './components/ui/Footer';
+import AuthModal from './components/auth/AuthModal';
 import Home from './pages/Home';
 import ProductListing from './pages/ProductListing';
 import ProductDetail from './pages/ProductDetail';
+import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import AdminDashboard from './pages/AdminDashboard';
 import SellerDashboard from './pages/seller/Dashboard';
@@ -12,26 +16,53 @@ import AddProduct from './pages/seller/AddProduct';
 import Orders from './pages/Orders';
 import { StoreProvider } from './context/StoreContext';
 
+function AppContent() {
+  const location = useLocation();
+
+  return (
+    <div className="min-h-screen bg-surface-primary text-text-primary flex flex-col relative">
+      {/* Global Toast Notifications */}
+      <Toaster position="bottom-right" toastOptions={{ duration: 3000 }} />
+      
+      {/* Global Auth Modals */}
+      <AuthModal />
+
+      <div className="relative z-10 flex min-h-screen flex-col">
+        <Navbar />
+        <main className="flex-1">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={location.pathname}
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+            >
+              <Routes location={location}>
+                <Route path="/" element={<Home />} />
+                <Route path="/products" element={<ProductListing />} />
+                <Route path="/product/:id" element={<ProductDetail />} />
+                <Route path="/cart" element={<Cart />} />
+                <Route path="/checkout" element={<Checkout />} />
+                <Route path="/orders" element={<Orders />} />
+                <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                <Route path="/seller/dashboard" element={<SellerDashboard />} />
+                <Route path="/seller/add-product" element={<AddProduct />} />
+              </Routes>
+            </motion.div>
+          </AnimatePresence>
+        </main>
+        <Footer />
+      </div>
+    </div>
+  );
+}
+
 function App() {
   return (
     <StoreProvider>
       <Router>
-        <div className="min-h-screen bg-[#eaeded] text-[#0f1111] flex flex-col">
-          <Navbar />
-          <main className="flex-1">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/products" element={<ProductListing />} />
-              <Route path="/product/:id" element={<ProductDetail />} />
-              <Route path="/checkout" element={<Checkout />} />
-              <Route path="/orders" element={<Orders />} />
-              <Route path="/admin/dashboard" element={<AdminDashboard />} />
-              <Route path="/seller/dashboard" element={<SellerDashboard />} />
-              <Route path="/seller/add-product" element={<AddProduct />} />
-            </Routes>
-          </main>
-          <Footer />
-        </div>
+        <AppContent />
       </Router>
     </StoreProvider>
   );
