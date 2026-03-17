@@ -12,6 +12,10 @@ const userSchema = new mongoose.Schema({
     default: 'None' 
   },
   
+  // Seller specific fields
+  storeName: { type: String },
+  bankAccount: { type: String },
+  
   wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
   recentlyViewed: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
   

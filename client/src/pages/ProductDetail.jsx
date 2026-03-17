@@ -85,7 +85,7 @@ const ProductDetail = () => {
 
             <div className="p-5 bg-surface-secondary rounded-pro border border-border-default">
               <div className="flex items-baseline gap-3 mb-2">
-                <span className="text-h1 font-mono font-bold text-text-primary">${currentPrice.toFixed(2)}</span>
+                <span className="text-h1 font-mono font-bold text-text-primary">₹{currentPrice.toLocaleString('en-IN')}</span>
                 {isDeal && (
                   <span className="text-small text-danger bg-danger/5 px-2 py-0.5 rounded border border-danger/10 font-bold">
                     -{Math.round((savings / product.price) * 100)}%
@@ -94,15 +94,16 @@ const ProductDetail = () => {
               </div>
               {isDeal && (
                 <div className="text-small text-text-muted">
-                  List Price: <span className="line-through">${product.price.toFixed(2)}</span>
+                  M.R.P.: <span className="line-through">₹{product.price.toLocaleString('en-IN')}</span>
                 </div>
               )}
               {isDeal && (
                 <div className="text-small font-bold text-text-primary mt-2 flex items-center gap-1.5">
                   <span className="text-success">You Save:</span>
-                  <span className="text-success">${savings.toFixed(2)}</span>
+                  <span className="text-success">₹{savings.toLocaleString('en-IN')} ({Math.round((savings / product.price) * 100)}%)</span>
                 </div>
               )}
+              <div className="mt-2 text-caption text-text-tertiary">Inclusive of all taxes</div>
             </div>
 
             <div className="space-y-4 py-6 border-y border-border-default">
@@ -110,11 +111,11 @@ const ProductDetail = () => {
               <ul className="space-y-3">
                 <li className="flex gap-3 text-small text-text-secondary leading-relaxed">
                   <CheckCircle className="text-brand-primary flex-shrink-0 mt-1" size={16} />
-                  <span>Next-Generation {product.brand} Architecture with enhanced efficiency.</span>
+                  <span>Premium {product.brand} craftsmanship with high-grade materials.</span>
                 </li>
                 <li className="flex gap-3 text-small text-text-secondary leading-relaxed">
                   <CheckCircle className="text-brand-primary flex-shrink-0 mt-1" size={16} />
-                  <span>Premium {product.category} built for longevity and performance.</span>
+                  <span>Official ecom.me Certified product with 1-year warranty.</span>
                 </li>
                 <li className="flex gap-3 text-small text-text-secondary leading-relaxed text-wrap">
                   <CheckCircle className="text-brand-primary flex-shrink-0 mt-1" size={16} />
@@ -125,52 +126,52 @@ const ProductDetail = () => {
           </section>
 
           {/* Column 3: Buy Box */}
-          <aside className="space-y-4">
-            <div className="p-6 border border-border-default rounded-pro bg-white shadow-sm sticky top-[150px]">
+          <aside className="space-y-4 lg:pb-20">
+            <div className="p-6 border border-border-default rounded-pro bg-white shadow-sm lg:sticky lg:top-[120px]">
               <div className="text-h2 font-mono font-bold text-text-primary mb-4">
-                ${(currentPrice * quantity).toFixed(2)}
+                ₹{(currentPrice * quantity).toLocaleString('en-IN')}
               </div>
 
               <div className="space-y-4 mb-6">
                 <div className="flex items-center gap-3">
-                  <MapPin size={18} className="text-text-muted" />
+                  <MapPin size={18} className="text-brand-primary" />
                   <div className="text-caption">
-                    <p className="font-bold text-text-primary">Deliver to New York</p>
-                    <p className="text-text-muted">Ships from ecom.me</p>
+                    <p className="font-bold text-text-primary">Deliver to India</p>
+                    <p className="text-text-muted">Ships from ecom.me Mumbai</p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <Truck size={18} className="text-text-muted" />
+                  <Truck size={18} className="text-brand-primary" />
                   <div className="text-caption">
-                    <p className="font-bold text-success">FREE Delivery</p>
-                    <p className="text-text-muted underline">Details</p>
+                    <p className="font-bold text-success">FREE Delivery by Tomorrow</p>
+                    <p className="text-text-muted">Order within 4 hrs 24 mins</p>
                   </div>
                 </div>
 
                 <div className="pt-2">
                   {product.stock > 0 ? (
-                    <p className="text-small font-bold text-success flex items-center gap-1.5">
+                    <p className="text-small font-bold text-success flex items-center gap-1.5 uppercase tracking-tighter">
                       In Stock
                     </p>
                   ) : (
-                    <p className="text-small font-bold text-danger">Currently Unavailable</p>
+                    <p className="text-small font-bold text-danger uppercase tracking-tighter">Temporarily Out of Stock</p>
                   )}
                   {product.stock < 10 && product.stock > 0 && (
                     <p className="text-caption text-danger font-medium mt-1">
-                      Only {product.stock} left in stock - order soon.
+                      Only {product.stock} units left - order soon.
                     </p>
                   )}
                 </div>
               </div>
 
               <div className="space-y-3">
-                <div className="flex items-center gap-3 bg-surface-secondary px-4 py-2 rounded-lg border border-border-default">
-                  <span className="text-caption font-bold text-text-secondary">Qty:</span>
+                <div className="flex items-center gap-3 bg-surface-secondary px-4 py-3 rounded-lg border border-border-default">
+                  <span className="text-caption font-bold text-text-secondary">Quantity:</span>
                   <select 
                     value={quantity}
                     onChange={(e) => setQuantity(Number(e.target.value))}
-                    className="flex-1 bg-transparent text-small font-bold text-text-primary focus:outline-none"
+                    className="flex-1 bg-transparent text-small font-bold text-text-primary focus:outline-none cursor-pointer"
                   >
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => (
                       <option key={n} value={n}>{n}</option>
@@ -180,28 +181,28 @@ const ProductDetail = () => {
 
                 <button 
                   onClick={() => addItem(product, quantity)}
-                  className="w-full bg-brand-primary hover:bg-brand-hover text-white py-3 rounded-pill font-bold transition-all flex items-center justify-center gap-2"
+                  className="w-full bg-brand-primary hover:bg-brand-hover text-white py-4 rounded-pro font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-brand-primary/20 group"
                 >
-                   Add to Cart
+                   Add to Bag
+                   <motion.div animate={{ x: [0, 4, 0] }} transition={{ repeat: Infinity, duration: 1.5 }}>
+                     <ChevronRight size={18} />
+                   </motion.div>
                 </button>
                 <Link 
                   to="/checkout"
                   onClick={() => addItem(product, quantity)}
-                  className="block w-full text-center bg-warning hover:bg-[#e66000] text-white py-3 rounded-pill font-bold transition-all"
+                  className="block w-full text-center bg-warning hover:bg-[#e66000] text-white py-4 rounded-pro font-bold transition-all shadow-lg shadow-warning/20"
                 >
                   Buy Now
                 </Link>
               </div>
 
               <div className="mt-6 space-y-3 pt-6 border-t border-border-default">
-                <button className="flex items-center gap-2 text-small font-medium text-text-secondary hover:text-brand-primary transition-colors">
-                  <Heart size={16} /> Add to Wishlist
+                <button className="flex items-center gap-2.5 text-small font-medium text-text-secondary hover:text-brand-primary transition-colors group">
+                  <Heart size={18} className="group-hover:fill-brand-primary group-hover:stroke-brand-primary transition-colors" /> Save for later
                 </button>
-                <button className="flex items-center gap-2 text-small font-medium text-text-secondary hover:text-brand-primary transition-colors">
-                  <Share2 size={16} /> Share Product
-                </button>
-                <div className="flex items-center gap-2 text-small font-medium text-text-secondary">
-                  <ShieldCheck size={16} className="text-success" /> secure transaction
+                <div className="flex items-center gap-2.5 text-small font-medium text-text-secondary">
+                  <ShieldCheck size={18} className="text-success" /> 100% Secure Payment
                 </div>
               </div>
             </div>

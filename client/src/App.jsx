@@ -13,6 +13,7 @@ import Checkout from './pages/Checkout';
 import AdminDashboard from './pages/AdminDashboard';
 import SellerDashboard from './pages/seller/Dashboard';
 import AddProduct from './pages/seller/AddProduct';
+import SellerOnboarding from './pages/seller/SellerOnboarding';
 import Orders from './pages/Orders';
 import { StoreProvider } from './context/StoreContext';
 
@@ -46,6 +47,7 @@ function AppContent() {
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/orders" element={<Orders />} />
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                <Route path="/seller/onboarding" element={<SellerOnboarding />} />
                 <Route path="/seller/dashboard" element={<SellerDashboard />} />
                 <Route path="/seller/add-product" element={<AddProduct />} />
               </Routes>

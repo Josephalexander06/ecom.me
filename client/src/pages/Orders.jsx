@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Package, ChevronRight, Clock, CheckCircle2, Truck } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
+import { useAuthStore } from '../context/stores';
 import EmptyState from '../components/ui/EmptyState';
 
 const OrderCard = ({ order, index }) => {
@@ -27,7 +28,7 @@ const OrderCard = ({ order, index }) => {
           </div>
           <div>
             <p className="text-[10px] font-bold text-text-muted uppercase tracking-wider">Total</p>
-            <p className="text-small font-bold text-text-primary">${Number(order.totalAmount || 0).toFixed(2)}</p>
+            <p className="text-small font-bold text-text-primary">₹{Number(order.totalAmount || 0).toLocaleString('en-IN')}</p>
           </div>
           <div>
             <p className="text-[10px] font-bold text-text-muted uppercase tracking-wider">Ship To</p>
@@ -79,10 +80,13 @@ const OrderCard = ({ order, index }) => {
 
 const Orders = () => {
   const { orders, loadOrders } = useStore();
+  const { user } = useAuthStore();
 
   useEffect(() => {
-    loadOrders();
-  }, [loadOrders]);
+    if (user) {
+      loadOrders(user._id || user.id);
+    }
+  }, [loadOrders, user]);
 
   return (
     <div className="bg-surface-primary min-h-screen py-12">

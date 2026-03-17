@@ -68,6 +68,28 @@ export const useAuthStore = create(
 
       updateUser: (updatedUser) => {
         set((state) => ({ user: { ...state.user, ...updatedUser } }));
+      },
+
+      upgradeUser: async (userId, storeName, bankAccount) => {
+        set({ loading: true, error: null });
+        try {
+          const response = await fetch(`${API_BASE}/auth/upgrade-to-seller`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId, storeName, bankAccount }),
+          });
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.message || 'Upgrade failed');
+
+          set((state) => ({
+            user: { ...state.user, ...data },
+            loading: false
+          }));
+          return data;
+        } catch (error) {
+          set({ error: error.message, loading: false });
+          throw error;
+        }
       }
     }),
     {

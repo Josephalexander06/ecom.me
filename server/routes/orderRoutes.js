@@ -9,7 +9,7 @@ router.post('/', async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
-    const { items, totalAmount, userId, paymentMethod } = req.body;
+    const { items, totalAmount, userId, paymentMethod, shippingAddress } = req.body;
 
     if (!items || items.length === 0) {
       await session.abortTransaction();
@@ -17,12 +17,19 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ message: 'Neural reservoir empty. Add nodes to sync.' });
     }
 
+    if (!userId) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(401).json({ message: 'Unauthorized: You must log in to checkout.' });
+    }
+
     // 1. Create Order
     const newOrder = new Order({
-      userId: userId || '65f1aeb4c9d2a3f123456789',
+      userId,
       items,
+      shippingAddress,
       totalAmount,
-      paymentMethod: paymentMethod || 'NeuralPay',
+      paymentMethod: paymentMethod || 'UPI',
       status: 'Order Placed',
       statusHistory: [{ stage: 'Order Placed' }]
     });
@@ -49,7 +56,7 @@ router.post('/', async (req, res) => {
     if (req.app.get('io')) {
         req.app.get('io').emit('neural-activity', {
             id: Date.now(),
-            message: `New Synaptic Order: $${totalAmount}`,
+            message: `New Synaptic Order: ₹${totalAmount.toLocaleString('en-IN')}`,
             timestamp: new Date().toISOString()
         });
     }

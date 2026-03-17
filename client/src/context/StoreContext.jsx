@@ -5,8 +5,6 @@ const StoreContext = createContext(null);
 
 const CART_KEY = 'ecomme_cart';
 const LOCAL_ORDERS_KEY = 'ecomme_local_orders';
-const USER_ID = '65f1aeb4c9d2a3f123456789';
-
 const API_ROOT = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 const API_BASE = API_ROOT.endsWith('/api') ? API_ROOT : `${API_ROOT}/api`;
 
@@ -128,7 +126,7 @@ export const StoreProvider = ({ children }) => {
 
   const clearCart = () => setCart([]);
 
-  const placeOrder = async ({ shippingAddress, paymentMethod, shippingAmount = 0 }) => {
+  const placeOrder = async ({ userId, shippingAddress, paymentMethod, shippingAmount = 0 }) => {
     if (!cart.length) throw new Error('Cart is empty');
     const finalTotal = Number((cartSubtotal + Number(shippingAmount || 0)).toFixed(2));
 
@@ -140,7 +138,7 @@ export const StoreProvider = ({ children }) => {
         quantity: item.quantity
       })),
       totalAmount: finalTotal,
-      userId: USER_ID,
+      userId: userId,
       paymentMethod: paymentMethod || 'Card'
     };
 
@@ -181,9 +179,10 @@ export const StoreProvider = ({ children }) => {
     }
   };
 
-  const loadOrders = async () => {
+  const loadOrders = async (userId) => {
+    if (!userId) return;
     try {
-      const response = await fetch(`${API_BASE}/orders/user/${USER_ID}`);
+      const response = await fetch(`${API_BASE}/orders/user/${userId}`);
       if (!response.ok) throw new Error('Failed to load orders');
       const data = await response.json();
       if (Array.isArray(data) && data.length) {

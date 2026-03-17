@@ -1,25 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
-const banners = [
+const slides = [
   {
-    image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=1400&q=80',
-    title: 'Precision Performance',
-    subtitle: 'Explore the new Aether Z-Series Sneakers.',
-    button: 'Shop Footwear',
+    id: 1,
+    title: "The All-New iPhone 15 Pro",
+    subtitle: "Titanium. So strong. So light. So Pro.",
+    image: "https://images.unsplash.com/photo-1695048133142-1a20484d2569?q=80&w=2670&auto=format&fit=crop",
+    link: "/products?q=iphone",
+    cta: "Buy Now",
+    align: "left",
+    theme: "dark"
   },
   {
-    image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1400&q=80',
-    title: 'Next-Gen Wearables',
-    subtitle: 'Smart tech that moves at the speed of life.',
-    button: 'View Watches',
+    id: 2,
+    title: "Sony WH-1000XM5",
+    subtitle: "Your world. Nothing else.",
+    image: "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?q=80&w=2788&auto=format&fit=crop",
+    link: "/products?category=Electronics",
+    cta: "Shop Audio",
+    align: "right",
+    theme: "light"
   },
   {
-    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1400&q=80',
-    title: 'Acoustic Perfection',
-    subtitle: 'Studio quality sound in your pocket.',
-    button: 'Discover Audio',
+    id: 3,
+    title: "Summer Wardrobe Reset",
+    subtitle: "Up to 40% off on premium lifestyle apparel.",
+    image: "https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?q=80&w=2670&auto=format&fit=crop",
+    link: "/products?category=Fashion",
+    cta: "Explore Fashion",
+    align: "center",
+    theme: "dark"
   }
 ];
 
@@ -28,73 +41,104 @@ const HeroCarousel = () => {
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrent((prev) => (prev === banners.length - 1 ? 0 : prev + 1));
-    }, 5000);
+      setCurrent((prev) => (prev + 1) % slides.length);
+    }, 5000); // 5 second auto-advance
     return () => clearInterval(timer);
   }, []);
 
-  const next = () => setCurrent((prev) => (prev === banners.length - 1 ? 0 : prev + 1));
-  const prev = () => setCurrent((prev) => (prev === 0 ? banners.length - 1 : prev - 1));
+  const next = () => setCurrent((prev) => (prev + 1) % slides.length);
+  const prev = () => setCurrent((prev) => (prev - 1 + slides.length) % slides.length);
 
   return (
-    <div className="relative h-[200px] md:h-[380px] w-full overflow-hidden bg-surface-secondary">
-      <AnimatePresence mode="wait">
+    <div className="relative w-full h-[350px] md:h-[450px] lg:h-[550px] overflow-hidden bg-surface-secondary">
+      <AnimatePresence initial={false} mode="wait">
         <motion.div
           key={current}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.4 }}
+          transition={{ duration: 0.5 }}
           className="absolute inset-0"
         >
-          <img 
-            src={banners[current].image} 
-            alt={banners[current].title}
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/20 to-transparent" />
-          
-          <div className="absolute inset-0 flex flex-col justify-center px-8 md:px-20 max-w-[1400px] mx-auto text-white">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <h2 className="text-h2 md:text-[3rem] font-display font-bold leading-tight mb-2">
-                {banners[current].title}
-              </h2>
-              <p className="text-body md:text-xl font-body text-white/80 mb-6 max-w-lg">
-                {banners[current].subtitle}
-              </p>
-              <button className="bg-white text-brand-primary px-8 py-3 rounded-pill font-bold hover:scale-105 transition-transform">
-                {banners[current].button}
-              </button>
-            </motion.div>
+          {/* Background Image */}
+          <div className="absolute inset-0">
+            <img 
+              src={slides[current].image} 
+              alt={slides[current].title}
+              className="w-full h-full object-cover object-center"
+            />
+            {/* Dark overlay for contrast if needed */}
+            <div className={`absolute inset-0 ${slides[current].theme === 'dark' ? 'bg-black/40' : 'bg-black/10'}`}></div>
+          </div>
+
+          {/* Content Wrapper */}
+          <div className="relative h-full max-w-[1400px] mx-auto px-6 md:px-12 flex items-center">
+            <div className={`w-full max-w-2xl ${
+              slides[current].align === 'center' ? 'mx-auto text-center' : 
+              slides[current].align === 'right' ? 'ml-auto text-right' : 'text-left'
+            }`}>
+              <motion.h2 
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className={`text-h2 md:text-h1 font-display font-black leading-tight tracking-tight mb-4 ${slides[current].theme === 'dark' ? 'text-white' : 'text-gray-900'}`}
+              >
+                {slides[current].title}
+              </motion.h2>
+              <motion.p 
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className={`text-body md:text-h3 font-medium mb-8 ${slides[current].theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}
+              >
+                {slides[current].subtitle}
+              </motion.p>
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.4 }}
+                className={slides[current].align === 'center' ? 'flex justify-center' : slides[current].align === 'right' ? 'flex justify-end' : ''}
+              >
+                <Link 
+                  to={slides[current].link}
+                  className={`inline-flex items-center gap-2 px-8 py-3.5 rounded-full font-bold transition-all shadow-lg ${
+                    slides[current].theme === 'dark' 
+                      ? 'bg-white text-brand-primary hover:bg-gray-100' 
+                      : 'bg-brand-primary text-white hover:bg-brand-hover'
+                  }`}
+                >
+                  {slides[current].cta} <ArrowRight size={18} />
+                </Link>
+              </motion.div>
+            </div>
           </div>
         </motion.div>
       </AnimatePresence>
 
-      {/* Controls */}
+      {/* Navigation Arrows */}
       <button 
         onClick={prev}
-        className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/10 hover:bg-white/30 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-all invisible md:visible"
+        className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 bg-white/80 backdrop-blur-sm border border-border-default text-text-primary rounded-full flex items-center justify-center hover:bg-white transition-colors z-10 shadow-sm"
+        aria-label="Previous Slide"
       >
         <ChevronLeft size={24} />
       </button>
       <button 
         onClick={next}
-        className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/10 hover:bg-white/30 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-all invisible md:visible"
+        className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 bg-white/80 backdrop-blur-sm border border-border-default text-text-primary rounded-full flex items-center justify-center hover:bg-white transition-colors z-10 shadow-sm"
+        aria-label="Next Slide"
       >
         <ChevronRight size={24} />
       </button>
 
-      {/* Dots */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
-        {banners.map((_, i) => (
-          <button 
-            key={i}
-            onClick={() => setCurrent(i)}
-            className={`w-2 h-2 rounded-full transition-all ${i === current ? 'bg-white w-6' : 'bg-white/40'}`}
+      {/* Slide Indicators */}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 Z-10">
+        {slides.map((_, idx) => (
+          <button
+            key={idx}
+            onClick={() => setCurrent(idx)}
+            className={`transition-all rounded-full ${current === idx ? 'w-8 h-2 bg-brand-primary' : 'w-2 h-2 bg-white/60 hover:bg-white'}`}
+            aria-label={`Go to slide ${idx + 1}`}
           />
         ))}
       </div>

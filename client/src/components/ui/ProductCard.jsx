@@ -13,20 +13,17 @@ const ProductCard = ({ product }) => {
 
   return (
     <motion.article 
-      whileHover={{ y: -8, transition: { duration: 0.3 } }}
-      className="group relative bg-white border border-border-default rounded-pro transition-all duration-500 hover:shadow-premium overflow-hidden h-full flex flex-col"
+      whileHover={{ y: -2, transition: { duration: 0.2 } }}
+      className="group relative bg-white border border-border-default rounded-pro transition-all duration-300 hover:shadow-md overflow-hidden h-full flex flex-col"
     >
       {/* Image Container */}
-      <Link to={`/product/${id}`} className="block aspect-square p-3 relative overflow-hidden">
-        <div className="w-full h-full bg-surface-secondary rounded-img overflow-hidden relative">
-          <motion.img 
-            whileHover={{ scale: 1.15 }}
-            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+      <Link to={`/product/${id}`} className="block aspect-[4/5] p-0 relative overflow-hidden bg-surface-secondary rounded-t-pro">
+        <div className="w-full h-full relative overflow-hidden flex items-center justify-center p-4">
+          <img 
             src={product.images?.[0] || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=400&q=80'} 
             alt={product.name}
-            className="w-full h-full object-cover transition-all"
+            className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-300"
           />
-          <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 backdrop-blur-0 group-hover:backdrop-blur-[2px] transition-all duration-500 pointer-events-none" />
         </div>
         
         {/* Deal Badge */}
@@ -56,11 +53,11 @@ const ProductCard = ({ product }) => {
         <div className="mt-auto pt-3">
           <div className="flex items-baseline gap-2">
             <span className="text-body font-bold text-brand-primary font-mono">
-              ${currentPrice.toFixed(2)}
+              ₹{currentPrice.toLocaleString('en-IN')}
             </span>
             {product.isDeal && (
               <span className="text-caption text-text-muted line-through">
-                ${product.price.toFixed(2)}
+                ₹{product.price.toLocaleString('en-IN')}
               </span>
             )}
           </div>

@@ -1,79 +1,97 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 
-const Panel = ({ title, products = [] }) => (
-  <div className="bg-white border border-border-default rounded-pro p-5 flex flex-col hover:shadow-premium transition-all">
-    <h3 className="text-h4 font-display text-text-primary mb-4">{title}</h3>
-    <div className="grid grid-cols-2 gap-3 mb-5">
-      {products.map((p, i) => (
-        <Link 
-          key={i} 
-          to="/products"
-          className="aspect-square bg-surface-secondary rounded-img overflow-hidden group/thumb"
-        >
-          <img 
-            src={p.image} 
-            alt={title} 
-            className="w-full h-full object-cover group-hover/thumb:scale-110 transition-transform duration-500"
-          />
-        </Link>
-      ))}
-    </div>
-    <Link 
-      to="/products" 
-      className="mt-auto text-brand-primary text-small font-bold flex items-center gap-1.5 hover:gap-2.5 transition-all"
+const CategoryGrid = ({ title, items, link, delay }) => {
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ duration: 0.5, delay, ease: "easeOut" }}
+      className="bg-white border border-border-default rounded-pro p-4 md:p-6 flex flex-col h-full shadow-sm hover:shadow-premium transition-shadow group"
     >
-      Explore all <ArrowRight size={16} />
-    </Link>
-  </div>
-);
+      <h3 className="text-body font-bold text-text-primary mb-4 leading-tight">
+        {title}
+      </h3>
+      
+      <div className="grid grid-cols-2 gap-3 flex-grow mb-6">
+        {items.map((item, idx) => (
+          <Link key={idx} to={link} className="flex flex-col gap-1.5 group/item cursor-pointer">
+            <div className="aspect-square bg-surface-secondary rounded-lg overflow-hidden border border-border-default">
+               <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover/item:scale-105 transition-transform duration-300" />
+            </div>
+            <span className="text-[11px] font-bold text-text-secondary group-hover/item:text-brand-primary line-clamp-1">{item.name}</span>
+          </Link>
+        ))}
+      </div>
+
+      <Link 
+        to={link} 
+        className="inline-flex items-center gap-1.5 text-small font-bold text-brand-primary hover:underline mt-auto"
+      >
+        <span>Shop more</span>
+      </Link>
+    </motion.div>
+  );
+};
 
 const CategoryPanels = () => {
-  const panelData = [
+  const categories = [
     {
-      title: 'Top Picks in Mobiles',
-      products: [
-        { image: 'https://images.unsplash.com/photo-1592890678913-e92708307c08?auto=format&fit=crop&w=200&q=80' },
-        { image: 'https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?auto=format&fit=crop&w=200&q=80' },
-        { image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=200&q=80' },
-        { image: 'https://images.unsplash.com/photo-1556656793-062ff98782a7?auto=format&fit=crop&w=200&q=80' },
+      title: 'Up to 60% off | Styles for men',
+      link: '/products?category=Fashion',
+      delay: 0,
+      items: [
+        { name: 'Clothing', image: 'https://images.unsplash.com/photo-1516257984-b1b4d707412e?auto=format&fit=crop&w=300&q=80' },
+        { name: 'Footwear', image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=300&q=80' },
+        { name: 'Watches', image: 'https://images.unsplash.com/photo-1524592094714-0f0654e20314?auto=format&fit=crop&w=300&q=80' },
+        { name: 'Bags & Luggages', image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=300&q=80' }
       ]
     },
     {
-      title: 'Fashion for You',
-      products: [
-        { image: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=200&q=80' },
-        { image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=200&q=80' },
-        { image: 'https://images.unsplash.com/photo-1490481658045-342d8a393046?auto=format&fit=crop&w=200&q=80' },
-        { image: 'https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=200&q=80' },
+      title: 'Upgrade your home | Amazon Brands & more',
+      link: '/products?category=Home',
+      delay: 0.1,
+      items: [
+        { name: 'Smart TVs', image: 'https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?auto=format&fit=crop&w=300&q=80' },
+        { name: 'Appliances', image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=300&q=80' },
+        { name: 'Furniture', image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=300&q=80' },
+        { name: 'Kitchen', image: 'https://images.unsplash.com/photo-1556910103-1c02745a872e?auto=format&fit=crop&w=300&q=80' }
       ]
     },
     {
-      title: 'Smart Home Hub',
-      products: [
-        { image: 'https://images.unsplash.com/photo-1585232351009-aa87416fca90?auto=format&fit=crop&w=200&q=80' },
-        { image: 'https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&w=200&q=80' },
-        { image: 'https://images.unsplash.com/photo-1586024486164-ce9b3d87408f?auto=format&fit=crop&w=200&q=80' },
-        { image: 'https://images.unsplash.com/photo-1544101270-2a81878f7129?auto=format&fit=crop&w=200&q=80' },
+      title: 'Starting ₹149 | Headphones',
+      link: '/products?category=Electronics',
+      delay: 0.2,
+      items: [
+        { name: 'boAt', image: 'https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?auto=format&fit=crop&w=300&q=80' },
+        { name: 'Sony', image: 'https://images.unsplash.com/photo-1546435770-a3e426bf472b?auto=format&fit=crop&w=300&q=80' },
+        { name: 'JBL', image: 'https://images.unsplash.com/photo-1613588718956-c2e80305bf61?auto=format&fit=crop&w=300&q=80' },
+        { name: 'Noise', image: 'https://images.unsplash.com/photo-1572569533902-3e59f217bfc1?auto=format&fit=crop&w=300&q=80' }
       ]
     },
     {
-      title: 'Gaming Essentials',
-      products: [
-        { image: 'https://images.unsplash.com/photo-1612287230202-1ff1d85d1bdf?auto=format&fit=crop&w=200&q=80' },
-        { image: 'https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?auto=format&fit=crop&w=200&q=80' },
-        { image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=200&q=80' },
-        { image: 'https://images.unsplash.com/photo-1605462863863-10d9e47e15ee?auto=format&fit=crop&w=200&q=80' },
+      title: 'Automotive essentials | Up to 60% off',
+      link: '/products',
+      delay: 0.3,
+      items: [
+        { name: 'Cleaning kits', image: 'https://images.unsplash.com/photo-1601362840469-51e4d8d58785?auto=format&fit=crop&w=300&q=80' },
+        { name: 'Tyre care', image: 'https://images.unsplash.com/photo-1534005852504-20ce45ddfdd8?auto=format&fit=crop&w=300&q=80' },
+        { name: 'Helmets', image: 'https://images.unsplash.com/photo-1557008075-7f2c5efa4cb9?auto=format&fit=crop&w=300&q=80' },
+        { name: 'Vacuum parts', image: 'https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?auto=format&fit=crop&w=300&q=80' }
       ]
     }
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      {panelData.map((data, i) => (
-        <Panel key={i} {...data} />
-      ))}
+    <div className="w-full">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {categories.map((cat, i) => (
+          <CategoryGrid key={i} {...cat} />
+        ))}
+      </div>
     </div>
   );
 };

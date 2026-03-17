@@ -22,37 +22,10 @@ const Home = () => {
   const { products, loadingProducts } = useStore();
   const { user } = useAuthStore();
 
-  // Animation setup for section reveals
+  // Animation setup removed in favor of instant rendering (2024 standard)
   useEffect(() => {
-    if (loadingProducts) return;
-    
-    const sections = gsap.utils.toArray('.animate-section');
-    sections.forEach((section, i) => {
-      gsap.fromTo(
-        section,
-        { 
-          opacity: 0, 
-          y: 40,
-          scale: 0.98,
-          filter: 'blur(10px)'
-        },
-        {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          filter: 'blur(0px)',
-          duration: 1.2,
-          ease: 'expo.out',
-          scrollTrigger: {
-            trigger: section,
-            start: 'top 90%',
-            end: 'top 70%',
-            scrub: 1,
-            toggleActions: 'play none none none',
-          },
-        }
-      );
-    });
+    // We intentionally leave this empty or remove it entirely
+    // Modern e-commerce prioritizes instant Time-To-Interactive over heavy scroll reveals
   }, [loadingProducts]);
 
   return (

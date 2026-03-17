@@ -71,4 +71,43 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// @desc    Upgrade User to Seller
+// @route   POST /api/auth/upgrade-to-seller
+// @access  Public (in real app, this should be protected via middleware)
+router.post('/upgrade-to-seller', async (req, res) => {
+  try {
+    const { userId, storeName, bankAccount } = req.body;
+
+    if (!userId || !storeName || !bankAccount) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        isSeller: true,
+        sellerStatus: 'Approved',
+        storeName,
+        bankAccount
+      },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json({
+      _id: updatedUser._id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      isAdmin: updatedUser.isAdmin,
+      isSeller: updatedUser.isSeller,
+      storeName: updatedUser.storeName
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server Error', error: error.message });
+  }
+});
+
 module.exports = router;

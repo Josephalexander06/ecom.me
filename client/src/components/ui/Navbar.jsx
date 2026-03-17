@@ -24,8 +24,8 @@ const Navbar = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
 
-  const categories = ['All', 'Electronics', 'Mobiles', 'Fashion', 'Home', 'Books', 'Beauty'];
-  const trendingSearches = ['iPhone 15 Pro', 'Wireless Earbuds', 'Summer Collection', 'Smart Home'];
+  const categories = ['All', 'Electronics', 'Mobiles', 'Fashion', 'Home', 'Books', 'Beauty', 'Groceries'];
+  const trendingSearches = ['iPhone 15', 'Silk Sarees', 'Running Shoes', 'Smart Watches', 'Kitchenware'];
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -37,21 +37,29 @@ const Navbar = () => {
   return (
     <nav className="w-full bg-white relative z-[50]">
       {/* Row 1: Brand & Utility (64px) */}
-      <div className="h-[64px] border-b border-border-default px-4 md:px-8 flex items-center gap-6 max-w-[1400px] mx-auto">
+      <div className="h-[72px] md:h-[64px] border-b border-border-default px-4 md:px-8 flex items-center gap-4 md:gap-6 max-w-[1400px] mx-auto">
+        {/* Mobile Menu Toggle */}
+        <button 
+          onClick={() => toggleMobileMenu()}
+          className="lg:hidden p-1 text-text-primary hover:bg-surface-secondary rounded-lg transition-colors"
+        >
+          <Menu size={26} />
+        </button>
+
         {/* Logo */}
         <Link to="/" className="flex-shrink-0">
-          <h1 className="font-display font-extrabold text-xl tracking-tight text-text-primary">
+          <h1 className="font-display font-black text-2xl tracking-tighter text-text-primary italic">
             ecom<span className="text-brand-primary">.me</span>
           </h1>
         </Link>
 
         {/* Deliver To (Desktop) */}
-        <button className="hidden lg:flex items-center gap-2 group flex-shrink-0 text-left">
+        <button className="hidden xl:flex items-center gap-2 group flex-shrink-0 text-left border border-transparent hover:border-border-default rounded-lg px-2 py-1 transition-all">
           <MapPin size={22} className="text-brand-primary" />
           <div className="flex flex-col">
-            <span className="text-[11px] leading-tight text-text-secondary">Deliver to</span>
+            <span className="text-[10px] leading-tight text-text-muted font-bold uppercase">Deliver to</span>
             <span className="text-small font-bold text-text-primary group-hover:text-brand-primary transition-colors flex items-center gap-0.5">
-              Select Location <ChevronDown size={12} />
+              Mumbai 400001 <ChevronDown size={12} />
             </span>
           </div>
         </button>
@@ -59,36 +67,49 @@ const Navbar = () => {
         {/* Search Bar (45%) */}
         <form 
           onSubmit={handleSearch}
-          className="flex-1 max-w-[45%] h-10 flex items-center bg-surface-secondary border border-border-default rounded-pill overflow-hidden focus-within:border-brand-primary focus-within:ring-4 focus-within:ring-brand-light transition-all shadow-sm"
+          className="hidden md:flex flex-1 max-w-[50%] h-11 items-center bg-surface-secondary border border-border-default rounded-lg overflow-hidden focus-within:border-brand-primary focus-within:ring-4 focus-within:ring-brand-light transition-all shadow-sm group"
         >
-          <div className="h-full border-r border-border-default px-3 flex items-center gap-1.5 cursor-pointer hover:bg-surface-tertiary transition-colors">
-            <span className="text-small font-medium text-text-secondary whitespace-nowrap">{selectedCategory}</span>
+          <div className="h-full border-r border-border-default px-4 flex items-center gap-2 cursor-pointer hover:bg-surface-tertiary transition-colors">
+            <span className="text-small font-bold text-text-primary whitespace-nowrap">{selectedCategory}</span>
             <ChevronDown size={14} className="text-text-muted" />
           </div>
           <input 
             type="text"
-            placeholder="Search products, brands and more..."
+            placeholder="Search for premium products..."
             className="flex-1 bg-transparent px-4 py-2 text-small text-text-primary placeholder:text-text-muted focus:outline-none"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-          <button type="submit" className="h-full px-5 bg-brand-primary text-white hover:bg-brand-hover transition-colors">
+          <button type="submit" className="h-full px-6 bg-brand-primary text-white hover:bg-brand-hover transition-colors flex items-center gap-2 font-bold">
             <Search size={18} />
           </button>
         </form>
 
         {/* Utility Icons */}
         <div className="flex items-center gap-4 md:gap-6 ml-auto">
+          {/* Seller Link */}
+          <Link 
+            to={(isAuthenticated && user?.isSeller) ? "/seller/dashboard" : "/seller/onboarding"} 
+            className="hidden xl:block text-small font-bold text-text-primary hover:text-brand-primary transition-colors whitespace-nowrap"
+          >
+            Sell on ecom.me
+          </Link>
+
+          {/* Mobile Search Icon */}
+          <button className="md:hidden p-1 text-text-primary" onClick={() => navigate('/search')}>
+            <Search size={24} />
+          </button>
+
           {/* Account */}
           <div className="relative group cursor-pointer flex-shrink-0">
             <div 
               onClick={() => !isAuthenticated && setActiveModal('login')}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 border border-transparent hover:border-border-default rounded-lg px-2 py-1 transition-all"
             >
               <div className="hidden md:flex flex-col items-end">
-                <span className="text-[11px] leading-tight text-text-secondary">Hello, {user?.name?.split(' ')[0] || 'Sign In'}</span>
+                <span className="text-[10px] leading-tight text-text-muted font-bold uppercase">Hello, {user?.name?.split(' ')[0] || 'Sign In'}</span>
                 <span className="text-small font-bold text-text-primary flex items-center gap-0.5">
-                  Account <ChevronDown size={12} className="text-text-muted" />
+                  Account <ChevronDown size={12} className="text-text-muted transition-transform group-hover:rotate-180" />
                 </span>
               </div>
               <User size={24} className="text-text-primary lg:hidden" />
@@ -96,31 +117,29 @@ const Navbar = () => {
             
             {/* Account Dropdown */}
             {isAuthenticated && (
-              <div className="absolute top-full right-0 pt-2 opacity-0 translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all">
-                <div className="bg-white border border-border-default rounded-pro shadow-premium p-2 min-w-[200px]">
-                  <Link to="/profile" className="block px-4 py-2 text-small hover:bg-surface-secondary rounded-lg transition-colors">My Profile</Link>
-                  <Link to="/orders" className="block px-4 py-2 text-small hover:bg-surface-secondary rounded-lg transition-colors">Orders & Returns</Link>
-                  <Link to="/wishlist" className="block px-4 py-2 text-small hover:bg-surface-secondary rounded-lg transition-colors">Wishlist</Link>
-                  <div className="border-t border-border-default my-1" />
+              <div className="absolute top-full right-0 pt-2 opacity-0 translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all bg-white z-[100]">
+                <div className="bg-white border border-border-default rounded-pro shadow-premium p-2 min-w-[220px]">
+                  <div className="px-4 py-3 mb-2 bg-surface-secondary rounded-lg">
+                    <p className="text-caption font-bold text-text-muted uppercase">Signed in as</p>
+                    <p className="text-small font-bold text-text-primary truncate">{user.email}</p>
+                  </div>
+                  <Link to="/profile" className="block px-4 py-2 text-small hover:bg-surface-secondary rounded-lg transition-colors font-medium">My Profile</Link>
+                  <Link to="/orders" className="block px-4 py-2 text-small hover:bg-surface-secondary rounded-lg transition-colors font-medium">Orders & Returns</Link>
+                  <Link to="/wishlist" className="block px-4 py-2 text-small hover:bg-surface-secondary rounded-lg transition-colors font-medium">Wishlist</Link>
+                  <div className="border-t border-border-default my-2" />
                   <button 
                     onClick={logout}
-                    className="w-full text-left px-4 py-2 text-small text-danger hover:bg-danger/5 rounded-lg transition-colors"
+                    className="w-full text-left px-4 py-2 text-small text-danger hover:bg-danger/5 rounded-lg transition-colors font-bold"
                   >
-                    Logout
+                    Sign Out
                   </button>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Orders (Desktop Only) */}
-          <Link to="/orders" className="hidden lg:flex flex-col flex-shrink-0">
-            <span className="text-[11px] leading-tight text-text-secondary">Returns</span>
-            <span className="text-small font-bold text-text-primary">& Orders</span>
-          </Link>
-
           {/* Cart */}
-          <Link to="/cart" className="relative group flex items-center gap-2">
+          <Link to="/cart" className="relative group flex items-center gap-2 border border-transparent hover:border-border-default rounded-lg px-2 py-1 transition-all">
             <div className="relative">
               <ShoppingBag size={24} className="text-text-primary group-hover:text-brand-primary transition-colors" />
               {cartCount > 0 && (
@@ -134,61 +153,50 @@ const Navbar = () => {
                 </motion.span>
               )}
             </div>
-            <span className="hidden lg:block text-small font-bold text-text-primary group-hover:text-brand-primary transition-colors">
-              Cart
-            </span>
+            <div className="hidden lg:flex flex-col">
+              <span className="text-[10px] leading-tight text-text-muted font-bold uppercase">Bag</span>
+              <span className="text-small font-bold text-text-primary group-hover:text-brand-primary transition-colors">
+                Items
+              </span>
+            </div>
           </Link>
-
-          {/* Mobile Menu Toggle */}
-          <button 
-            onClick={() => toggleMobileMenu()}
-            className="lg:hidden p-1 text-text-primary"
-          >
-            <Menu size={24} />
-          </button>
         </div>
       </div>
 
-      {/* Row 2: Category Navigation (40px) */}
-      <div className="hidden md:block h-[40px] bg-surface-secondary border-b border-border-default px-4 md:px-8">
+      {/* Row 2: Category Navigation (44px) */}
+      <div className="hidden md:block h-[44px] bg-white border-b border-border-default px-4 md:px-8">
         <div className="max-w-[1400px] mx-auto h-full flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <button className="flex items-center gap-2 text-small font-bold text-text-primary hover:text-brand-primary transition-colors">
-              <LayoutGrid size={16} /> All Departments
+          <div className="flex items-center gap-8">
+            <button className="flex items-center gap-2 text-small font-bold text-text-primary hover:text-brand-primary transition-colors group">
+              <LayoutGrid size={18} className="text-brand-primary" /> 
+              <span>Explore Categories</span>
             </button>
-            <div className="h-4 w-[1px] bg-border-strong mx-1" />
+            <div className="h-5 w-[1px] bg-border-default" />
             
             {categories.slice(1).map((cat) => (
               <Link 
                 key={cat} 
                 to={`/products?category=${cat}`}
-                className="text-small text-text-secondary font-medium hover:text-text-primary transition-colors"
+                className="text-small text-text-secondary font-bold hover:text-brand-primary transition-colors uppercase tracking-tight"
               >
                 {cat}
               </Link>
             ))}
           </div>
-
-          <Link 
-            to="/seller/onboarding" 
-            className="text-small font-bold text-warning hover:underline flex items-center gap-1.5"
-          >
-            Sell on ecom.me
-          </Link>
         </div>
       </div>
 
-      {/* Row 3: Location & Trending (36px) — Home Only context would usually go here */}
-      <div className="h-[36px] bg-white border-b-2 border-brand-primary/10 px-4 md:px-8">
+      {/* Row 3: Location & Trending (36px) */}
+      <div className="h-[40px] md:h-[36px] bg-surface-secondary border-b-2 border-brand-primary/5 px-4 md:px-8">
         <div className="max-w-[1400px] mx-auto h-full flex items-center justify-between overflow-hidden">
           <div className="flex items-center gap-2 whitespace-nowrap">
-            <span className="text-caption font-medium text-text-muted">Delivering to:</span>
-            <span className="text-caption font-bold text-text-secondary">New York, 10001</span>
+            <MapPin size={14} className="text-brand-primary md:hidden" />
+            <span className="text-caption font-medium text-text-muted underline-offset-4 decoration-brand-primary/30 decoration-dotted underline">Mumbai 400001</span>
           </div>
 
-          <div className="hidden lg:flex items-center gap-4 overflow-x-auto no-scrollbar py-1">
-            <span className="flex items-center gap-1.5 text-caption font-bold text-brand-primary">
-              <TrendingUp size={12} /> TRENDING
+          <div className="hidden lg:flex items-center gap-6 overflow-x-auto no-scrollbar py-1">
+            <span className="flex items-center gap-1.5 text-caption font-black text-brand-primary italic">
+              <TrendingUp size={14} /> NOW TRENDING
             </span>
             {trendingSearches.map((term) => (
               <button 
@@ -197,9 +205,9 @@ const Navbar = () => {
                   setSearchQuery(term);
                   navigate(`/products?q=${encodeURIComponent(term)}`);
                 }}
-                className="px-3 py-1 bg-surface-secondary text-caption text-text-secondary rounded-full hover:bg-surface-tertiary hover:text-text-primary transition-all whitespace-nowrap"
+                className="text-caption font-bold text-text-secondary hover:text-brand-primary transition-all whitespace-nowrap flex items-center gap-1"
               >
-                {term}
+                #{term}
               </button>
             ))}
           </div>

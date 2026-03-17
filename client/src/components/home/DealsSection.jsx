@@ -47,7 +47,7 @@ const DealsSection = ({ products = [] }) => {
       <div className="relative">
         <div className="flex gap-4 md:gap-6 overflow-x-auto no-scrollbar pb-8 snap-x">
           {products.map((product) => (
-            <div key={product.id || product._id} className="min-w-[240px] md:min-w-[280px] snap-start">
+            <div key={product.id || product._id} className="w-[180px] md:w-[220px] flex-none snap-start">
               <ProductCard product={product} />
               
               {/* Deal Specific Meta */}
