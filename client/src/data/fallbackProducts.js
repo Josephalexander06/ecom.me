@@ -1,0 +1,102 @@
+export const fallbackProducts = [
+  {
+    _id: '65f1aeb4c9d2a3f123456781',
+    name: 'Noise Cancelling Headphones Pro',
+    brand: 'SoundMax',
+    category: 'Electronics',
+    description: 'Wireless over-ear headphones with 40-hour battery and adaptive noise cancellation.',
+    price: 129.99,
+    stock: 26,
+    images: ['https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1000&q=80'],
+    averageRating: 4.5,
+    soldCount: 948,
+    isDeal: true,
+    dealPrice: 99.99
+  },
+  {
+    _id: '65f1aeb4c9d2a3f123456782',
+    name: '4K Smart TV 55-inch',
+    brand: 'ViewNest',
+    category: 'Electronics',
+    description: 'Ultra HD smart TV with HDR10, voice remote, and streaming apps built in.',
+    price: 499,
+    stock: 14,
+    images: ['https://images.unsplash.com/photo-1593784991095-a205069470b6?auto=format&fit=crop&w=1000&q=80'],
+    averageRating: 4.4,
+    soldCount: 562
+  },
+  {
+    _id: '65f1aeb4c9d2a3f123456783',
+    name: 'Cotton Crew Neck T-Shirt (Pack of 3)',
+    brand: 'UrbanCotton',
+    category: 'Fashion',
+    description: 'Soft breathable cotton t-shirts with regular fit for daily wear.',
+    price: 24.99,
+    stock: 120,
+    images: ['https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1000&q=80'],
+    averageRating: 4.1,
+    soldCount: 1860
+  },
+  {
+    _id: '65f1aeb4c9d2a3f123456784',
+    name: 'Air Fryer 5.5L',
+    brand: 'KitchenJoy',
+    category: 'Home & Kitchen',
+    description: 'Fast and oil-light cooking with 8 presets and digital touch controls.',
+    price: 89.99,
+    stock: 31,
+    images: ['https://images.unsplash.com/photo-1585515656412-49f0f8e3b0f0?auto=format&fit=crop&w=1000&q=80'],
+    averageRating: 4.6,
+    soldCount: 723,
+    isDeal: true,
+    dealPrice: 69.99
+  },
+  {
+    _id: '65f1aeb4c9d2a3f123456785',
+    name: 'Paperback Fiction Bundle',
+    brand: 'BookRiver',
+    category: 'Books',
+    description: 'Bestselling fiction set with 3 curated page-turners.',
+    price: 18.5,
+    stock: 64,
+    images: ['https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=1000&q=80'],
+    averageRating: 4.3,
+    soldCount: 433
+  },
+  {
+    _id: '65f1aeb4c9d2a3f123456786',
+    name: 'Gaming Mouse RGB',
+    brand: 'VoltGear',
+    category: 'Computers',
+    description: 'Programmable 8-button gaming mouse with 16000 DPI optical sensor.',
+    price: 39.99,
+    stock: 77,
+    images: ['https://images.unsplash.com/photo-1613141411244-0e4ac259d217?auto=format&fit=crop&w=1000&q=80'],
+    averageRating: 4.2,
+    soldCount: 1204
+  },
+  {
+    _id: '65f1aeb4c9d2a3f123456787',
+    name: 'Running Shoes',
+    brand: 'SprintOne',
+    category: 'Sports',
+    description: 'Lightweight running shoes with cushioned sole and breathable upper.',
+    price: 74.99,
+    stock: 48,
+    images: ['https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=1000&q=80'],
+    averageRating: 4.4,
+    soldCount: 982
+  },
+  {
+    _id: '65f1aeb4c9d2a3f123456788',
+    name: 'Hydrating Face Serum',
+    brand: 'PureGlow',
+    category: 'Beauty',
+    description: 'Vitamin C and hyaluronic acid serum for daily skin hydration.',
+    price: 19.99,
+    stock: 96,
+    images: ['https://images.unsplash.com/photo-1556228578-8c89e6adf883?auto=format&fit=crop&w=1000&q=80'],
+    averageRating: 4.0,
+    soldCount: 645
+  }
+];

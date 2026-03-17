@@ -2,6 +2,51 @@ const express = require('express');
 const router = express.Router();
 const Product = require('../models/Product');
 
+// Create product (seller flow)
+router.post('/', async (req, res) => {
+  try {
+    const {
+      name,
+      brand,
+      category,
+      description,
+      price,
+      stock,
+      images,
+      tags,
+      variants,
+      features,
+      isDeal,
+      dealPrice,
+      dealExpiresAt
+    } = req.body;
+
+    if (!name || !brand || !category || !description || price === undefined) {
+      return res.status(400).json({ message: 'Missing required product fields' });
+    }
+
+    const product = await Product.create({
+      name,
+      brand,
+      category,
+      description,
+      price: Number(price),
+      stock: Number(stock || 0),
+      images: Array.isArray(images) ? images : [],
+      tags: Array.isArray(tags) ? tags : [],
+      variants: Array.isArray(variants) ? variants : [],
+      features: Array.isArray(features) ? features : [],
+      isDeal: Boolean(isDeal),
+      dealPrice: dealPrice !== undefined && dealPrice !== '' ? Number(dealPrice) : undefined,
+      dealExpiresAt: dealExpiresAt || undefined
+    });
+
+    res.status(201).json(product);
+  } catch (err) {
+    res.status(500).json({ message: 'Product creation failed', error: err.message });
+  }
+});
+
 // Advanced AI Search using MongoDB Text Index
 router.get('/ai-search', async (req, res) => {
   try {
@@ -69,7 +114,7 @@ router.get('/analytics', async (req, res) => {
 // Get all products with filters
 router.get('/', async (req, res) => {
   try {
-    const { category, minPrice, maxPrice, sort } = req.query;
+    const { category, minPrice, maxPrice, sort, query: searchQuery } = req.query;
     let query = {};
 
     if (category) query.category = category;
@@ -77,6 +122,14 @@ router.get('/', async (req, res) => {
       query.price = {};
       if (minPrice) query.price.$gte = Number(minPrice);
       if (maxPrice) query.price.$lte = Number(maxPrice);
+    }
+    if (searchQuery) {
+      query.$or = [
+        { name: { $regex: searchQuery, $options: 'i' } },
+        { brand: { $regex: searchQuery, $options: 'i' } },
+        { category: { $regex: searchQuery, $options: 'i' } },
+        { description: { $regex: searchQuery, $options: 'i' } }
+      ];
     }
 
     let sortOptions = { createdAt: -1 };

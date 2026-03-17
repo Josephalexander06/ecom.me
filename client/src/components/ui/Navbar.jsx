@@ -1,162 +1,117 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Search, ShoppingCart, User, Menu, X, 
-  ChevronDown, MapPin, Package, Heart,
-  TrendingUp, Globe, Box
-} from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { MapPin, Menu, Search, ShoppingCart } from 'lucide-react';
+import { useStore } from '../../context/StoreContext';
 import CartDrawer from './CartDrawer';
 
 const Navbar = () => {
-  const [isScrolled, setIsScrolled] = useState(false);
+  const navigate = useNavigate();
+  const { cartCount, categories } = useStore();
+  const [search, setSearch] = useState('');
+  const [category, setCategory] = useState('All');
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [searchCategory, setSearchCategory] = useState('All');
-  const location = useLocation();
-  const isHome = location.pathname === '/';
 
-  const categories = [
-    'All', 'Neural Links', 'Retinal Inserts', 'Haptic Gear', 'Cognitive', 'Bionics'
-  ];
+  const topLinks = useMemo(
+    () => [
+      { label: "Today's Deals", to: '/products?sort=deals' },
+      { label: 'Customer Service', to: '/products' },
+      { label: 'Registry', to: '/products' },
+      { label: 'Gift Cards', to: '/products' },
+      { label: 'Sell', to: '/seller/dashboard' }
+    ],
+    []
+  );
 
-  const subLinks = [
-    "Today's Deals", "Electronics", "Wearables", "Neural Devices", 
-    "Fashion", "Home", "Books", "Seller Central"
-  ];
-
-  const trending = [
-    "Neural Link V4", "Somatic Glove", "Iris Pro", "Synapse-X", "Bio-Thread"
-  ];
-
-  useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  const onSearch = (event) => {
+    event.preventDefault();
+    const params = new URLSearchParams();
+    if (search.trim()) params.set('q', search.trim());
+    if (category && category !== 'All') params.set('category', category);
+    navigate(`/products?${params.toString()}`);
+  };
 
   return (
-    <nav className="w-full flex flex-col z-[100] font-body shadow-sm sticky top-0">
-      {/* ROW 1: Identity & Primary Utility */}
-      <div className="bg-accent-primary h-14 md:h-16 flex items-center px-4 md:px-8 gap-4 md:gap-8 border-b border-accent-primary shadow-md">
-        {/* Mobile Hamburger (Only visible on Mobile) */}
-        <button 
-          onClick={() => setIsMenuOpen(true)}
-          className="lg:hidden text-white p-2"
-        >
-          <Menu size={24} />
-        </button>
+    <header className="sticky top-0 z-30 shadow">
+      <div className="bg-[#131921] text-white px-3 md:px-6 py-2">
+        <div className="max-w-[1400px] mx-auto flex items-center gap-3 md:gap-4">
+          <Link to="/" className="font-extrabold tracking-wide text-lg md:text-2xl">
+            ec<span className="text-[#ff9900]">omme</span>
+          </Link>
 
-        {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 shrink-0 group">
-          <div className="w-5 h-5 bg-white rounded-[2px] rotate-45 group-hover:bg-accent-warning transition-all" />
-          <span className="font-display text-xl tracking-tighter text-white font-extrabold italic">AETHER</span>
-        </Link>
-
-        {/* Desktop Search - 50% Width */}
-        <div className="hidden lg:flex flex-1 max-w-[55%] h-9 md:h-10 group relative shadow-md rounded-sm overflow-hidden">
-          <div className="flex w-full h-full bg-white">
-            <input 
-              type="text" 
-              placeholder="Search for products, brands and more" 
-              className="flex-1 px-4 bg-transparent text-text-main text-sm focus:outline-none placeholder:text-text-dim"
-            />
-            <button className="h-full px-4 text-accent-primary hover:text-accent-secondary transition-colors">
-              <Search size={20} strokeWidth={2.5} />
-            </button>
+          <div className="hidden md:flex items-center text-xs leading-tight">
+            <MapPin size={16} className="mr-1 text-gray-300" />
+            <div>
+              <p className="text-gray-300">Deliver to</p>
+              <p className="font-semibold">United States</p>
+            </div>
           </div>
-        </div>
 
-        {/* Desktop Utility Actions */}
-        <div className="hidden lg:flex items-center gap-2 ml-auto">
-          <Link to="/login" className="px-10 py-1.5 bg-white text-accent-primary font-bold text-sm rounded-sm hover:bg-bg-secondary transition-all shadow-sm">
-            Login
-          </Link>
+          <form onSubmit={onSearch} className="flex-1 flex min-w-0">
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="hidden sm:block bg-[#f3f3f3] text-black rounded-l-md px-2 text-sm border-r border-gray-300"
+            >
+              {categories.map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
 
-          <Link to="/seller/dashboard" className="text-white text-sm font-bold px-4 hover:underline">
-            Become a Seller
-          </Link>
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search products"
+              className="w-full min-w-0 px-3 py-2 text-sm text-black bg-white focus:outline-none"
+            />
+            <button
+              type="submit"
+              className="bg-[#febd69] hover:bg-[#f3a847] text-black px-3 rounded-r-md"
+              aria-label="Search"
+            >
+              <Search size={18} />
+            </button>
+          </form>
 
-          <Link to="/orders" className="text-white text-sm font-bold px-4 hover:underline">
-            Orders
-          </Link>
+          <nav className="hidden lg:flex items-center gap-4 text-sm">
+            <Link to="/orders" className="hover:underline">
+              Returns & Orders
+            </Link>
+            <Link to="/admin/dashboard" className="hover:underline">
+              Admin
+            </Link>
+            <Link to="/seller/dashboard" className="hover:underline">
+              Seller
+            </Link>
+          </nav>
 
-          <button 
+          <button
             onClick={() => setIsCartOpen(true)}
-            className="flex items-center gap-2 text-white px-4 group"
+            className="relative flex items-center gap-1 font-semibold"
           >
-            <ShoppingCart size={20} className="group-hover:scale-110 transition-transform" />
-            <span className="text-sm font-bold">Cart</span>
-            <span className="w-5 h-5 bg-accent-warning text-white text-[10px] font-extrabold flex items-center justify-center rounded-sm">0</span>
+            <ShoppingCart size={24} />
+            <span className="hidden sm:inline">Cart</span>
+            <span className="absolute -top-2 left-4 text-[#ff9900] text-sm font-bold">{cartCount}</span>
           </button>
-        </div>
-
-        {/* Mobile Icons (Visible on Mobile only) */}
-        <div className="lg:hidden flex items-center gap-4 ml-auto">
-           <button className="text-white relative">
-             <ShoppingCart size={24} />
-             <span className="absolute -top-1 -right-1 w-4 h-4 bg-accent-warning text-white text-[9px] font-bold flex items-center justify-center rounded-full">0</span>
-           </button>
         </div>
       </div>
 
-      <div className="bg-bg-primary h-10 flex items-center px-4 md:px-8 border-b border-border-main">
-        <button 
-          onClick={() => setIsMenuOpen(true)}
-          className="flex items-center gap-1 text-text-main font-bold text-sm h-full px-2 hover:border border-transparent hover:border-black/5 transition-all"
-        >
-          <Menu size={20} />
-          <span className="hidden sm:inline tracking-tight">All</span>
-        </button>
-
-        <div className="hidden md:flex items-center h-full gap-2 lg:gap-4 ml-2 overflow-hidden">
-          {subLinks.map((link) => (
-            <a 
-              key={link} 
-              href="#" 
-              className="text-text-main text-xs px-2 h-full flex items-center border border-transparent hover:border-black/10 transition-all whitespace-nowrap tracking-tight"
-            >
-              {link}
-            </a>
+      <div className="bg-[#232f3e] text-white text-sm px-3 md:px-6 py-2">
+        <div className="max-w-[1400px] mx-auto flex items-center gap-4 overflow-x-auto no-scrollbar">
+          <Link to="/products" className="inline-flex items-center gap-1 whitespace-nowrap font-semibold">
+            <Menu size={16} /> All
+          </Link>
+          {topLinks.map((link) => (
+            <Link key={link.label} to={link.to} className="whitespace-nowrap hover:underline">
+              {link.label}
+            </Link>
           ))}
         </div>
       </div>
 
-      {/* ROW 3: Location Bar & Mobile Search (Sticky) */}
-      <AnimatePresence>
-        {isHome && (
-          <motion.div 
-            initial={{ height: 0 }}
-            animate={{ height: 'auto' }}
-            className="bg-bg-surface flex items-center px-4 md:px-8 overflow-hidden py-1.5 gap-8 border-b border-border-main"
-          >
-             <div className="flex items-center gap-1.5 text-text-main hover:text-accent-primary cursor-pointer transition-colors whitespace-nowrap group">
-                <MapPin size={16} className="text-accent-primary" />
-                <div className="flex flex-col">
-                  <span className="text-[9px] text-text-muted leading-tight uppercase tracking-widest font-bold">Deliver to</span>
-                  <span className="text-[10px] font-bold group-hover:underline">New Delhi 110001</span>
-                </div>
-             </div>
-
-             <div className="flex items-center gap-4 overflow-x-auto no-scrollbar scroll-smooth">
-                <span className="text-[10px] text-accent-primary uppercase tracking-[0.2em] font-extrabold whitespace-nowrap flex items-center gap-2">
-                  <TrendingUp size={12} strokeWidth={3} /> Trending:
-                </span>
-                {trending.map((term) => (
-                  <button 
-                    key={term}
-                    className="whitespace-nowrap hover:text-accent-primary text-[10px] text-text-muted transition-all uppercase tracking-tighter font-bold"
-                  >
-                    {term}
-                  </button>
-                ))}
-             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
-    </nav>
+      <CartDrawer open={isCartOpen} onClose={() => setIsCartOpen(false)} />
+    </header>
   );
 };
 

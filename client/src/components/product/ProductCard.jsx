@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ShoppingCart, Eye, Heart } from 'lucide-react';
-import { Tilt } from 'react-tilt';
+import Tilt from "react-parallax-tilt";
 
 const ProductCard = ({ product }) => {
   const navigate = useNavigate();
