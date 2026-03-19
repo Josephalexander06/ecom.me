@@ -50,25 +50,31 @@ const HeroCarousel = () => {
   const prev = () => setCurrent((prev) => (prev - 1 + slides.length) % slides.length);
 
   return (
-    <div className="relative w-full h-[350px] md:h-[450px] lg:h-[550px] overflow-hidden bg-surface-secondary">
+    <div className="relative w-full h-[400px] md:h-[500px] lg:h-[600px] overflow-hidden bg-surface-secondary group/carousel">
       <AnimatePresence initial={false} mode="wait">
         <motion.div
           key={current}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.5 }}
+          initial={{ x: 300, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: -300, opacity: 0 }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           className="absolute inset-0"
         >
-          {/* Background Image */}
-          <div className="absolute inset-0">
-            <img 
+          {/* Background Image with Zoom Effect */}
+          <div className="absolute inset-0 overflow-hidden">
+            <motion.img 
+              initial={{ scale: 1.1 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 6 }}
               src={slides[current].image} 
               alt={slides[current].title}
               className="w-full h-full object-cover object-center"
             />
-            {/* Dark overlay for contrast if needed */}
-            <div className={`absolute inset-0 ${slides[current].theme === 'dark' ? 'bg-black/40' : 'bg-black/10'}`}></div>
+            <div className={`absolute inset-0 bg-gradient-to-r ${
+              slides[current].theme === 'dark' 
+                ? 'from-black/70 via-black/40 to-transparent' 
+                : 'from-white/40 via-transparent to-transparent'
+            }`} />
           </div>
 
           {/* Content Wrapper */}
@@ -77,37 +83,52 @@ const HeroCarousel = () => {
               slides[current].align === 'center' ? 'mx-auto text-center' : 
               slides[current].align === 'right' ? 'ml-auto text-right' : 'text-left'
             }`}>
-              <motion.h2 
-                initial={{ y: 20, opacity: 0 }}
+              <motion.div
+                initial={{ y: 30, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.2 }}
-                className={`text-h2 md:text-h1 font-display font-black leading-tight tracking-tight mb-4 ${slides[current].theme === 'dark' ? 'text-white' : 'text-gray-900'}`}
+                transition={{ delay: 0.3, duration: 0.5 }}
+              >
+                 <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-bold tracking-[0.2em] uppercase mb-4 ${
+                   slides[current].theme === 'dark' ? 'bg-white/20 text-white backdrop-blur-md' : 'bg-brand-primary/10 text-brand-primary'
+                 }`}>
+                   Featured Arrival
+                 </span>
+              </motion.div>
+
+              <motion.h2 
+                initial={{ y: 30, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.4, duration: 0.6 }}
+                className={`text-h1 md:text-[64px] font-display font-black leading-[1.05] tracking-tight mb-6 ${slides[current].theme === 'dark' ? 'text-white' : 'text-gray-900'}`}
               >
                 {slides[current].title}
               </motion.h2>
+
               <motion.p 
-                initial={{ y: 20, opacity: 0 }}
+                initial={{ y: 30, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                className={`text-body md:text-h3 font-medium mb-8 ${slides[current].theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}
+                transition={{ delay: 0.5, duration: 0.6 }}
+                className={`text-body md:text-h3 font-medium mb-10 opacity-90 ${slides[current].theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}
               >
                 {slides[current].subtitle}
               </motion.p>
+
               <motion.div
-                initial={{ y: 20, opacity: 0 }}
+                initial={{ y: 30, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.4 }}
+                transition={{ delay: 0.6, duration: 0.6 }}
                 className={slides[current].align === 'center' ? 'flex justify-center' : slides[current].align === 'right' ? 'flex justify-end' : ''}
               >
                 <Link 
                   to={slides[current].link}
-                  className={`inline-flex items-center gap-2 px-8 py-3.5 rounded-full font-bold transition-all shadow-lg ${
+                  className={`group/btn inline-flex items-center gap-3 px-10 py-4 rounded-full font-bold transition-all shadow-2xl hover:scale-105 active:scale-95 ${
                     slides[current].theme === 'dark' 
-                      ? 'bg-white text-brand-primary hover:bg-gray-100' 
-                      : 'bg-brand-primary text-white hover:bg-brand-hover'
+                      ? 'bg-white text-brand-primary hover:shadow-white/20' 
+                      : 'bg-brand-primary text-white hover:bg-brand-hover hover:shadow-brand-primary/20'
                   }`}
                 >
-                  {slides[current].cta} <ArrowRight size={18} />
+                  {slides[current].cta} 
+                  <ArrowRight size={20} className="group-hover/btn:translate-x-1 transition-transform" />
                 </Link>
               </motion.div>
             </div>
@@ -115,29 +136,31 @@ const HeroCarousel = () => {
         </motion.div>
       </AnimatePresence>
 
-      {/* Navigation Arrows */}
-      <button 
-        onClick={prev}
-        className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 bg-white/80 backdrop-blur-sm border border-border-default text-text-primary rounded-full flex items-center justify-center hover:bg-white transition-colors z-10 shadow-sm"
-        aria-label="Previous Slide"
-      >
-        <ChevronLeft size={24} />
-      </button>
-      <button 
-        onClick={next}
-        className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 bg-white/80 backdrop-blur-sm border border-border-default text-text-primary rounded-full flex items-center justify-center hover:bg-white transition-colors z-10 shadow-sm"
-        aria-label="Next Slide"
-      >
-        <ChevronRight size={24} />
-      </button>
+      {/* Navigation Arrows (Modern Style) */}
+      <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 px-4 md:px-8 flex justify-between items-center pointer-events-none opacity-0 group-hover/carousel:opacity-100 transition-opacity duration-300">
+        <button 
+          onClick={prev}
+          className="w-12 h-12 md:w-14 md:h-14 bg-white/10 backdrop-blur-xl border border-white/20 text-white rounded-full flex items-center justify-center hover:bg-white hover:text-brand-primary transition-all pointer-events-auto shadow-2xl"
+          aria-label="Previous Slide"
+        >
+          <ChevronLeft size={28} />
+        </button>
+        <button 
+          onClick={next}
+          className="w-12 h-12 md:w-14 md:h-14 bg-white/10 backdrop-blur-xl border border-white/20 text-white rounded-full flex items-center justify-center hover:bg-white hover:text-brand-primary transition-all pointer-events-auto shadow-2xl"
+          aria-label="Next Slide"
+        >
+          <ChevronRight size={28} />
+        </button>
+      </div>
 
-      {/* Slide Indicators */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 Z-10">
+      {/* Slide Indicators (Modern Pills) */}
+      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-3 z-10 p-2 rounded-full backdrop-blur-md bg-black/10 border border-white/10">
         {slides.map((_, idx) => (
           <button
             key={idx}
             onClick={() => setCurrent(idx)}
-            className={`transition-all rounded-full ${current === idx ? 'w-8 h-2 bg-brand-primary' : 'w-2 h-2 bg-white/60 hover:bg-white'}`}
+            className={`transition-all duration-500 rounded-full h-1.5 ${current === idx ? 'w-10 bg-brand-primary' : 'w-2 bg-white/40 hover:bg-white'}`}
             aria-label={`Go to slide ${idx + 1}`}
           />
         ))}

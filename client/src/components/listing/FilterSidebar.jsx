@@ -85,19 +85,19 @@ const FilterSidebar = ({ categories, brands, facets }) => {
 
       {/* Price */}
       <FilterGroup title="Price Range" defaultOpen={true}>
-        <div className="px-1">
+        <div className="px-1 pt-2">
           <input 
             type="range" 
             min="0" 
-            max="5000" 
-            step="100"
+            max="200000" 
+            step="1000"
             value={activePrice}
             onChange={(e) => updateParams('maxPrice', e.target.value)}
-            className="w-full accent-brand-primary cursor-pointer"
+            className="w-full accent-brand-primary cursor-pointer h-1.5 bg-surface-secondary rounded-lg appearance-none"
           />
-          <div className="flex justify-between mt-2 text-caption font-mono font-bold text-text-secondary">
-            <span>$0</span>
-            <span className="text-brand-primary">${activePrice}</span>
+          <div className="flex justify-between mt-4 text-caption font-bold text-text-secondary">
+            <span className="bg-surface-secondary px-2 py-1 rounded">₹0</span>
+            <span className="bg-brand-primary/10 text-brand-primary px-2 py-1 rounded">₹{activePrice.toLocaleString('en-IN')}</span>
           </div>
         </div>
       </FilterGroup>

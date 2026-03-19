@@ -10,28 +10,31 @@ const CategoryGrid = ({ title, items, link, delay }) => {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-50px" }}
       transition={{ duration: 0.5, delay, ease: "easeOut" }}
-      className="bg-white border border-border-default rounded-pro p-4 md:p-6 flex flex-col h-full shadow-sm hover:shadow-premium transition-shadow group"
+      className="bg-white border border-border-default rounded-pro p-6 flex flex-col h-full hover:shadow-premium transition-all duration-500 group relative overflow-hidden"
     >
-      <h3 className="text-body font-bold text-text-primary mb-4 leading-tight">
+      <div className="absolute top-0 left-0 w-1 h-0 bg-brand-primary group-hover:h-full transition-all duration-700" />
+      
+      <h3 className="text-body font-bold text-text-primary mb-6 leading-tight group-hover:text-brand-primary transition-colors">
         {title}
       </h3>
       
-      <div className="grid grid-cols-2 gap-3 flex-grow mb-6">
+      <div className="grid grid-cols-2 gap-4 flex-grow mb-8">
         {items.map((item, idx) => (
-          <Link key={idx} to={link} className="flex flex-col gap-1.5 group/item cursor-pointer">
-            <div className="aspect-square bg-surface-secondary rounded-lg overflow-hidden border border-border-default">
-               <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover/item:scale-105 transition-transform duration-300" />
+          <Link key={idx} to={link} className="flex flex-col gap-2 group/item cursor-pointer">
+            <div className="aspect-square bg-surface-secondary rounded-xl overflow-hidden border border-border-default shadow-sm group-hover/item:border-brand-primary/30 transition-all">
+               <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover/item:scale-110 transition-transform duration-700 ease-out" />
             </div>
-            <span className="text-[11px] font-bold text-text-secondary group-hover/item:text-brand-primary line-clamp-1">{item.name}</span>
+            <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider group-hover/item:text-brand-primary transition-colors text-center line-clamp-1">{item.name}</span>
           </Link>
         ))}
       </div>
 
       <Link 
         to={link} 
-        className="inline-flex items-center gap-1.5 text-small font-bold text-brand-primary hover:underline mt-auto"
+        className="inline-flex items-center gap-2 text-caption font-bold text-brand-primary group-hover:translate-x-1 transition-transform mt-auto"
       >
-        <span>Shop more</span>
+        <span>Explore Collection</span>
+        <ArrowRight size={14} />
       </Link>
     </motion.div>
   );

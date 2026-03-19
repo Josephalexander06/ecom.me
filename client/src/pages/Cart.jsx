@@ -15,27 +15,39 @@ import { useStore } from '../context/StoreContext';
 import { fetchSiteConfig, defaultSiteConfig } from '../utils/siteConfig';
 import ProductRow from '../components/home/ProductRow';
 import EmptyState from '../components/ui/EmptyState';
+import toast from 'react-hot-toast';
 
 const CartItem = ({ item }) => {
   const { updateQuantity, removeItem } = useCartStore();
   
+  const handleRemove = () => {
+    removeItem(item.productId);
+    toast.error(`${item.name} removed from bag`);
+  };
+
+  const handleUpdate = (newQty) => {
+    if (newQty < 1) return;
+    updateQuantity(item.productId, newQty);
+    toast.success('Quantity updated', { id: 'qty-update' });
+  };
+
   return (
-    <div className="flex gap-4 md:gap-6 py-6 border-b border-border-default last:border-0">
-      <div className="w-24 h-24 md:w-32 md:h-32 bg-surface-secondary rounded-img overflow-hidden flex-shrink-0 border border-border-default">
+    <div className="flex gap-4 md:gap-6 py-6 border-b border-border-default last:border-0 group/cart">
+      <Link to={`/product/${item.productId}`} className="w-24 h-24 md:w-32 md:h-32 bg-surface-secondary rounded-img overflow-hidden flex-shrink-0 border border-border-default group-hover/cart:opacity-80 transition-opacity">
         <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-      </div>
+      </Link>
 
       <div className="flex-1 flex flex-col justify-between">
         <div className="flex justify-between gap-4">
           <div>
-            <h3 className="text-small md:text-body font-bold text-text-primary line-clamp-2 hover:text-brand-primary transition-colors cursor-pointer">
+            <Link to={`/product/${item.productId}`} className="text-small md:text-body font-bold text-text-primary line-clamp-2 hover:text-brand-primary transition-colors cursor-pointer">
               {item.name}
-            </h3>
+            </Link>
             <p className="text-caption text-text-muted mt-1">In Stock</p>
           </div>
           <div className="text-right">
             <span className="text-body font-mono font-bold text-text-primary">
-              ₹{item.price.toLocaleString('en-IN')}
+              ₹{(item.price * item.quantity).toLocaleString('en-IN')}
             </span>
             <p className="text-caption text-text-muted mt-1 uppercase tracking-tighter">
               ₹{item.price.toLocaleString('en-IN')} ea.
@@ -46,14 +58,14 @@ const CartItem = ({ item }) => {
         <div className="flex items-center justify-between mt-4">
           <div className="flex items-center gap-1.5 bg-surface-secondary rounded-lg border border-border-default p-1">
             <button 
-              onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+              onClick={() => handleUpdate(item.quantity - 1)}
               className="w-8 h-8 flex items-center justify-center hover:bg-surface-tertiary rounded-md transition-colors"
             >
               <Minus size={14} />
             </button>
             <span className="w-8 text-center text-small font-bold">{item.quantity}</span>
             <button 
-              onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+              onClick={() => handleUpdate(item.quantity + 1)}
               className="w-8 h-8 flex items-center justify-center hover:bg-surface-tertiary rounded-md transition-colors"
             >
               <Plus size={14} />
@@ -61,7 +73,7 @@ const CartItem = ({ item }) => {
           </div>
 
           <button 
-            onClick={() => removeItem(item.productId)}
+            onClick={handleRemove}
             className="flex items-center gap-1.5 text-caption font-bold text-danger hover:underline"
           >
             <Trash2 size={14} /> Remove

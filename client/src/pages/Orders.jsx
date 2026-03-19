@@ -1,14 +1,16 @@
-import React, { useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import { Package, ChevronRight, Clock, CheckCircle2, Truck } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate, Link } from 'react-router-dom';
+import { Package, ChevronRight, Clock, CheckCircle2, Truck, LayoutGrid } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import { useAuthStore, useCartStore } from '../context/stores';
 import EmptyState from '../components/ui/EmptyState';
+import toast from 'react-hot-toast';
 
 const OrderCard = ({ order, index }) => {
   const navigate = useNavigate();
   const { addItem } = useCartStore();
+  const [showTracking, setShowTracking] = useState(false);
   
   const statusColors = {
     pending: 'bg-brand-light text-brand-primary',
@@ -28,33 +30,72 @@ const OrderCard = ({ order, index }) => {
       price: item.price,
       images: [item.image]
     }, item.quantity);
-    navigate('/cart');
+    toast.success('Added to bag! Moving to checkout...');
+    setTimeout(() => navigate('/cart'), 500);
   };
 
   const handleInvoice = () => {
-    alert(`Generating invoice for Order #${order._id.slice(-6).toUpperCase()}...\n\nItems: ${order.items.length}\nTotal: ₹${order.totalAmount.toLocaleString('en-IN')}\n\nThis would normally open a PDF or a printable window.`);
+    const invoiceWindow = window.open('', '_blank');
+    invoiceWindow.document.write(`
+      <html>
+        <head>
+          <title>Invoice - ${order._id}</title>
+          <style>
+            body { font-family: sans-serif; padding: 40px; }
+            .header { display: flex; justify-content: space-between; border-bottom: 2px solid #eee; padding-bottom: 20px; }
+            .details { margin: 40px 0; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+            table { width: 100%; border-collapse: collapse; }
+            th { text-align: left; border-bottom: 1px solid #eee; padding: 10px; }
+            td { padding: 10px; border-bottom: 1px solid #f9f9f9; }
+            .total { text-align: right; margin-top: 40px; font-size: 20px; font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div><h1>INVOICE</h1><p>Order ID: ${order._id}</p></div>
+            <div style="text-align: right;"><h2>ecom.me</h2><p>Mumbai, Maharashtra, India</p></div>
+          </div>
+          <div class="details">
+            <div><strong>Bill To:</strong><p>${order.shippingAddress?.street}<br>${order.shippingAddress?.city} - ${order.shippingAddress?.zip}</p></div>
+            <div><strong>Order Date:</strong><p>${new Date(order.createdAt).toLocaleDateString()}</p></div>
+          </div>
+          <table>
+            <thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead>
+            <tbody>
+              ${order.items.map(item => `
+                <tr>
+                  <td>${item.name}</td>
+                  <td>${item.quantity}</td>
+                  <td>₹${item.price.toLocaleString()}</td>
+                  <td>₹${(item.price * item.quantity).toLocaleString()}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          <div class="total">Total: ₹${order.totalAmount.toLocaleString()}</div>
+          <p style="margin-top: 50px; text-align: center; color: #888;">Thank you for shopping with ecom.me!</p>
+          <script>window.print();</script>
+        </body>
+      </html>
+    `);
   };
 
-  const handleTrackPackage = () => {
-    const trackingSteps = [
-      { step: 'Ordered', done: true },
-      { step: 'Confirmed', done: ['confirmed', 'packed', 'shipped', 'delivered'].includes(normalizedStatus) },
-      { step: 'Packed', done: ['packed', 'shipped', 'delivered'].includes(normalizedStatus) },
-      { step: 'Shipped', done: ['shipped', 'delivered'].includes(normalizedStatus) },
-      { step: 'Delivered', done: normalizedStatus === 'delivered' }
-    ];
-    
-    alert(`Tracking for #${order._id.slice(-6).toUpperCase()}:\n\n` + 
-      trackingSteps.map(s => `${s.done ? '✅' : '⚪'} ${s.step}`).join('\n')
-    );
-  };
+  const trackingSteps = [
+    { label: 'Ordered', icon: Package, key: 'pending' },
+    { label: 'Confirmed', icon: CheckCircle2, key: 'confirmed' },
+    { label: 'Packed', icon: LayoutGrid, key: 'packed' },
+    { label: 'Shipped', icon: Truck, key: 'shipped' },
+    { label: 'Delivered', icon: CheckCircle2, key: 'delivered' }
+  ];
+
+  const currentStepIndex = trackingSteps.findIndex(s => s.key === normalizedStatus);
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1 }}
-      className="bg-white border border-border-default rounded-pro overflow-hidden mb-6"
+      className="bg-white border border-border-default rounded-pro overflow-hidden mb-6 shadow-sm hover:shadow-md transition-shadow"
     >
       <div className="bg-surface-secondary px-6 py-4 flex flex-wrap items-center justify-between gap-4 border-b border-border-default">
         <div className="flex gap-8">
@@ -82,7 +123,7 @@ const OrderCard = ({ order, index }) => {
       </div>
 
       <div className="p-6">
-        <div className="flex items-start justify-between mb-6">
+        <div className="flex items-start justify-between mb-8">
           <div className="flex items-center gap-3">
              <div className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase flex items-center gap-1.5 ${statusColors[normalizedStatus] || 'bg-brand-light text-brand-primary'}`}>
                 {normalizedStatus === 'shipped' || normalizedStatus === 'delivered' ? <Truck size={12} /> : <Clock size={12} />}
@@ -93,28 +134,63 @@ const OrderCard = ({ order, index }) => {
              </p>
           </div>
           <button 
-            onClick={handleTrackPackage}
-            className="bg-brand-primary text-white px-4 py-2 rounded-lg text-caption font-bold hover:bg-brand-hover transition-colors shadow-sm"
+            onClick={() => setShowTracking(!showTracking)}
+            className="bg-brand-primary text-white px-6 py-2 rounded-full text-caption font-bold hover:bg-brand-hover transition-all shadow-lg shadow-brand-primary/20"
           >
-            Track Package
+            {showTracking ? 'Close Tracking' : 'Track Package'}
           </button>
         </div>
 
-        <div className="space-y-4">
+        <AnimatePresence>
+          {showTracking && (
+            <motion.div 
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="mb-8 overflow-hidden bg-surface-secondary/50 rounded-xl p-6 border border-border-default"
+            >
+               <div className="flex justify-between relative max-w-[600px] mx-auto">
+                 <div className="absolute top-4 left-0 w-full h-0.5 bg-border-default z-0" />
+                 <div className="absolute top-4 left-0 h-0.5 bg-brand-primary z-0 transition-all duration-1000" style={{ width: `${(currentStepIndex / (trackingSteps.length - 1)) * 100}%` }} />
+                 
+                 {trackingSteps.map((s, i) => {
+                   const Icon = s.icon;
+                   const isDone = i <= currentStepIndex;
+                   return (
+                     <div key={s.label} className="relative z-10 flex flex-col items-center gap-2">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all ${isDone ? 'bg-brand-primary border-brand-primary text-white' : 'bg-white border-border-default text-text-muted'}`}>
+                           <Icon size={14} />
+                        </div>
+                        <span className={`text-[10px] font-bold uppercase ${isDone ? 'text-brand-primary' : 'text-text-muted'}`}>{s.label}</span>
+                     </div>
+                   );
+                 })}
+               </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {(order.items || []).map((item) => (
-            <div key={item.productId} className="flex gap-4 items-center">
-              <div className="w-20 h-20 bg-surface-secondary rounded-lg border border-border-default overflow-hidden flex-shrink-0">
-                <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-              </div>
+            <div key={item.productId} className="flex gap-4 items-center p-3 border border-border-default rounded-xl hover:border-brand-primary transition-colors bg-white shadow-sm group">
+              <Link to={`/product/${item.productId}`} className="w-20 h-20 bg-surface-secondary rounded-lg border border-border-default overflow-hidden flex-shrink-0 group-hover:opacity-80 transition-opacity">
+                <img src={item.image} alt={item.name} className="w-full h-full object-cover mix-blend-multiply" />
+              </Link>
               <div className="flex-1">
-                <p className="text-small font-bold text-text-primary line-clamp-1">{item.name}</p>
-                <p className="text-caption text-text-muted mt-1 uppercase tracking-tighter">Amount: ₹{item.price.toLocaleString('en-IN')}</p>
-                <p className="text-caption text-text-muted">Quantity: {item.quantity}</p>
+                <Link to={`/product/${item.productId}`} className="text-caption font-bold text-text-primary line-clamp-1 hover:text-brand-primary transition-colors">
+                  {item.name}
+                </Link>
+                <p className="text-caption text-text-muted mt-1 font-mono">₹{item.price.toLocaleString('en-IN')}</p>
+                <p className="text-[10px] text-text-muted font-bold">Qty: {item.quantity}</p>
                 <button 
-                  onClick={() => handleBuyAgain(item)}
-                  className="mt-2 text-caption font-bold text-brand-primary py-1.5 px-3 border border-border-default rounded-lg hover:bg-surface-secondary transition-colors"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleBuyAgain(item);
+                  }}
+                  className="mt-2 text-[10px] font-bold text-brand-primary py-1 px-3 border border-brand-primary/20 rounded-lg hover:bg-brand-primary hover:text-white transition-all"
                 >
-                   Buy it again
+                   Buy Again
                 </button>
               </div>
             </div>

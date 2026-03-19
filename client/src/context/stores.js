@@ -162,6 +162,27 @@ export const useAuthStore = create(
           set({ error: getErrorMessage(error), loading: false });
           throw error;
         }
+      },
+
+      toggleWishlist: async (productId) => {
+        if (!get().isAuthenticated) throw new Error('Sign in to save items');
+        try {
+          const token = get().token;
+          const response = await fetch(`${API_BASE}/auth/wishlist/${productId}`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.message || 'Toggle failed');
+
+          set((state) => ({
+            user: { ...state.user, wishlist: data.wishlist }
+          }));
+          return data;
+        } catch (error) {
+          console.error(error);
+          throw error;
+        }
       }
     }),
     {

@@ -1,83 +1,156 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Star, ShoppingCart } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { useCartStore } from '../../context/stores';
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ShoppingCart, Heart, Star, Zap, Check } from 'lucide-react';
+import { useAuthStore, useCartStore, useUIStore } from '../../context/stores';
+import toast from 'react-hot-toast';
 
 const ProductCard = ({ product }) => {
+  const navigate = useNavigate();
   const { addItem } = useCartStore();
+  const { user, isAuthenticated, toggleWishlist } = useAuthStore();
+  const { setActiveModal } = useUIStore();
+  
+  const [isWishloading, setIsWishLoading] = useState(false);
+  const [isAdded, setIsAdded] = useState(false);
 
   const id = product._id || product.id;
+  const isInWishlist = user?.wishlist?.some(w => (w._id || w) === id);
   const currentPrice = product.dealPrice || product.price;
-  const discount = Math.round(((product.price - currentPrice) / product.price) * 100);
+  const discount = product.isDeal ? Math.round(((product.price - currentPrice) / product.price) * 100) : 0;
+
+  const handleAddToCart = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addItem(product);
+    setIsAdded(true);
+    toast.success(`${product.name} added to cart!`);
+    setTimeout(() => setIsAdded(false), 2000);
+  };
+
+  const handleWishlist = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isAuthenticated) return setActiveModal('login');
+    
+    setIsWishLoading(true);
+    try {
+      await toggleWishlist(id);
+      toast.success(isInWishlist ? 'Removed from wishlist' : 'Added to wishlist!');
+    } catch (err) {
+      toast.error('Failed to update wishlist');
+    } finally {
+      setIsWishLoading(false);
+    }
+  };
 
   return (
-    <motion.article 
-      whileHover={{ y: -2, transition: { duration: 0.2 } }}
-      className="group relative bg-white border border-border-default rounded-pro transition-all duration-300 hover:shadow-md overflow-hidden h-full flex flex-col"
+    <motion.div 
+      layout
+      whileHover={{ y: -8 }}
+      className="group relative bg-white rounded-2xl overflow-hidden border border-border-default hover:border-brand-primary/30 hover:shadow-xl transition-all duration-300 h-full flex flex-col"
     >
-      {/* Image Container */}
-      <Link to={`/product/${id}`} className="block aspect-[4/5] p-0 relative overflow-hidden bg-surface-secondary rounded-t-pro">
-        <div className="w-full h-full relative overflow-hidden flex items-center justify-center p-4">
-          <img 
-            src={product.images?.[0] || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=400&q=80'} 
-            alt={product.name}
-            className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-300"
-          />
+      <Link to={`/product/${id}`} className="flex-1 flex flex-col">
+        {/* Badges */}
+        <div className="absolute top-3 left-3 z-10 flex flex-col gap-2">
+          {product.isDeal && (
+            <div className="bg-danger text-white text-[10px] font-bold px-2 py-1 rounded-md flex items-center gap-1 shadow-lg">
+              <Zap size={10} fill="currentColor" />
+              {discount}% OFF
+            </div>
+          )}
+          {(product.soldCount > 500 || product.averageRating > 4.8) && (
+            <div className="bg-brand-primary text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-lg uppercase">
+              Best Seller
+            </div>
+          )}
         </div>
-        
-        {/* Deal Badge */}
-        {product.isDeal && (
-          <div className="absolute top-5 left-5 bg-warning text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-lg z-10 animate-pulse-subtle">
-            {discount}% OFF
-          </div>
-        )}
-      </Link>
 
-      {/* Content */}
-      <div className="p-4 flex-1 flex flex-col">
-        <Link to={`/product/${id}`} className="block group/title">
-          <h3 className="text-small font-medium text-text-primary line-clamp-2 leading-tight group-hover/title:text-brand-primary transition-colors min-h-[40px]">
+        {/* Heart Button */}
+        <button 
+          onClick={handleWishlist}
+          disabled={isWishloading}
+          className={`absolute top-3 right-3 z-20 p-2 rounded-full backdrop-blur-md transition-all duration-300 ${
+            isInWishlist 
+              ? 'bg-red-500 text-white shadow-lg' 
+              : 'bg-white/80 text-text-muted hover:text-red-500 hover:scale-110 shadow-sm'
+          }`}
+        >
+          <Heart size={18} fill={isInWishlist ? 'currentColor' : 'none'} className={isWishloading ? 'animate-pulse' : ''} />
+        </button>
+
+        {/* Image Container */}
+        <div className="relative aspect-[4/5] overflow-hidden bg-surface-secondary flex items-center justify-center p-4">
+          <img 
+            src={product.images?.[0] || 'https://via.placeholder.com/400'} 
+            alt={product.name}
+            className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500"
+          />
+          
+          {/* Quick Add (Visible on Hover) */}
+          <div className="absolute inset-x-0 bottom-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300 bg-gradient-to-t from-black/60 to-transparent z-10">
+             <button 
+               onClick={handleAddToCart}
+               className="w-full bg-white text-text-primary py-2.5 rounded-pill font-bold text-caption flex items-center justify-center gap-2 hover:bg-brand-primary hover:text-white transition-colors shadow-xl"
+             >
+               {isAdded ? <Check size={16} /> : <ShoppingCart size={16} />}
+               {isAdded ? 'Added!' : 'Quick Add'}
+             </button>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-4 flex flex-col flex-1">
+          <div className="mb-1">
+            <span className="text-[10px] font-bold text-text-muted uppercase tracking-widest">{product.brand}</span>
+          </div>
+          
+          <h3 className="text-body font-bold text-text-primary mb-2 line-clamp-2 h-10 group-hover:text-brand-primary transition-colors leading-tight">
             {product.name}
           </h3>
-        </Link>
-        
-        <div className="mt-2 flex items-center gap-1.5">
-          <div className="flex items-center text-rating">
-            <Star size={12} fill="currentColor" />
-            <span className="text-caption font-bold ml-1">{product.averageRating || '4.5'}</span>
-          </div>
-          <span className="text-caption text-text-muted">({product.reviewCount || '1.2k'})</span>
-        </div>
 
-        <div className="mt-auto pt-3">
-          <div className="flex items-baseline gap-2">
-            <span className="text-body font-bold text-brand-primary font-mono">
-              ₹{currentPrice.toLocaleString('en-IN')}
-            </span>
-            {product.isDeal && (
-              <span className="text-caption text-text-muted line-through">
-                ₹{product.price.toLocaleString('en-IN')}
-              </span>
-            )}
+          {/* Rating */}
+          <div className="flex items-center gap-1.5 mb-3">
+            <div className="flex items-center text-warning">
+              {[...Array(5)].map((_, i) => (
+                <Star 
+                  key={i} 
+                  size={12} 
+                  fill={i < Math.floor(product.averageRating || 4.5) ? 'currentColor' : 'none'} 
+                  className={i < Math.floor(product.averageRating || 4.5) ? '' : 'text-border-default'}
+                />
+              ))}
+            </div>
+            <span className="text-[11px] text-text-muted font-medium">({product.reviewCount || 128})</span>
+          </div>
+
+          {/* Price & Stock */}
+          <div className="mt-auto flex items-end justify-between">
+            <div className="flex flex-col">
+              {product.isDeal ? (
+                <>
+                  <span className="text-caption text-text-muted line-through">₹{product.price.toLocaleString('en-IN')}</span>
+                  <span className="text-h4 font-display text-brand-primary">₹{currentPrice.toLocaleString('en-IN')}</span>
+                </>
+              ) : (
+                <span className="text-h4 font-display text-text-primary">₹{product.price.toLocaleString('en-IN')}</span>
+              )}
+            </div>
+            
+            <div className="flex flex-col items-end">
+               {product.stock < 10 ? (
+                 <span className="text-[10px] font-bold text-danger animate-pulse">Only {product.stock} Left!</span>
+               ) : (
+                 <div className="flex items-center gap-1 text-success">
+                   <Check size={10} />
+                   <span className="text-[10px] font-bold">In Stock</span>
+                 </div>
+               )}
+            </div>
           </div>
         </div>
-
-        {/* Add to Cart Button — Slide up on hover or always on mobile */}
-        <div className="mt-4 md:mt-0 md:absolute md:bottom-0 md:left-0 md:right-0 md:p-4 md:translate-y-full md:group-hover:translate-y-0 transition-transform duration-300">
-          <button 
-            onClick={(e) => {
-              e.preventDefault();
-              addItem(product);
-            }}
-            className="w-full h-10 bg-brand-primary hover:bg-brand-hover text-white rounded-pill flex items-center justify-center gap-2 text-small font-bold"
-          >
-            <ShoppingCart size={16} />
-            <span>Add to Cart</span>
-          </button>
-        </div>
-      </div>
-    </motion.article>
+      </Link>
+    </motion.div>
   );
 };
 

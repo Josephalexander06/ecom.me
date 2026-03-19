@@ -78,28 +78,34 @@ const Checkout = () => {
   const [step, setStep] = useState(1);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isPlacing, setIsPlacing] = useState(false);
+  const [isManualEntry, setIsManualEntry] = useState(!user?.savedAddresses?.length);
+  const { location } = useAuthStore();
+
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
     address: user?.savedAddresses?.[0]?.street || '',
-    city: user?.savedAddresses?.[0]?.city || '',
-    zip: user?.savedAddresses?.[0]?.zip || '',
+    city: user?.savedAddresses?.[0]?.city || location?.city || '',
+    zip: user?.savedAddresses?.[0]?.zip || location?.pincode || '',
     paymentMethod: 'Card'
   });
 
-  // Re-sync formData if user loads late
+  // Re-sync formData if user loads late or location changes
   useEffect(() => {
-    if (user && !formData.address) {
+    if (user) {
       setFormData(prev => ({
         ...prev,
         name: user.name || prev.name,
         email: user.email || prev.email,
-        address: user.savedAddresses?.[0]?.street || prev.address,
-        city: user.savedAddresses?.[0]?.city || prev.city,
-        zip: user.savedAddresses?.[0]?.zip || prev.zip
+        address: prev.address || user.savedAddresses?.[0]?.street || '',
+        city: prev.city || user.savedAddresses?.[0]?.city || location?.city || '',
+        zip: prev.zip || user.savedAddresses?.[0]?.zip || location?.pincode || ''
       }));
+      if (user.savedAddresses?.length && !formData.address) {
+        setIsManualEntry(false);
+      }
     }
-  }, [user]);
+  }, [user, location]);
 
   const nextStep = () => setStep(s => s + 1);
   const prevStep = () => setStep(s => s - 1);
@@ -243,20 +249,20 @@ const Checkout = () => {
                   </div>
                   {user?.savedAddresses?.length > 0 && (
                      <button 
-                       onClick={() => setFormData({
-                         ...formData,
-                         address: '',
-                         city: '',
-                         zip: ''
-                       })} 
+                       onClick={() => {
+                         setIsManualEntry(!isManualEntry);
+                         if (!isManualEntry) {
+                           setFormData({ ...formData, address: '', city: location?.city || '', zip: location?.pincode || '' });
+                         }
+                       }} 
                        className="text-caption font-bold text-brand-primary hover:underline"
                      >
-                       Add New
+                       {isManualEntry ? 'Select Saved' : 'Add New'}
                      </button>
                   )}
                 </div>
 
-                {user?.savedAddresses?.length > 0 && !formData.address.startsWith('CUSTOM:') ? (
+                {user?.savedAddresses?.length > 0 && !isManualEntry ? (
                   <div className="space-y-4">
                     <p className="text-caption font-bold text-text-muted uppercase tracking-wider">Select a saved address</p>
                     <div className="grid grid-cols-1 gap-3">
