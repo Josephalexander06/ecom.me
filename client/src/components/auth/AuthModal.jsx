@@ -14,7 +14,7 @@ const AuthModal = () => {
     password: '',
   });
 
-  if (!activeModal) return null;
+  if (activeModal !== 'login' && activeModal !== 'register') return null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();

@@ -13,15 +13,11 @@ const COUPONS = {
 
 // Initialize Checkout Flow
 router.post('/', protect, async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
   try {
     const { items, paymentMethod, shippingAddress, couponCode } = req.body;
     const userId = req.user._id;
 
     if (!items || items.length === 0) {
-      await session.abortTransaction();
-      session.endSession();
       return res.status(400).json({ message: 'Neural reservoir empty. Add nodes to sync.' });
     }
 
@@ -29,17 +25,18 @@ router.post('/', protect, async (req, res) => {
     const normalizedItems = [];
 
     for (const item of items) {
-      const product = await Product.findById(item.productId).session(session);
+      const product = await Product.findById(item.productId);
       if (!product) {
         throw new Error(`Product not found: ${item.productId}`);
       }
 
-      if (product.stock < Number(item.quantity || 0)) {
-        throw new Error(`Insufficient stock for product: ${item.productId}`);
-      }
-
       const unitPrice = Number(item.price ?? (product.isDeal && product.dealPrice ? product.dealPrice : product.price));
       const quantity = Number(item.quantity || 1);
+      
+      if (product.stock < quantity) {
+        throw new Error(`Insufficient stock for product: ${product.name}`);
+      }
+
       subtotalAmount += unitPrice * quantity;
 
       normalizedItems.push({
@@ -71,23 +68,15 @@ router.post('/', protect, async (req, res) => {
       statusHistory: [{ stage: 'pending' }]
     });
 
-    const savedOrder = await newOrder.save({ session });
+    const savedOrder = await newOrder.save();
 
-    // 2. Reduce Stock (Atomic updates with session)
+    // 2. Reduce Stock
     for (const item of normalizedItems) {
-      const product = await Product.findByIdAndUpdate(
+      await Product.findByIdAndUpdate(
         item.productId, 
-        { $inc: { stock: -item.quantity, soldCount: item.quantity } },
-        { session, new: true }
+        { $inc: { stock: -item.quantity, soldCount: item.quantity } }
       );
-      
-      if (!product || product.stock < 0) {
-        throw new Error(`Insufficient stock for product: ${item.productId}`);
-      }
     }
-
-    await session.commitTransaction();
-    session.endSession();
 
     // 3. Broadcast to Socket.io
     if (req.app.get('io')) {
@@ -107,8 +96,6 @@ router.post('/', protect, async (req, res) => {
         couponCode: discountPct ? normalizedCoupon : null
     });
   } catch (err) {
-    await session.abortTransaction();
-    session.endSession();
     res.status(500).json({ message: 'Order Sync Failed', error: err.message });
   }
 });

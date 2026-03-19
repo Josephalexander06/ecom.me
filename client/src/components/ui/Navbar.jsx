@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -13,13 +13,22 @@ import {
   X
 } from 'lucide-react';
 import { useAuthStore, useUIStore, useCartStore } from '../../context/stores';
+import LocationModal from './LocationModal';
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const { user, isAuthenticated, logout } = useAuthStore();
+  const { user, isAuthenticated, logout, location, hasSetLocation, detectLocation } = useAuthStore();
   const { setActiveModal, isMobileMenuOpen, toggleMobileMenu } = useUIStore();
   const { items } = useCartStore();
   const cartCount = items.reduce((sum, item) => sum + item.quantity, 0);
+
+  useEffect(() => {
+    if (!hasSetLocation) {
+      detectLocation().catch(() => {
+        // Silent fail if permission denied, but at least we tried
+      });
+    }
+  }, [hasSetLocation, detectLocation]);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -54,12 +63,15 @@ const Navbar = () => {
         </Link>
 
         {/* Deliver To (Desktop) */}
-        <button className="hidden xl:flex items-center gap-2 group flex-shrink-0 text-left border border-transparent hover:border-border-default rounded-lg px-2 py-1 transition-all">
+        <button 
+          onClick={() => setActiveModal('location')}
+          className="hidden xl:flex items-center gap-2 group flex-shrink-0 text-left border border-transparent hover:border-border-default rounded-lg px-2 py-1 transition-all"
+        >
           <MapPin size={22} className="text-brand-primary" />
           <div className="flex flex-col">
             <span className="text-[10px] leading-tight text-text-muted font-bold uppercase">Deliver to</span>
             <span className="text-small font-bold text-text-primary group-hover:text-brand-primary transition-colors flex items-center gap-0.5">
-              Mumbai 400001 <ChevronDown size={12} />
+              {location.city} {location.pincode} <ChevronDown size={12} />
             </span>
           </div>
         </button>
@@ -197,7 +209,12 @@ const Navbar = () => {
         <div className="max-w-[1400px] mx-auto h-full flex items-center justify-between overflow-hidden">
           <div className="flex items-center gap-2 whitespace-nowrap">
             <MapPin size={14} className="text-brand-primary md:hidden" />
-            <span className="text-caption font-medium text-text-muted underline-offset-4 decoration-brand-primary/30 decoration-dotted underline">Mumbai 400001</span>
+            <span 
+              onClick={() => setActiveModal('location')}
+              className="text-caption font-medium text-text-muted underline-offset-4 decoration-brand-primary/30 decoration-dotted underline cursor-pointer"
+            >
+              {location.city} {location.pincode}
+            </span>
           </div>
 
           <div className="hidden lg:flex items-center gap-6 overflow-x-auto no-scrollbar py-1">
@@ -279,6 +296,7 @@ const Navbar = () => {
           </>
         )}
       </AnimatePresence>
+      <LocationModal />
     </nav>
   );
 };

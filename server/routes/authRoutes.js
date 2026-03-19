@@ -19,7 +19,8 @@ const buildAuthPayload = (user) => ({
   isSeller: user.isSeller,
   sellerStatus: user.sellerStatus,
   storeName: user.storeName,
-  isBlocked: user.isBlocked
+  isBlocked: user.isBlocked,
+  savedAddresses: user.savedAddresses || []
 });
 
 // @desc    Register a new user

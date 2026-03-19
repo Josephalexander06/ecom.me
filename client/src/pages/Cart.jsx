@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Trash2, 
@@ -10,7 +10,7 @@ import {
   ShieldCheck, 
   Truck 
 } from 'lucide-react';
-import { useCartStore } from '../context/stores';
+import { useCartStore, useAuthStore, useUIStore } from '../context/stores';
 import { useStore } from '../context/StoreContext';
 import { fetchSiteConfig, defaultSiteConfig } from '../utils/siteConfig';
 import ProductRow from '../components/home/ProductRow';
@@ -73,8 +73,11 @@ const CartItem = ({ item }) => {
 };
 
 const Cart = () => {
+  const navigate = useNavigate();
   const { items } = useCartStore();
   const { products } = useStore();
+  const { isAuthenticated } = useAuthStore();
+  const { setActiveModal } = useUIStore();
   const [siteConfig, setSiteConfig] = useState(defaultSiteConfig);
 
   useEffect(() => {
@@ -188,13 +191,19 @@ const Cart = () => {
                 </div>
               </div>
 
-              <Link 
-                to="/checkout"
+              <button 
+                onClick={() => {
+                  if (isAuthenticated) {
+                    navigate('/checkout');
+                  } else {
+                    setActiveModal('login');
+                  }
+                }}
                 className="w-full bg-brand-primary hover:bg-brand-hover text-white py-4 rounded-pro font-bold transition-all flex items-center justify-center gap-2 group mb-4 shadow-lg shadow-brand-primary/20"
               >
                 Place Order
                 <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-              </Link>
+              </button>
               
               <div className="flex gap-3 text-caption text-text-muted leading-tight mt-6 pt-6 border-t border-border-default">
                 <ShieldCheck size={18} className="text-success flex-shrink-0" />

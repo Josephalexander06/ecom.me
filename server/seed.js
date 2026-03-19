@@ -66,7 +66,13 @@ const seedData = async () => {
         role: 'user',
         isAdmin: false,
         isSeller: false,
-        sellerStatus: 'None'
+        sellerStatus: 'None',
+        savedAddresses: [{
+          street: '123 Cyber Street, Sector 5',
+          city: 'Mumbai',
+          zip: '400001',
+          isDefault: true
+        }]
       },
       {
         name: 'Electro Hub',

@@ -1,11 +1,15 @@
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { Package, ChevronRight, Clock, CheckCircle2, Truck } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
-import { useAuthStore } from '../context/stores';
+import { useAuthStore, useCartStore } from '../context/stores';
 import EmptyState from '../components/ui/EmptyState';
 
 const OrderCard = ({ order, index }) => {
+  const navigate = useNavigate();
+  const { addItem } = useCartStore();
+  
   const statusColors = {
     pending: 'bg-brand-light text-brand-primary',
     confirmed: 'bg-brand-secondary/20 text-brand-primary',
@@ -16,6 +20,34 @@ const OrderCard = ({ order, index }) => {
 
   const normalizedStatus = (order.status || 'pending').toLowerCase();
   const label = normalizedStatus.charAt(0).toUpperCase() + normalizedStatus.slice(1);
+
+  const handleBuyAgain = (item) => {
+    addItem({
+      _id: item.productId,
+      name: item.name,
+      price: item.price,
+      images: [item.image]
+    }, item.quantity);
+    navigate('/cart');
+  };
+
+  const handleInvoice = () => {
+    alert(`Generating invoice for Order #${order._id.slice(-6).toUpperCase()}...\n\nItems: ${order.items.length}\nTotal: ₹${order.totalAmount.toLocaleString('en-IN')}\n\nThis would normally open a PDF or a printable window.`);
+  };
+
+  const handleTrackPackage = () => {
+    const trackingSteps = [
+      { step: 'Ordered', done: true },
+      { step: 'Confirmed', done: ['confirmed', 'packed', 'shipped', 'delivered'].includes(normalizedStatus) },
+      { step: 'Packed', done: ['packed', 'shipped', 'delivered'].includes(normalizedStatus) },
+      { step: 'Shipped', done: ['shipped', 'delivered'].includes(normalizedStatus) },
+      { step: 'Delivered', done: normalizedStatus === 'delivered' }
+    ];
+    
+    alert(`Tracking for #${order._id.slice(-6).toUpperCase()}:\n\n` + 
+      trackingSteps.map(s => `${s.done ? '✅' : '⚪'} ${s.step}`).join('\n')
+    );
+  };
 
   return (
     <motion.div
@@ -28,7 +60,9 @@ const OrderCard = ({ order, index }) => {
         <div className="flex gap-8">
           <div>
             <p className="text-[10px] font-bold text-text-muted uppercase tracking-wider">Order Placed</p>
-            <p className="text-small font-bold text-text-primary">March 21, 2035</p>
+            <p className="text-small font-bold text-text-primary">
+              {new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+            </p>
           </div>
           <div>
             <p className="text-[10px] font-bold text-text-muted uppercase tracking-wider">Total</p>
@@ -36,13 +70,13 @@ const OrderCard = ({ order, index }) => {
           </div>
           <div>
             <p className="text-[10px] font-bold text-text-muted uppercase tracking-wider">Ship To</p>
-            <p className="text-small font-bold text-brand-primary cursor-pointer hover:underline">Alex Johnson</p>
+            <p className="text-small font-bold text-brand-primary cursor-pointer hover:underline">{order.shippingAddress?.city || 'Default'}</p>
           </div>
         </div>
         <div>
           <p className="text-[10px] font-bold text-text-muted uppercase tracking-wider text-right">Order # {order._id.slice(-12).toUpperCase()}</p>
           <div className="flex items-center gap-2 mt-0.5 justify-end">
-             <button className="text-caption font-bold text-brand-primary hover:underline">View invoice</button>
+             <button onClick={handleInvoice} className="text-caption font-bold text-brand-primary hover:underline">View invoice</button>
           </div>
         </div>
       </div>
@@ -51,12 +85,17 @@ const OrderCard = ({ order, index }) => {
         <div className="flex items-start justify-between mb-6">
           <div className="flex items-center gap-3">
              <div className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase flex items-center gap-1.5 ${statusColors[normalizedStatus] || 'bg-brand-light text-brand-primary'}`}>
-               {normalizedStatus === 'shipped' || normalizedStatus === 'delivered' ? <Truck size={12} /> : <Clock size={12} />}
-               {label}
+                {normalizedStatus === 'shipped' || normalizedStatus === 'delivered' ? <Truck size={12} /> : <Clock size={12} />}
+                {label}
              </div>
-             <p className="text-small font-bold text-text-primary">Arriving Tuesday</p>
+             <p className="text-small font-bold text-text-primary">
+               {normalizedStatus === 'delivered' ? 'Delivered successfully' : 'Arriving in 3-5 days'}
+             </p>
           </div>
-          <button className="bg-brand-primary text-white px-4 py-2 rounded-lg text-caption font-bold hover:bg-brand-hover transition-colors">
+          <button 
+            onClick={handleTrackPackage}
+            className="bg-brand-primary text-white px-4 py-2 rounded-lg text-caption font-bold hover:bg-brand-hover transition-colors shadow-sm"
+          >
             Track Package
           </button>
         </div>
@@ -69,8 +108,12 @@ const OrderCard = ({ order, index }) => {
               </div>
               <div className="flex-1">
                 <p className="text-small font-bold text-text-primary line-clamp-1">{item.name}</p>
-                <p className="text-caption text-text-muted mt-1">Quantity: {item.quantity}</p>
-                <button className="mt-2 text-caption font-bold text-brand-primary py-1.5 px-3 border border-border-default rounded-lg hover:bg-surface-secondary transition-colors">
+                <p className="text-caption text-text-muted mt-1 uppercase tracking-tighter">Amount: ₹{item.price.toLocaleString('en-IN')}</p>
+                <p className="text-caption text-text-muted">Quantity: {item.quantity}</p>
+                <button 
+                  onClick={() => handleBuyAgain(item)}
+                  className="mt-2 text-caption font-bold text-brand-primary py-1.5 px-3 border border-border-default rounded-lg hover:bg-surface-secondary transition-colors"
+                >
                    Buy it again
                 </button>
               </div>

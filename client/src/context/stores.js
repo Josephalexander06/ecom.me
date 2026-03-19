@@ -16,6 +16,45 @@ export const useAuthStore = create(
       isAuthenticated: false,
       loading: false,
       error: null,
+      location: { city: 'Mumbai', pincode: '400001' },
+      hasSetLocation: false,
+
+      setLocation: (loc) => set({ location: loc, hasSetLocation: true }),
+
+      detectLocation: async () => {
+        if (!navigator.geolocation) return;
+        return new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(
+            async (position) => {
+              try {
+                const { latitude, longitude } = position.coords;
+                const response = await fetch(
+                  `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`,
+                  {
+                    headers: { 'Accept-Language': 'en', 'User-Agent': 'ecom.me-demo' }
+                  }
+                );
+                const data = await response.json();
+                if (data && data.address) {
+                  const city = data.address.city || data.address.town || data.address.village || data.address.suburb || 'Mumbai';
+                  const postCode = data.address.postcode || '400001';
+                  const newLoc = { city, pincode: postCode };
+                  set({ location: newLoc, hasSetLocation: true });
+                  resolve(newLoc);
+                }
+              } catch (error) {
+                console.error('Location Error:', error);
+                reject(error);
+              }
+            },
+            (error) => {
+              console.error('Geolocation Error:', error);
+              reject(error);
+            },
+            { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+          );
+        });
+      },
 
       login: async (email, password) => {
         set({ loading: true, error: null });
@@ -71,6 +110,32 @@ export const useAuthStore = create(
 
       updateUser: (updatedUser) => {
         set((state) => ({ user: { ...state.user, ...updatedUser } }));
+      },
+
+      updateProfile: async (profileData) => {
+        set({ loading: true, error: null });
+        try {
+          const token = get().token;
+          const response = await fetch(`${API_BASE}/auth/profile`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify(profileData),
+          });
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.message || 'Update failed');
+
+          set((state) => ({
+            user: { ...state.user, ...data },
+            loading: false
+          }));
+          return data;
+        } catch (error) {
+          set({ error: getErrorMessage(error), loading: false });
+          throw error;
+        }
       },
 
       upgradeUser: async (storeName, bankAccount) => {

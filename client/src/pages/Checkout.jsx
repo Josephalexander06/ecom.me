@@ -41,9 +41,16 @@ const StepIndicator = ({ currentStep }) => {
 const Checkout = () => {
   const navigate = useNavigate();
   const { items, clearCart } = useCartStore();
-  const { user, isAuthenticated, token } = useAuthStore();
+  const { user, isAuthenticated, token, logout, updateProfile } = useAuthStore();
   const { setActiveModal } = useUIStore();
   const [siteConfig, setSiteConfig] = useState(defaultSiteConfig);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/');
+      setActiveModal('login');
+    }
+  }, [isAuthenticated, navigate, setActiveModal]);
 
   useEffect(() => {
     const loadConfig = async () => {
@@ -75,10 +82,24 @@ const Checkout = () => {
     name: user?.name || '',
     email: user?.email || '',
     address: user?.savedAddresses?.[0]?.street || '',
-    city: user?.savedAddresses?.[0]?.city || 'Mumbai',
-    zip: user?.savedAddresses?.[0]?.zip || '400001',
+    city: user?.savedAddresses?.[0]?.city || '',
+    zip: user?.savedAddresses?.[0]?.zip || '',
     paymentMethod: 'Card'
   });
+
+  // Re-sync formData if user loads late
+  useEffect(() => {
+    if (user && !formData.address) {
+      setFormData(prev => ({
+        ...prev,
+        name: user.name || prev.name,
+        email: user.email || prev.email,
+        address: user.savedAddresses?.[0]?.street || prev.address,
+        city: user.savedAddresses?.[0]?.city || prev.city,
+        zip: user.savedAddresses?.[0]?.zip || prev.zip
+      }));
+    }
+  }, [user]);
 
   const nextStep = () => setStep(s => s + 1);
   const prevStep = () => setStep(s => s - 1);
@@ -96,10 +117,10 @@ const Checkout = () => {
     try {
       // Setup Gateway Simulation
       setProcessingState('verifying');
-      await new Promise(r => setTimeout(r, 600)); // Faster simulation
+      await new Promise(r => setTimeout(r, 600)); 
       
       setProcessingState('allocating');
-      await new Promise(r => setTimeout(r, 800)); // Faster simulation
+      await new Promise(r => setTimeout(r, 800)); 
       
       setProcessingState('securing');
       
@@ -127,14 +148,51 @@ const Checkout = () => {
         }),
       });
 
-      if (!response.ok) throw new Error('Order Transmission Failed');
+      if (response.status === 401) {
+        logout();
+        throw new Error('Session expired or user not found. Please log in again.');
+      }
 
-      await new Promise(r => setTimeout(r, 400)); // Faster simulaton
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || data.message || 'Order Transmission Failed');
+      }
+
+      await new Promise(r => setTimeout(r, 400)); 
       setIsSuccess(true);
       clearCart();
+
+      // Automatically save new address if not already present
+      if (user && formData.address) {
+        const addressExists = user.savedAddresses?.some(a => 
+          a.street === formData.address && a.zip === formData.zip
+        );
+        
+        if (!addressExists) {
+          const newAddress = {
+            street: formData.address,
+            city: formData.city,
+            zip: formData.zip,
+            isDefault: user.savedAddresses?.length === 0
+          };
+          
+          try {
+            await updateProfile({
+              savedAddresses: [...(user.savedAddresses || []), newAddress]
+            });
+          } catch (err) {
+            console.error('Failed to save address:', err);
+          }
+        }
+      }
     } catch (error) {
       console.error('Order Sync Error:', error);
       alert('Transaction Failed: ' + error.message);
+      if (error.message.includes('Session expired')) {
+        navigate('/');
+        setActiveModal('login');
+      }
     } finally {
       setIsPlacing(false);
       setProcessingState('');
@@ -176,62 +234,112 @@ const Checkout = () => {
           <main className="bg-white border border-border-default rounded-pro p-6 md:p-8 relative overflow-hidden shadow-sm">
             {step === 1 && (
               <div className="space-y-6 animate-in fade-in zoom-in-95 duration-200">
-                <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border-default">
-                  <div className="w-8 h-8 rounded bg-surface-secondary flex items-center justify-center text-text-primary border border-border-default">
-                    <MapPin size={18} />
+                <div className="flex items-center justify-between mb-6 pb-4 border-b border-border-default">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded bg-surface-secondary flex items-center justify-center text-text-primary border border-border-default">
+                      <MapPin size={18} />
+                    </div>
+                    <h2 className="text-body font-bold text-text-primary">Delivery Address</h2>
                   </div>
-                  <h2 className="text-body font-bold text-text-primary">Delivery Address</h2>
+                  {user?.savedAddresses?.length > 0 && (
+                     <button 
+                       onClick={() => setFormData({
+                         ...formData,
+                         address: '',
+                         city: '',
+                         zip: ''
+                       })} 
+                       className="text-caption font-bold text-brand-primary hover:underline"
+                     >
+                       Add New
+                     </button>
+                  )}
                 </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div className="space-y-1.5 flex flex-col md:col-span-2">
-                     <label className="text-[13px] font-bold text-text-secondary">Full Name</label>
-                     <input 
-                       type="text" 
-                       value={formData.name}
-                       onChange={(e) => setFormData({...formData, name: e.target.value})}
-                       placeholder="Enter your full name"
-                       className="bg-white border border-border-default rounded-md px-4 py-2.5 text-small focus:outline-none focus:border-brand-primary transition-colors hover:border-text-muted"
-                     />
+
+                {user?.savedAddresses?.length > 0 && !formData.address.startsWith('CUSTOM:') ? (
+                  <div className="space-y-4">
+                    <p className="text-caption font-bold text-text-muted uppercase tracking-wider">Select a saved address</p>
+                    <div className="grid grid-cols-1 gap-3">
+                      {user.savedAddresses.map((addr, idx) => (
+                        <label 
+                          key={idx}
+                          className={`flex items-start gap-4 p-4 border rounded-md cursor-pointer transition-all ${
+                            formData.address === addr.street ? 'border-brand-primary bg-brand-light/10 ring-1 ring-brand-primary' : 'border-border-default hover:border-text-muted bg-white'
+                          }`}
+                        >
+                          <input 
+                            type="radio" 
+                            name="address" 
+                            checked={formData.address === addr.street}
+                            onChange={() => setFormData({
+                              ...formData,
+                              address: addr.street,
+                              city: addr.city,
+                              zip: addr.zip
+                            })}
+                            className="mt-1 w-4 h-4 accent-brand-primary"
+                          />
+                          <div className="flex flex-col">
+                            <span className="text-small font-bold text-text-primary">{user.name}</span>
+                            <span className="text-small text-text-secondary mt-1">{addr.street}, {addr.city} - {addr.zip}</span>
+                            <span className="text-[10px] font-bold text-success uppercase mt-2 tracking-tighter">Verified Address</span>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
                   </div>
-                  <div className="space-y-1.5 flex flex-col md:col-span-2">
-                     <label className="text-[13px] font-bold text-text-secondary">Street Address</label>
-                     <input 
-                       type="text" 
-                       value={formData.address}
-                       onChange={(e) => setFormData({...formData, address: e.target.value})}
-                       placeholder="House No, Building, Street, Area"
-                       className="bg-white border border-border-default rounded-md px-4 py-2.5 text-small focus:outline-none focus:border-brand-primary transition-colors hover:border-text-muted"
-                     />
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div className="space-y-1.5 flex flex-col md:col-span-2">
+                       <label className="text-[13px] font-bold text-text-secondary">Full Name</label>
+                       <input 
+                         type="text" 
+                         value={formData.name}
+                         onChange={(e) => setFormData({...formData, name: e.target.value})}
+                         placeholder="Enter your full name"
+                         className="bg-white border border-border-default rounded-md px-4 py-2.5 text-small focus:outline-none focus:border-brand-primary transition-colors hover:border-text-muted"
+                       />
+                    </div>
+                    <div className="space-y-1.5 flex flex-col md:col-span-2">
+                       <label className="text-[13px] font-bold text-text-secondary">Street Address</label>
+                       <input 
+                         type="text" 
+                         value={formData.address}
+                         onChange={(e) => setFormData({...formData, address: e.target.value})}
+                         placeholder="House No, Building, Street, Area"
+                         className="bg-white border border-border-default rounded-md px-4 py-2.5 text-small focus:outline-none focus:border-brand-primary transition-colors hover:border-text-muted"
+                       />
+                    </div>
+                    <div className="space-y-1.5 flex flex-col">
+                       <label className="text-[13px] font-bold text-text-secondary">City</label>
+                       <input 
+                         type="text" 
+                         value={formData.city}
+                         onChange={(e) => setFormData({...formData, city: e.target.value})}
+                         placeholder="City"
+                         className="bg-white border border-border-default rounded-md px-4 py-2.5 text-small focus:outline-none focus:border-brand-primary transition-colors hover:border-text-muted"
+                       />
+                    </div>
+                    <div className="space-y-1.5 flex flex-col">
+                       <label className="text-[13px] font-bold text-text-secondary">Pincode</label>
+                       <input 
+                         type="text" 
+                         value={formData.zip}
+                         onChange={(e) => setFormData({...formData, zip: e.target.value})}
+                         placeholder="6-digit Pincode"
+                         className="bg-white border border-border-default rounded-md px-4 py-2.5 text-small focus:outline-none focus:border-brand-primary transition-colors hover:border-text-muted"
+                       />
+                    </div>
                   </div>
-                  <div className="space-y-1.5 flex flex-col">
-                     <label className="text-[13px] font-bold text-text-secondary">City</label>
-                     <input 
-                       type="text" 
-                       value={formData.city}
-                       onChange={(e) => setFormData({...formData, city: e.target.value})}
-                       placeholder="City"
-                       className="bg-white border border-border-default rounded-md px-4 py-2.5 text-small focus:outline-none focus:border-brand-primary transition-colors hover:border-text-muted"
-                     />
-                  </div>
-                  <div className="space-y-1.5 flex flex-col">
-                     <label className="text-[13px] font-bold text-text-secondary">Pincode</label>
-                     <input 
-                       type="text" 
-                       value={formData.zip}
-                       onChange={(e) => setFormData({...formData, zip: e.target.value})}
-                       placeholder="6-digit Pincode"
-                       className="bg-white border border-border-default rounded-md px-4 py-2.5 text-small focus:outline-none focus:border-brand-primary transition-colors hover:border-text-muted"
-                     />
-                  </div>
-                </div>
+                )}
                 
                 <div className="pt-6 mt-6 flex justify-end">
                   <button 
                     onClick={nextStep}
-                    className="w-full md:w-auto bg-brand-primary text-white px-8 py-3 rounded-md font-bold hover:bg-brand-hover transition-all flex items-center justify-center gap-2 shadow-sm"
+                    disabled={!formData.address || !formData.city || !formData.zip}
+                    className="w-full md:w-auto bg-brand-primary text-white px-8 py-3 rounded-md font-bold hover:bg-brand-hover transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
                   >
-                    Save & Continue <ChevronRight size={16} />
+                    Deliver to this Address <ChevronRight size={16} />
                   </button>
                 </div>
               </div>
