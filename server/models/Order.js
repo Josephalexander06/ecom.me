@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const statusHistorySchema = new mongoose.Schema({
   stage: { 
     type: String, 
-    enum: ['pending', 'packed', 'shipped', 'delivered'],
+    enum: ['pending', 'confirmed', 'packed', 'shipped', 'delivered'],
     default: 'pending'
   },
   timestamp: { type: Date, default: Date.now }
@@ -30,7 +30,7 @@ const orderSchema = new mongoose.Schema({
   couponCode: { type: String },
   status: { 
     type: String, 
-    enum: ['pending', 'packed', 'shipped', 'delivered'],
+    enum: ['pending', 'confirmed', 'packed', 'shipped', 'delivered'],
     default: 'pending'
   },
   statusHistory: [statusHistorySchema],

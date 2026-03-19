@@ -8,6 +8,7 @@ import EmptyState from '../components/ui/EmptyState';
 const OrderCard = ({ order, index }) => {
   const statusColors = {
     pending: 'bg-brand-light text-brand-primary',
+    confirmed: 'bg-brand-secondary/20 text-brand-primary',
     packed: 'bg-warning-light text-warning',
     shipped: 'bg-success-light text-success',
     delivered: 'bg-success-light text-success',

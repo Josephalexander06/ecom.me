@@ -67,7 +67,8 @@ const SellerDashboard = () => {
 
   const nextStatusAction = (status) => {
     const normalized = (status || '').toLowerCase();
-    if (normalized === 'pending') return 'packed';
+    if (normalized === 'pending') return 'confirmed';
+    if (normalized === 'confirmed') return 'packed';
     if (normalized === 'packed') return 'shipped';
     if (normalized === 'shipped') return 'delivered';
     return null;

@@ -17,7 +17,7 @@ const seedData = async () => {
     console.log('Cleared existing products and users.');
 
     const passwordHash = await bcrypt.hash('Password@123', 10);
-    const [adminUser, sellerUser, regularUser] = await User.insertMany([
+    const [adminUser, sellerUser, regularUser, electroSeller, fashionSeller, homeSeller] = await User.insertMany([
       {
         name: 'Admin User',
         email: 'admin@ecomme.local',
@@ -46,9 +46,42 @@ const seedData = async () => {
         isAdmin: false,
         isSeller: false,
         sellerStatus: 'None'
+      },
+      {
+        name: 'Electro Hub',
+        email: 'electro@ecomme.local',
+        password: passwordHash,
+        role: 'seller',
+        isAdmin: false,
+        isSeller: true,
+        sellerStatus: 'Approved',
+        storeName: 'Electro Hub',
+        bankAccount: '444455556666'
+      },
+      {
+        name: 'Fashion Nova',
+        email: 'fashion@ecomme.local',
+        password: passwordHash,
+        role: 'seller',
+        isAdmin: false,
+        isSeller: true,
+        sellerStatus: 'Approved',
+        storeName: 'Fashion Nova',
+        bankAccount: '777788889999'
+      },
+      {
+        name: 'Home Comforts',
+        email: 'home@ecomme.local',
+        password: passwordHash,
+        role: 'seller',
+        isAdmin: false,
+        isSeller: true,
+        sellerStatus: 'Approved',
+        storeName: 'Home Comforts',
+        bankAccount: '000011112222'
       }
     ]);
-    console.log('Seeded test users: admin, seller, user');
+    console.log('Seeded test users: admin, seller, user, and 3 specialized sellers');
 
     const products = [
       {
@@ -70,45 +103,82 @@ const seedData = async () => {
         soldCount: 1542
       },
       {
-        sellerId: sellerUser._id,
-        name: 'Retinal Iris Pro',
-        brand: 'OPTIC',
-        category: 'Visual Augmentation',
-        description: 'Hyper-visual overlays with 16K resolution directly to your optic nerve. Integrated spatial computing core for real-time mesh mapping.',
-        price: 1899,
-        stock: 5,
-        images: ['https://images.unsplash.com/photo-1576086213369-9713438b11ad?auto=format&fit=crop&q=80&w=800'],
-        dominantColor: '#7000ff',
-        tags: ['eye', 'optic', 'vision', '4K', 'augmented-reality', 'spatial'],
-        isDeal: true,
-        dealPrice: 1599,
-        dealExpiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7)
+        sellerId: electroSeller._id,
+        name: 'Quantum Laptop X1',
+        brand: 'SYNAPSE',
+        category: 'Electronics',
+        description: 'Next-gen computing with quantum processing cores. 1TB Q-RAM, Infinite battery life via ambient heat harvesting.',
+        price: 3499,
+        stock: 12,
+        images: ['https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&q=80&w=800'],
+        dominantColor: '#0066ff',
+        tags: ['laptop', 'quantum', 'fast', 'pro', 'workstation'],
+        soldCount: 45
       },
       {
-        sellerId: sellerUser._id,
-        name: 'Haptic Glove S1',
-        brand: 'SENSE',
-        category: 'Tactile Peripherals',
-        description: 'Feel the virtual as if it were physical. 4096 pressure points per finger and active temperature feedback.',
-        price: 999,
-        stock: 22,
-        images: ['https://images.unsplash.com/photo-1558444479-2706fa53002d?auto=format&fit=crop&q=80&w=800'],
-        dominantColor: '#00ff62',
-        tags: ['hand', 'tactile', 'sense', 'immersion', 'feedback'],
-        soldCount: 843
+        sellerId: electroSeller._id,
+        name: 'Cyber Phone S10',
+        brand: 'SYNAPSE',
+        category: 'Electronics',
+        description: 'Foldable holographic display with neural sync. 6G connectivity and 200MP bio-sensor camera.',
+        price: 1299,
+        stock: 50,
+        images: ['https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&q=80&w=800'],
+        dominantColor: '#ff0055',
+        tags: ['phone', 'mobile', 'holographic', 'camera'],
+        soldCount: 230
       },
       {
-        sellerId: sellerUser._id,
-        name: 'Cognitive Thread',
-        brand: 'AETHER',
-        category: 'Bio-Computing',
-        description: 'Minimally invasive cerebral expansion threads. Increase your calculation speed by 400x using the AETHER network.',
-        price: 4999,
-        stock: 2,
-        images: ['https://images.unsplash.com/photo-1614850523296-e8c041de8c2e?auto=format&fit=crop&q=80&w=800'],
-        dominantColor: '#ffb700',
-        tags: ['bio', 'compute', 'brain', 'expansion', 'server'],
-        soldCount: 124
+        sellerId: fashionSeller._id,
+        name: 'Aero-Mesh Sneakers',
+        brand: 'NOVA',
+        category: 'Fashion',
+        description: 'Self-adjusting fit with liquid cooling mesh. Gravity-defying propulsion soles.',
+        price: 299,
+        stock: 100,
+        images: ['https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&q=80&w=800'],
+        dominantColor: '#ff6600',
+        tags: ['shoes', 'sneakers', 'fashion', 'sport'],
+        soldCount: 540
+      },
+      {
+        sellerId: fashionSeller._id,
+        name: 'Titanium Fabric Jacket',
+        brand: 'NOVA',
+        category: 'Fashion',
+        description: 'Bulletproof yet breathable. Integrated climate control system.',
+        price: 899,
+        stock: 30,
+        images: ['https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&q=80&w=800'],
+        dominantColor: '#333333',
+        tags: ['jacket', 'fashion', 'techwear', 'outerwear'],
+        soldCount: 88
+      },
+      {
+        sellerId: homeSeller._id,
+        name: 'Levitating Smart Lamp',
+        brand: 'COMFORT',
+        category: 'Home',
+        description: 'Maglev technology for a floating light experience. 16 million colors with circadian sync.',
+        price: 450,
+        stock: 25,
+        images: ['https://images.unsplash.com/photo-1507413245164-6160d8298b31?auto=format&fit=crop&q=80&w=800'],
+        dominantColor: '#ffff00',
+        tags: ['lamp', 'home', 'smart', 'lighting'],
+        soldCount: 156
+      },
+      {
+        sellerId: homeSeller._id,
+        name: 'Ergo-Grip AI Chair',
+        brand: 'COMFORT',
+        category: 'Home',
+        description: 'Dynamic lumbar support that learns your posture. Integrated massage and heating modules.',
+        price: 1200,
+        stock: 15,
+        images: ['https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=800'],
+        dominantColor: '#663300',
+        tags: ['chair', 'furniture', 'home', 'office'],
+        soldCount: 42
       }
     ];
 
@@ -117,7 +187,10 @@ const seedData = async () => {
     console.log('Login credentials for all seeded users: Password@123');
     console.log(`Admin: ${adminUser.email}`);
     console.log(`Seller: ${sellerUser.email}`);
-    console.log(`User: ${regularUser.email}`);
+    console.log(`Regular User: ${regularUser.email}`);
+    console.log(`Electro Seller: ${electroSeller.email}`);
+    console.log(`Fashion Seller: ${fashionSeller.email}`);
+    console.log(`Home Seller: ${homeSeller.email}`);
 
     process.exit();
   } catch (err) {

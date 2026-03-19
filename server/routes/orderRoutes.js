@@ -5,7 +5,7 @@ const Order = require('../models/Order');
 const Product = require('../models/Product');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
-const VALID_STATUS = ['pending', 'packed', 'shipped', 'delivered'];
+const VALID_STATUS = ['pending', 'confirmed', 'packed', 'shipped', 'delivered'];
 const COUPONS = {
   SAVE10: 10,
   WELCOME5: 5
