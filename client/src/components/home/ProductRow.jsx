@@ -13,8 +13,8 @@ const ProductRow = ({ eyebrow, title, products = [] }) => {
 
       <div className="flex gap-4 md:gap-6 overflow-x-auto no-scrollbar pb-6 -mx-4 px-4 md:-mx-8 md:px-8">
         {products.map((product) => (
-          <div key={product.id || product._id} className="min-w-[200px] md:min-w-[260px]">
-            <ProductCard product={product} />
+          <div key={product.id || product._id} className="min-w-[180px] md:min-w-[220px]">
+            <ProductCard product={product} compact={true} />
           </div>
         ))}
       </div>

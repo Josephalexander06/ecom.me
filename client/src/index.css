@@ -6,10 +6,20 @@
 
 :root {
   --brand-primary: #0066ff;
+  --brand-hover: #0055dd;
+  --brand-dark: #0033cc;
+  --brand-light: #e6f0ff;
+  --accent-primary: #10ced1;
   --surface-secondary: #f7f7f8;
+  --surface-tertiary: #efeff1;
   --text-primary: #111118;
   --text-secondary: #52525e;
+  --text-muted: #8e8e9c;
   --border-default: #e8e8ec;
+  --bg-deep: #0a0a0c;
+  --success: #22c55e;
+  --danger: #ef4444;
+  --warning: #f59e0b;
 }
 
 @layer base {
@@ -53,6 +63,22 @@
   /* Sophisticated Hover Shadow */
   .hover-lift {
     @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-premium;
+  }
+
+  .rounded-pro {
+    border-radius: 1.25rem;
+  }
+
+  .rounded-pill {
+    border-radius: 9999px;
+  }
+
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+
+  .preserve-3d {
+    transform-style: preserve-3d;
   }
 }
 
@@ -98,4 +124,17 @@
 
 .glass-dark {
   @apply bg-black/40 backdrop-blur-lg border border-white/10;
+}
+
+@keyframes bounce-subtle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.animate-bounce-subtle {
+  animation: bounce-subtle 2s ease-in-out infinite;
+}
+
+.shadow-premium {
+  box-shadow: 0 20px 40px -15px rgba(0,0,0,0.1), 0 10px 15px -10px rgba(0,0,0,0.05);
 }

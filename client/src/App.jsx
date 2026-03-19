@@ -5,6 +5,7 @@ import { Toaster } from 'react-hot-toast';
 import Navbar from './components/ui/Navbar';
 import Footer from './components/ui/Footer';
 import AuthModal from './components/auth/AuthModal';
+import ScrollToTop from './components/ui/ScrollToTop';
 import Home from './pages/Home';
 import ProductListing from './pages/ProductListing';
 import ProductDetail from './pages/ProductDetail';
@@ -33,6 +34,7 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-surface-primary text-text-primary flex flex-col relative">
+      <ScrollToTop />
       {/* Global Toast Notifications */}
       <Toaster position="bottom-right" toastOptions={{ duration: 3000 }} />
       

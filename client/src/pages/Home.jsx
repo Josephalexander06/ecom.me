@@ -14,7 +14,7 @@ import SellerSpotlight from '../components/home/SellerSpotlight';
 
 // State & Data
 import { useStore } from '../context/StoreContext';
-import { useAuthStore } from '../context/stores';
+import { useAuthStore, useCartStore } from '../context/stores';
 import { defaultSiteConfig, fetchSiteConfig } from '../utils/siteConfig';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -22,6 +22,7 @@ gsap.registerPlugin(ScrollTrigger);
 const Home = () => {
   const { products, loadingProducts } = useStore();
   const { user } = useAuthStore();
+  const { recentlyViewed } = useCartStore();
   const isAdmin = user?.role === 'admin' || user?.isAdmin;
   const [siteConfig, setSiteConfig] = useState(defaultSiteConfig);
 
@@ -157,13 +158,13 @@ const Home = () => {
         </section>
       )}
 
-      {siteConfig.showRecentlyViewed && (user?.recentlyViewed?.length > 0 || true) && (
+      {siteConfig.showRecentlyViewed && recentlyViewed.length > 0 && (
         <section className="py-12 animate-section">
           <div className="max-w-[1400px] mx-auto px-4 md:px-8">
             <ProductRow 
               eyebrow="YOUR HISTORY" 
               title="Recently Viewed" 
-              products={products.slice(5, 12)} 
+              products={recentlyViewed.map(id => products.find(p => (p._id || p.id) === id)).filter(Boolean)} 
             />
           </div>
         </section>

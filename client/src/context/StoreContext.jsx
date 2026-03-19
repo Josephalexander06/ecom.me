@@ -6,21 +6,25 @@ const StoreContext = createContext(null);
 
 const CART_KEY = 'ecomme_cart';
 const LOCAL_ORDERS_KEY = 'ecomme_local_orders';
+const PRODUCTS_CACHE_KEY = 'ecomme_products_cache';
+const FACETS_CACHE_KEY = 'ecomme_facets_cache';
 const getProductId = (product) => product?._id || product?.id;
 const effectivePrice = (product) => Number(product?.isDeal && product?.dealPrice ? product.dealPrice : product?.price || 0);
 
 const readJSON = (key, fallback) => {
   try {
     const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : fallback;
+    if (!raw || raw === 'undefined' || raw === 'null') return fallback;
+    const parsed = JSON.parse(raw);
+    return parsed === null ? fallback : parsed;
   } catch {
     return fallback;
   }
 };
 
 export const StoreProvider = ({ children }) => {
-  const [products, setProducts] = useState([]);
-  const [facets, setFacets] = useState({ categories: [], brands: [], priceRange: { min: 0, max: 0 } });
+  const [products, setProducts] = useState(() => readJSON(PRODUCTS_CACHE_KEY, []));
+  const [facets, setFacets] = useState(() => readJSON(FACETS_CACHE_KEY, { categories: [], brands: [], priceRange: { min: 0, max: 0 } }));
   const [isUsingFallback, setIsUsingFallback] = useState(false);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [cart, setCart] = useState(() => readJSON(CART_KEY, []));
@@ -62,6 +66,16 @@ export const StoreProvider = ({ children }) => {
   useEffect(() => {
     localStorage.setItem(LOCAL_ORDERS_KEY, JSON.stringify(orders));
   }, [orders]);
+
+  useEffect(() => {
+    if (products.length > 0 && !isUsingFallback) {
+      localStorage.setItem(PRODUCTS_CACHE_KEY, JSON.stringify(products));
+    }
+  }, [products, isUsingFallback]);
+
+  useEffect(() => {
+    localStorage.setItem(FACETS_CACHE_KEY, JSON.stringify(facets));
+  }, [facets]);
 
   const categories = useMemo(() => {
     const unique = new Set(products.map((p) => p.category).filter(Boolean));

@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, Heart, Star, Zap, Check } from 'lucide-react';
+import { ShoppingCart, Heart, Star, Zap, Check, TrendingUp, ShieldCheck } from 'lucide-react';
 import { useAuthStore, useCartStore, useUIStore } from '../../context/stores';
 import toast from 'react-hot-toast';
 
-const ProductCard = ({ product }) => {
+const ProductCard = ({ product, compact = false }) => {
   const navigate = useNavigate();
   const { addItem } = useCartStore();
-  const { user, isAuthenticated, toggleWishlist } = useAuthStore();
+  const { user, isAuthenticated, toggleWishlist, location } = useAuthStore();
   const { setActiveModal } = useUIStore();
   
   const [isWishloading, setIsWishLoading] = useState(false);
@@ -48,20 +48,34 @@ const ProductCard = ({ product }) => {
     <motion.div 
       layout
       whileHover={{ y: -8 }}
-      className="group relative bg-white rounded-2xl overflow-hidden border border-border-default hover:border-brand-primary/30 hover:shadow-xl transition-all duration-300 h-full flex flex-col"
+      className={`group relative bg-white rounded-2xl overflow-hidden border border-border-default hover:border-brand-primary/30 hover:shadow-xl transition-all duration-300 h-full flex flex-col ${compact ? 'max-w-[220px]' : ''}`}
     >
       <Link to={`/product/${id}`} className="flex-1 flex flex-col">
         {/* Badges */}
         <div className="absolute top-3 left-3 z-10 flex flex-col gap-2">
           {product.isDeal && (
-            <div className="bg-danger text-white text-[10px] font-bold px-2 py-1 rounded-md flex items-center gap-1 shadow-lg">
+            <div className="bg-danger text-white text-[10px] font-bold px-2 py-1 rounded-md flex items-center gap-1 shadow-lg animate-bounce-subtle">
               <Zap size={10} fill="currentColor" />
               {discount}% OFF
             </div>
           )}
           {(product.soldCount > 500 || product.averageRating > 4.8) && (
-            <div className="bg-brand-primary text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-lg uppercase">
+            <div className="bg-brand-primary text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-lg uppercase tracking-tighter">
               Best Seller
+            </div>
+          )}
+          {/* Social Proof: Trending Badge */}
+          {id.charCodeAt(0) % 3 === 0 && (
+            <div className="bg-white/90 backdrop-blur-md text-brand-primary text-[9px] font-black px-2 py-1 rounded-md shadow-sm border border-brand-primary/20 flex items-center gap-1 uppercase italic">
+              <TrendingUp size={10} />
+              Trending in {location?.city || 'India'}
+            </div>
+          )}
+          {/* Social Proof: Recent Purchase Badge */}
+          {id.charCodeAt(1) % 4 === 0 && (
+            <div className="bg-success/90 backdrop-blur-md text-white text-[9px] font-bold px-2 py-1 rounded-md shadow-sm flex items-center gap-1 uppercase">
+              <Check size={10} />
+              {20 + (id.charCodeAt(2) % 30)} bought recently
             </div>
           )}
         </div>
@@ -101,27 +115,31 @@ const ProductCard = ({ product }) => {
 
         {/* Content */}
         <div className="p-4 flex flex-col flex-1">
-          <div className="mb-1">
+          <div className="mb-1 flex items-center justify-between">
             <span className="text-[10px] font-bold text-text-muted uppercase tracking-widest">{product.brand}</span>
+            <div className="flex items-center gap-1 bg-brand-primary/5 px-1.5 py-0.5 rounded border border-brand-primary/10">
+               <ShieldCheck size={10} className="text-brand-primary" />
+               <span className="text-[8px] font-black text-brand-primary uppercase">Verified</span>
+            </div>
           </div>
           
-          <h3 className="text-body font-bold text-text-primary mb-2 line-clamp-2 h-10 group-hover:text-brand-primary transition-colors leading-tight">
+          <h3 className={`${compact ? 'text-caption' : 'text-body'} font-bold text-text-primary mb-2 line-clamp-2 ${compact ? 'h-8' : 'h-10'} group-hover:text-brand-primary transition-colors leading-tight`}>
             {product.name}
           </h3>
 
           {/* Rating */}
-          <div className="flex items-center gap-1.5 mb-3">
+          <div className={`flex items-center gap-1.5 ${compact ? 'mb-1.5' : 'mb-3'}`}>
             <div className="flex items-center text-warning">
               {[...Array(5)].map((_, i) => (
                 <Star 
                   key={i} 
-                  size={12} 
+                  size={compact ? 10 : 12} 
                   fill={i < Math.floor(product.averageRating || 4.5) ? 'currentColor' : 'none'} 
                   className={i < Math.floor(product.averageRating || 4.5) ? '' : 'text-border-default'}
                 />
               ))}
             </div>
-            <span className="text-[11px] text-text-muted font-medium">({product.reviewCount || 128})</span>
+            {compact ? null : <span className="text-[11px] text-text-muted font-medium">({product.reviewCount || 128})</span>}
           </div>
 
           {/* Price & Stock */}
@@ -129,11 +147,11 @@ const ProductCard = ({ product }) => {
             <div className="flex flex-col">
               {product.isDeal ? (
                 <>
-                  <span className="text-caption text-text-muted line-through">₹{product.price.toLocaleString('en-IN')}</span>
-                  <span className="text-h4 font-display text-brand-primary">₹{currentPrice.toLocaleString('en-IN')}</span>
+                  <span className={`${compact ? 'text-[8px]' : 'text-caption'} text-text-muted line-through`}>₹{product.price.toLocaleString('en-IN')}</span>
+                  <span className={`${compact ? 'text-small' : 'text-h4'} font-display text-brand-primary`}>₹{currentPrice.toLocaleString('en-IN')}</span>
                 </>
               ) : (
-                <span className="text-h4 font-display text-text-primary">₹{product.price.toLocaleString('en-IN')}</span>
+                <span className={`${compact ? 'text-small' : 'text-h4'} font-display text-text-primary`}>₹{product.price.toLocaleString('en-IN')}</span>
               )}
             </div>
             

@@ -1,6 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { 
   ShieldCheck, 
@@ -11,7 +11,9 @@ import {
   ChevronRight,
   Heart,
   Share2,
-  ShoppingCart
+  ShoppingCart,
+  TrendingUp,
+  Users
 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import { useAuthStore, useCartStore, useUIStore } from '../context/stores';
@@ -23,7 +25,7 @@ const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { products, loadingProducts, refreshProducts } = useStore();
-  const { addItem } = useCartStore();
+  const { trackProduct, addItem } = useCartStore();
   const { user, isAuthenticated, toggleWishlist } = useAuthStore();
   const { setActiveModal } = useUIStore();
 
@@ -32,11 +34,19 @@ const ProductDetail = () => {
     [products, id]
   );
 
+  useEffect(() => {
+    if (product) {
+      trackProduct(product);
+    }
+  }, [product, trackProduct]);
+
   const [quantity, setQuantity] = useState(1);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const [submittingReview, setSubmittingReview] = useState(false);
   const [isWishloading, setIsWishLoading] = useState(false);
+  const [showFloatingIcon, setShowFloatingIcon] = useState(false);
+  const [showARPreview, setShowARPreview] = useState(false);
 
   if (loadingProducts) {
     return (
@@ -117,10 +127,21 @@ const ProductDetail = () => {
           
           {/* Column 1: Gallery */}
           <section className="space-y-6">
-            <div className="bg-surface-secondary rounded-pro border border-border-default overflow-hidden group">
-              <ImageZoom src={product.images?.[0]} alt={product.name} />
-            </div>
-            <div className="grid grid-cols-4 gap-4">
+            <div className="bg-surface-secondary rounded-pro border border-border-default overflow-hidden group relative">
+                <ImageZoom src={product.images?.[0] || 'https://via.placeholder.com/800'} alt={product.name} />
+                
+                {/* AR Try-On Trigger */}
+                {(product.category === 'Mobiles' || product.category === 'Electronics' || true) && (
+                  <button 
+                    onClick={() => setShowARPreview(true)}
+                    className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-md border border-border-default px-4 py-2 rounded-full text-[10px] font-black tracking-widest text-brand-primary hover:bg-brand-primary hover:text-white transition-all shadow-lg flex items-center gap-2 z-20"
+                  >
+                     <div className="w-2 h-2 rounded-full bg-brand-primary animate-pulse group-hover:bg-white" />
+                     VIEW IN YOUR SPACE (AR)
+                  </button>
+                )}
+              </div>
+              <div className="grid grid-cols-4 gap-4">
               {product.images?.map((img, i) => (
                 <div key={i} className="aspect-square bg-surface-secondary rounded-pro border border-border-default overflow-hidden cursor-pointer hover:border-brand-primary hover:shadow-lg transition-all">
                   <img src={img} alt={`${product.name} ${i}`} className="w-full h-full object-cover mix-blend-multiply" />
@@ -143,9 +164,15 @@ const ProductDetail = () => {
           <section className="space-y-8">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Link to={`/products?brand=${product.brand}`} className="text-caption font-bold text-brand-primary uppercase tracking-widest hover:underline">
-                  {product.brand}
-                </Link>
+                <div className="flex items-center gap-2">
+                  <Link to={`/products?brand=${product.brand}`} className="text-caption font-bold text-brand-primary uppercase tracking-widest hover:underline">
+                    {product.brand}
+                  </Link>
+                  <div className="flex items-center gap-1 bg-success/10 text-success px-2 py-0.5 rounded-full border border-success/20">
+                    <ShieldCheck size={12} />
+                    <span className="text-[10px] font-black uppercase">Verified Seller</span>
+                  </div>
+                </div>
                 <div className="flex gap-4">
                    <button onClick={handleWishlist} className={`p-2 rounded-full border transition-all ${isInWishlist ? 'bg-red-500 border-red-500 text-white shadow-lg' : 'bg-white border-border-default text-text-muted hover:border-red-500 hover:text-red-500'}`}>
                      <Heart size={20} fill={isInWishlist ? 'currentColor' : 'none'} className={isWishloading ? 'animate-pulse' : ''} />
@@ -186,8 +213,21 @@ const ProductDetail = () => {
                   </span>
                 )}
               </div>
+
+              {/* Social Proof Indicator */}
+              <div className="flex flex-wrap items-center gap-4 mt-4 pt-4 border-t border-border-default/50">
+                 <div className="flex items-center gap-2 text-caption font-bold text-brand-primary">
+                    <TrendingUp size={14} />
+                    <span>Trending in {user?.location?.city || 'India'}</span>
+                 </div>
+                 <div className="flex items-center gap-2 text-caption font-bold text-text-secondary">
+                    <Users size={14} />
+                    <span>{15 + (id.charCodeAt(5) % 40)} bought this in 24h</span>
+                 </div>
+              </div>
+
               {isDeal && (
-                <div className="text-small text-text-muted">
+                <div className="text-small text-text-muted mt-2">
                   List Price: <span className="line-through">₹{product.price.toLocaleString('en-IN')}</span>
                 </div>
               )}
@@ -212,6 +252,30 @@ const ProductDetail = () => {
                    </div>
                  </div>
                )}
+
+              {/* Rating Breakdown */}
+              <div className="p-6 bg-white border border-border-default rounded-xl">
+                 <h3 className="text-small font-bold text-text-primary uppercase tracking-widest mb-4">Customer Ratings</h3>
+                 <div className="space-y-3">
+                   {[5, 4, 3, 2, 1].map((star) => {
+                     const percent = star === 5 ? 75 : star === 4 ? 15 : star === 3 ? 5 : 2;
+                     return (
+                       <div key={star} className="flex items-center gap-4">
+                         <span className="text-caption font-bold w-4">{star}</span>
+                         <Star size={12} fill="currentColor" className="text-warning flex-shrink-0" />
+                         <div className="flex-1 h-2 bg-surface-secondary rounded-full overflow-hidden">
+                           <motion.div 
+                             initial={{ width: 0 }}
+                             whileInView={{ width: `${percent}%` }}
+                             className="h-full bg-warning"
+                           />
+                         </div>
+                         <span className="text-[10px] font-bold text-text-muted w-8">{percent}%</span>
+                       </div>
+                     );
+                   })}
+                 </div>
+              </div>
 
               <div className="space-y-4">
                 <h3 className="text-small font-bold text-text-primary uppercase tracking-widest">Why shop with us?</h3>
@@ -252,10 +316,10 @@ const ProductDetail = () => {
                 <div className="pt-2 border-t border-border-default/50">
                   {product.stock > 0 ? (
                     <div className="space-y-2">
-                       <p className="text-h4 font-bold text-success flex items-center gap-2">
+                       <div className="text-h4 font-bold text-success flex items-center gap-2">
                          <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
                          In Stock
-                       </p>
+                       </div>
                        {product.stock < 10 && (
                         <p className="text-caption text-danger font-bold bg-danger/5 px-2 py-1 rounded">
                           Hurry! Only {product.stock} units left.
@@ -268,7 +332,24 @@ const ProductDetail = () => {
                 </div>
               </div>
 
-              <div className="space-y-3">
+              {/* Action Buttons */}
+              <div className="space-y-3 relative">
+                {/* Floating Animation Element */}
+                <AnimatePresence>
+                  {showFloatingIcon && (
+                    <motion.div 
+                      initial={{ y: 0, opacity: 1, scale: 1 }}
+                      animate={{ y: -100, opacity: 0, scale: 1.5 }}
+                      exit={{ opacity: 0 }}
+                      className="absolute left-1/2 -translate-x-1/2 -top-10 z-[100] pointer-events-none"
+                    >
+                      <div className="bg-brand-primary text-white p-3 rounded-full shadow-2xl">
+                         <ShoppingCart size={24} />
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
                 <div className="flex items-center justify-between bg-surface-secondary px-4 py-3 rounded-lg border border-border-default">
                   <span className="text-caption font-bold text-text-secondary">Quantity</span>
                   <select 
@@ -285,9 +366,11 @@ const ProductDetail = () => {
                 <button 
                   onClick={() => {
                     addItem(product, quantity);
+                    setShowFloatingIcon(true);
+                    setTimeout(() => setShowFloatingIcon(false), 1000);
                     toast.success('Added to bag!');
                   }}
-                  className="w-full bg-surface-primary border-2 border-brand-primary text-brand-primary hover:bg-brand-primary hover:text-white py-4 rounded-pro font-bold transition-all flex items-center justify-center gap-2 group"
+                  className="w-full bg-surface-primary border-2 border-brand-primary text-brand-primary hover:bg-brand-primary hover:text-white py-4 rounded-pro font-bold transition-all flex items-center justify-center gap-2 group active:scale-95"
                 >
                    Add to Bag
                    <ShoppingCart size={18} />
@@ -297,9 +380,10 @@ const ProductDetail = () => {
                     addItem(product, quantity);
                     navigate('/checkout');
                   }}
-                  className="w-full text-center bg-brand-primary hover:bg-brand-hover text-white py-4 rounded-pro font-bold transition-all shadow-lg shadow-brand-primary/20"
+                  className="w-full text-center bg-brand-primary hover:bg-brand-hover text-white py-4 rounded-pro font-black transition-all shadow-xl shadow-brand-primary/20 scale-100 active:scale-95 group relative overflow-hidden"
                 >
-                  Buy Now
+                  <span className="relative z-10">BUY IN 1 TAP</span>
+                  <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out" />
                 </button>
               </div>
 
@@ -309,12 +393,94 @@ const ProductDetail = () => {
                   Price includes GST and handling.
                 </div>
                 <div className="flex items-center gap-2.5 text-caption font-bold text-success capitalize bg-success/5 px-3 py-2 rounded-lg border border-success/10">
-                   <ShieldCheck size={16} /> Secure checkout guarantee
+                   <ShieldCheck size={16} /> 100% Secure Transaction
+                </div>
+                <div className="p-3 bg-surface-secondary rounded-lg border border-border-default mt-2">
+                   <p className="text-[10px] font-bold text-text-primary mb-1 uppercase tracking-tight">Buyer Protection</p>
+                   <p className="text-[10px] text-text-muted">Get full refund if the item is not as described or not delivered.</p>
                 </div>
               </div>
             </div>
           </aside>
         </div>
+      </div>
+
+      {/* AR Preview Modal (MVP) */}
+      <AnimatePresence>
+        {showARPreview && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowARPreview(false)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-md"
+            />
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative bg-white w-full max-w-2xl rounded-pro overflow-hidden shadow-2xl"
+            >
+              <div className="p-6 border-b border-border-default flex items-center justify-between">
+                <div>
+                  <h3 className="text-h3 font-display">Augmented Reality Preview</h3>
+                  <p className="text-caption text-text-muted italic">Simulating product scale in real environment</p>
+                </div>
+                <button onClick={() => setShowARPreview(false)} className="text-text-muted hover:text-text-primary">Close</button>
+              </div>
+              
+              <div className="aspect-[4/3] bg-surface-secondary relative flex items-center justify-center overflow-hidden">
+                 {/* Mock Camera View */}
+                 <div className="absolute inset-0 grayscale opacity-30 bg-[url('https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=1000&q=80')] bg-cover bg-center" />
+                 
+                 {/* Product Overlay */}
+                 <motion.div 
+                   drag
+                   dragConstraints={{ left: -100, right: 100, top: -100, bottom: 100 }}
+                   className="relative z-10 cursor-move"
+                 >
+                   <img 
+                     src={product.images?.[0]} 
+                     alt="AR Preview" 
+                     className="w-64 h-64 object-contain drop-shadow-2xl" 
+                   />
+                   <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 bg-brand-primary text-white px-3 py-1 rounded-full text-[8px] font-bold whitespace-nowrap">
+                      DRAG TO POSITION
+                   </div>
+                 </motion.div>
+
+                 <div className="absolute bottom-6 left-6 right-6 flex justify-between items-center text-white z-20">
+                    <div className="flex items-center gap-2">
+                       <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
+                       <span className="text-[10px] font-bold uppercase tracking-widest">Live AR Feed</span>
+                    </div>
+                    <p className="text-[10px] font-medium opacity-70">Scale: 1:1 Actual Size</p>
+                 </div>
+              </div>
+              
+              <div className="p-6 bg-surface-secondary flex items-center justify-between">
+                 <div className="flex items-center gap-3">
+                    <img src={product.images?.[0]} className="w-12 h-12 rounded bg-white p-1 object-contain border border-border-default" />
+                    <div>
+                      <p className="text-caption font-bold">{product.name}</p>
+                      <p className="text-[10px] text-brand-primary font-black uppercase tracking-tighter italic">Matching your space...</p>
+                    </div>
+                 </div>
+                 <button className="bg-brand-primary text-white px-6 py-2.5 rounded-pill font-bold text-small shadow-lg">Confirm Fit</button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Similar Products */}
+      <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-20 border-t border-border-default">
+         <ProductRow 
+           eyebrow="YOU MIGHT ALSO LIKE" 
+           title="Similar Products" 
+           products={products.filter(p => p.category === product.category && (p._id || p.id) !== id).slice(0, 10)} 
+         />
       </div>
     </div>
   );

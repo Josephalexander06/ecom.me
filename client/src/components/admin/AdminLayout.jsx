@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutDashboard, Package, ShoppingBag, Users, Settings, Menu, X, LogOut, Bell, CheckCircle2 } from 'lucide-react';
+import { BarChart3, Bell, CheckCircle2, Clock3, LayoutDashboard, LogOut, Menu, Package, Settings, ShoppingBag, Users, X } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
 const AdminLayout = ({ children }) => {
@@ -10,8 +10,9 @@ const AdminLayout = ({ children }) => {
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/admin/dashboard' },
     { icon: CheckCircle2, label: 'Sellers', path: '/admin/sellers' },
-    { icon: Package, label: 'Products', path: '/admin/products' },
-    { icon: ShoppingBag, label: 'Orders', path: '/admin/orders' },
+     { icon: Package, label: 'Products', path: '/admin/products' },
+     { icon: BarChart3, label: 'Analytics', path: '/admin/analytics' },
+     { icon: ShoppingBag, label: 'Orders', path: '/admin/orders' },
     { icon: Users, label: 'Users', path: '/admin/users' },
     { icon: Settings, label: 'Website Settings', path: '/admin/settings' },
   ];

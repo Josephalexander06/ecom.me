@@ -257,11 +257,31 @@ router.get('/seller/my-products', protect, authorize('seller', 'admin'), async (
   }
 });
 
-// Get single product
+// Get single product (with view increment and smart pricing)
 router.get('/:id', async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
-    if (!product) return res.status(404).json({ message: 'Node not found' });
+    if (!product) return res.status(404).json({ message: 'Product not found' });
+    
+    // Increment views
+    product.views = (product.views || 0) + 1;
+
+    // Smart Pricing Engine (Simple Rule-based)
+    // 1. Demand Spike: views > 100 and low stock -> +5% price
+    if (product.views > 100 && product.stock < 10 && product.stock > 0) {
+       // We don't save the price change to DB permanently here for MVP, 
+       // but we send the 'dynamic' price to frontend
+       product.price = Math.round(product.price * 1.05);
+       if (product.dealPrice) product.dealPrice = Math.round(product.dealPrice * 1.05);
+    }
+    
+    // 2. Slow Mover: views < 20 and plenty of stock -> -10% price
+    // (Only if it's not already a deal)
+    if (product.views < 20 && product.stock > 50 && !product.isDeal) {
+       product.price = Math.round(product.price * 0.90);
+    }
+
+    await product.save();
     res.json(product);
   } catch (err) {
     res.status(500).json({ message: 'Sync Error', error: err.message });

@@ -29,6 +29,7 @@ const productSchema = new mongoose.Schema({
   averageRating: { type: Number, default: 0 },
   reviewCount: { type: Number, default: 0 },
   soldCount: { type: Number, default: 0 },
+  views: { type: Number, default: 0 },
   reviews: [{
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     name: { type: String, required: true },

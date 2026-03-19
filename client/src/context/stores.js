@@ -210,7 +210,17 @@ export const useCartStore = create(
   persist(
     (set, get) => ({
       items: [],
+      recentlyViewed: [],
       
+      trackProduct: (product) => {
+        set((state) => {
+          const filtered = state.recentlyViewed.filter(p => (p._id || p.id) !== (product._id || product.id));
+          return {
+            recentlyViewed: [product, ...filtered].slice(0, 10)
+          };
+        });
+      },
+
       addItem: (product, quantity = 1) => {
         const id = product._id || product.id;
         set((state) => {

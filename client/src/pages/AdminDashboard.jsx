@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { CheckCircle2, Clock3, Megaphone, Package, Search, Settings2, Shield, ShoppingBag, Trash2, Users, XCircle } from 'lucide-react';
+import { CheckCircle2, Clock3, Megaphone, Package, Search, Settings2, Shield, ShoppingBag, Trash2, TrendingUp, Users, XCircle } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import toast from 'react-hot-toast';
 import AdminLayout from '../components/admin/AdminLayout';
 import { API_BASE, authHeaders } from '../utils/api';
@@ -12,6 +13,7 @@ const sectionByPath = {
   '/admin/users': 'users',
   '/admin/orders': 'orders',
   '/admin/products': 'products',
+  '/admin/analytics': 'analytics',
   '/admin/settings': 'controls'
 };
 
@@ -147,6 +149,7 @@ const AdminDashboard = () => {
           <button onClick={() => goSection('users')} className={`px-4 py-2 rounded-lg text-sm font-bold ${activeSection === 'users' ? 'bg-brand-primary text-white' : 'bg-white border border-border-default'}`}>Users</button>
           <button onClick={() => goSection('orders')} className={`px-4 py-2 rounded-lg text-sm font-bold ${activeSection === 'orders' ? 'bg-brand-primary text-white' : 'bg-white border border-border-default'}`}>Orders</button>
           <button onClick={() => goSection('products')} className={`px-4 py-2 rounded-lg text-sm font-bold ${activeSection === 'products' ? 'bg-brand-primary text-white' : 'bg-white border border-border-default'}`}>Products</button>
+          <button onClick={() => goSection('analytics')} className={`px-4 py-2 rounded-lg text-sm font-bold ${activeSection === 'analytics' ? 'bg-brand-primary text-white' : 'bg-white border border-border-default'}`}>Advanced Analytics</button>
           <button onClick={() => goSection('controls')} className={`px-4 py-2 rounded-lg text-sm font-bold ${activeSection === 'controls' ? 'bg-brand-primary text-white' : 'bg-white border border-border-default'}`}>Website Controls</button>
         </div>
 
@@ -251,32 +254,80 @@ const AdminDashboard = () => {
           </div>
         )}
 
-        {activeSection === 'products' && (
-          <div className="bg-white border border-border-default rounded-pro overflow-hidden">
-            <div className="p-6 border-b border-border-default"><h3 className="text-body font-bold">Product Moderation</h3></div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-surface-secondary">
-                  <tr>
-                    <th className="px-6 py-4 text-caption font-bold text-text-muted uppercase text-left">Product</th>
-                    <th className="px-6 py-4 text-caption font-bold text-text-muted uppercase text-left">Category</th>
-                    <th className="px-6 py-4 text-caption font-bold text-text-muted uppercase text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border-default">
-                  {products.map((product) => (
-                    <tr key={product._id}>
-                      <td className="px-6 py-4"><p className="text-small font-bold">{product.name}</p><p className="text-caption text-text-muted">{product.brand}</p></td>
-                      <td className="px-6 py-4">{product.category}</td>
-                      <td className="px-6 py-4 text-right">
-                        <button onClick={() => removeProduct(product._id)} className="inline-flex items-center gap-1 px-3 py-2 rounded-md text-caption font-bold text-danger hover:bg-danger/10">
-                          <Trash2 size={14} /> Remove
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        {activeSection === 'analytics' && (
+          <div className="space-y-8">
+            {/* Conversion Funnel */}
+            <div className="bg-white p-8 rounded-pro border border-border-default shadow-sm">
+               <h3 className="text-h3 font-display mb-8">Conversion Funnel</h3>
+               <div className="flex flex-col gap-6 max-w-4xl mx-auto">
+                 {[
+                   { label: 'Product Views', value: products.reduce((sum, p) => sum + (p.views || 0), 0), color: 'bg-brand-primary' },
+                   { label: 'Added to Cart', value: Math.round(products.reduce((sum, p) => sum + (p.views || 0), 0) * 0.15), color: 'bg-brand-hover' },
+                   { label: 'Purchases', value: products.reduce((sum, p) => sum + (p.soldCount || 0), 0), color: 'bg-brand-dark' }
+                 ].map((step, i, arr) => (
+                   <div key={step.label} className="relative">
+                     <div className="flex items-center gap-6">
+                        <div className={`h-16 flex-1 ${step.color} rounded-lg flex items-center justify-between px-8 text-white shadow-lg`}>
+                           <span className="font-bold uppercase tracking-widest">{step.label}</span>
+                           <span className="text-h4 font-mono font-black">{step.value.toLocaleString()}</span>
+                        </div>
+                        {i < arr.length - 1 && (
+                          <div className="w-24 text-center">
+                             <p className="text-caption font-black text-brand-primary italic">-{Math.round(100 - (arr[i+1].value / step.value * 100))}%</p>
+                             <p className="text-[8px] text-text-muted uppercase font-bold">Dropoff</p>
+                          </div>
+                        )}
+                     </div>
+                   </div>
+                 ))}
+               </div>
+            </div>
+
+            {/* Heat Ranking */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+               <div className="bg-white p-6 rounded-pro border border-border-default shadow-sm text-surface-primary">
+                  <h3 className="text-body font-bold mb-6 flex items-center gap-2">
+                     <TrendingUp size={18} className="text-brand-primary" /> Most Viewed Products
+                  </h3>
+                  <div className="space-y-4">
+                     {products.sort((a,b) => (b.views || 0) - (a.views || 0)).slice(0, 5).map((p, i) => (
+                       <div key={p._id} className="flex items-center gap-4 p-3 bg-surface-secondary rounded-xl border border-border-default/50">
+                          <span className="text-h4 font-black text-text-muted italic w-6">#{i+1}</span>
+                          <img src={p.images?.[0]} className="w-12 h-12 rounded bg-white object-contain border border-border-default" />
+                          <div className="flex-1 min-w-0">
+                             <p className="text-small font-bold text-text-primary truncate">{p.name}</p>
+                             <p className="text-caption text-text-muted">{p.brand}</p>
+                          </div>
+                          <div className="text-right">
+                             <p className="text-small font-black text-brand-primary">{p.views || 0}</p>
+                             <p className="text-[8px] text-text-muted font-bold uppercase">Views</p>
+                          </div>
+                       </div>
+                     ))}
+                  </div>
+               </div>
+
+               <div className="bg-white p-6 rounded-pro border border-border-default shadow-sm">
+                  <h3 className="text-body font-bold mb-6 flex items-center gap-2">
+                     <Package size={18} className="text-success" /> Best Selling Products
+                  </h3>
+                  <div className="space-y-4">
+                     {products.sort((a,b) => (b.soldCount || 0) - (a.soldCount || 0)).slice(0, 5).map((p, i) => (
+                       <div key={p._id} className="flex items-center gap-4 p-3 bg-surface-secondary rounded-xl border border-border-default/50">
+                          <span className="text-h4 font-black text-text-muted italic w-6">#{i+1}</span>
+                          <img src={p.images?.[0]} className="w-12 h-12 rounded bg-white object-contain border border-border-default" />
+                          <div className="flex-1 min-w-0">
+                             <p className="text-small font-bold text-text-primary truncate">{p.name}</p>
+                             <p className="text-caption text-text-muted">{p.brand}</p>
+                          </div>
+                          <div className="text-right">
+                             <p className="text-small font-black text-success">{p.soldCount || 0}</p>
+                             <p className="text-[8px] text-text-muted font-bold uppercase">Units Sold</p>
+                          </div>
+                       </div>
+                     ))}
+                  </div>
+               </div>
             </div>
           </div>
         )}
