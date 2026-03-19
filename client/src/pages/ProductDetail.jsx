@@ -12,6 +12,7 @@ import {
   Heart,
   Share2,
   ShoppingCart,
+  ShoppingBag,
   TrendingUp,
   Users
 } from 'lucide-react';
@@ -475,6 +476,77 @@ const ProductDetail = () => {
       </AnimatePresence>
 
       {/* Similar Products */}
+      {/* Frequently Bought Together (Bundle) */}
+      <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-20 border-t border-border-default">
+         <div className="flex flex-col lg:flex-row items-center gap-12 bg-surface-secondary/30 p-8 rounded-pro border border-border-default">
+            <div className="flex-1">
+               <h2 className="text-h4 font-display text-text-primary mb-2 uppercase tracking-tight">Frequently Bought Together</h2>
+               <p className="text-caption text-text-muted mb-8">Customers who viewed this item also purchased these together for a complete experience.</p>
+               
+               <div className="flex flex-wrap items-center gap-4 md:gap-8">
+                  {/* Current Product */}
+                  <div className="flex flex-col items-center gap-3">
+                     <div className="w-32 h-32 bg-white rounded-xl border border-border-default overflow-hidden p-4 shadow-sm">
+                        <img src={product.images?.[0]} alt="" className="w-full h-full object-contain mix-blend-multiply" />
+                     </div>
+                     <span className="text-caption font-bold text-text-primary">This Item</span>
+                  </div>
+
+                  <div className="text-h3 text-text-muted font-light">+</div>
+
+                  {/* Suggestion 1 */}
+                  {products.filter(p => p.category === product.category && (p._id || p.id) !== id).slice(0, 1).map(p => (
+                    <React.Fragment key={p._id || p.id}>
+                      <div className="flex flex-col items-center gap-3">
+                        <Link to={`/product/${p._id || p.id}`} className="w-32 h-32 bg-white rounded-xl border border-border-default overflow-hidden p-4 shadow-sm hover:border-brand-primary transition-colors">
+                            <img src={p.images?.[0]} alt="" className="w-full h-full object-contain mix-blend-multiply" />
+                        </Link>
+                        <span className="text-caption font-medium text-text-muted line-clamp-1 max-w-[120px]">{p.name}</span>
+                      </div>
+                      
+                      <div className="text-h3 text-text-muted font-light">+</div>
+
+                      {/* Suggestion 2 */}
+                      {(products || []).filter(p => p.category === product.category && (p._id || p.id) !== id).slice(1, 2).map(p2 => (
+                        <div key={p2._id || p2.id} className="flex flex-col items-center gap-3">
+                          <Link to={`/product/${p2._id || p2.id}`} className="w-32 h-32 bg-white rounded-xl border border-border-default overflow-hidden p-4 shadow-sm hover:border-brand-primary transition-colors">
+                              <img src={p2.images?.[0]} alt="" className="w-full h-full object-contain mix-blend-multiply" />
+                          </Link>
+                          <span className="text-caption font-medium text-text-muted line-clamp-1 max-w-[120px]">{p2.name}</span>
+                        </div>
+                      ))}
+                    </React.Fragment>
+                  ))}
+               </div>
+            </div>
+
+            <div className="w-full lg:w-[320px] bg-white p-6 rounded-2xl shadow-premium border border-border-default">
+               <div className="space-y-4 mb-6">
+                  <div className="flex justify-between text-small text-text-secondary">
+                     <span>Total Bundle Price:</span>
+                     <span className="line-through">₹{(product.price * 2.8).toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="flex justify-between items-end">
+                     <span className="text-body font-bold text-text-primary">Bundle Price:</span>
+                     <span className="text-h3 font-display text-brand-primary">₹{(product.price * 2.4).toLocaleString('en-IN')}</span>
+                  </div>
+                  <p className="text-[10px] font-bold text-success bg-success/5 px-2 py-1 rounded inline-block">SAVE 15% ON BUNDLE</p>
+               </div>
+               
+               <button 
+                onClick={() => {
+                  addItem(product);
+                  products.filter(p => p.category === product.category && (p._id || p.id) !== id).slice(0, 2).forEach(p => addItem(p));
+                  toast.success('Bundle added to bag!');
+                }}
+                className="w-full bg-brand-primary text-white py-4 rounded-pill font-bold shadow-lg shadow-brand-primary/20 hover:bg-brand-hover transition-all flex items-center justify-center gap-2"
+               >
+                 <ShoppingBag size={20} /> Add All 3 to Bag
+               </button>
+            </div>
+         </div>
+      </div>
+
       <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-20 border-t border-border-default">
          <ProductRow 
            eyebrow="YOU MIGHT ALSO LIKE" 

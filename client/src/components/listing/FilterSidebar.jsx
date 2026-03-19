@@ -32,6 +32,19 @@ const FilterSidebar = ({ categories, brands, facets }) => {
     setSearchParams(next);
   };
 
+  const toggleBrand = (brand) => {
+    const next = new URLSearchParams(searchParams);
+    const brands = next.getAll('brand');
+    if (brands.includes(brand)) {
+      const remaining = brands.filter(b => b !== brand);
+      next.delete('brand');
+      remaining.forEach(b => next.append('brand', b));
+    } else {
+      next.append('brand', brand);
+    }
+    setSearchParams(next);
+  };
+
   return (
     <aside className="w-[260px] flex-shrink-0 hidden lg:block sticky top-[150px] self-start max-h-[80vh] overflow-y-auto no-scrollbar pr-4">
       <div className="flex items-center justify-between mb-6">
@@ -111,8 +124,8 @@ const FilterSidebar = ({ categories, brands, facets }) => {
               <div className="flex items-center gap-2">
                 <input 
                   type="checkbox" 
-                  checked={searchParams.get('brand') === brand}
-                  onChange={(e) => updateParams('brand', e.target.checked ? brand : null)}
+                  checked={searchParams.getAll('brand').includes(brand)}
+                  onChange={() => toggleBrand(brand)}
                   className="w-4 h-4 rounded border-border-default text-brand-primary focus:ring-brand-primary"
                 />
                 <span className="text-small text-text-secondary group-hover:text-text-primary transition-colors">

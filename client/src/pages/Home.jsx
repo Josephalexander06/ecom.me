@@ -158,16 +158,32 @@ const Home = () => {
         </section>
       )}
 
-      {siteConfig.showRecentlyViewed && recentlyViewed.length > 0 && (
-        <section className="py-12 animate-section">
-          <div className="max-w-[1400px] mx-auto px-4 md:px-8">
-            <ProductRow 
-              eyebrow="YOUR HISTORY" 
-              title="Recently Viewed" 
-              products={recentlyViewed.map(id => products.find(p => (p._id || p.id) === id)).filter(Boolean)} 
-            />
-          </div>
-        </section>
+       {siteConfig.showRecentlyViewed && recentlyViewed.length > 0 && (
+        <>
+          <section className="py-12 animate-section">
+            <div className="max-w-[1400px] mx-auto px-4 md:px-8">
+              <ProductRow 
+                eyebrow="YOUR HISTORY" 
+                title="Recently Viewed" 
+                products={recentlyViewed} 
+              />
+            </div>
+          </section>
+
+          {/* Inspired by your browsing */}
+          <section className="py-12 bg-surface-secondary/30 animate-section border-y border-border-default">
+            <div className="max-w-[1400px] mx-auto px-4 md:px-8">
+              <ProductRow 
+                eyebrow="AI PERSONALISED" 
+                title="Inspired by your browsing" 
+                products={products.filter(p => 
+                  recentlyViewed.some(rv => rv.category === p.category) && 
+                  !recentlyViewed.some(rv => (rv._id || rv.id) === (p._id || p.id))
+                ).slice(0, 10)} 
+              />
+            </div>
+          </section>
+        </>
       )}
     </div>
   );

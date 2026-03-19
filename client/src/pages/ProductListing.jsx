@@ -14,22 +14,27 @@ const ProductListing = () => {
   // Filter params
   const q = searchParams.get('q')?.toLowerCase() || '';
   const category = searchParams.get('category') || 'All';
-  const brand = searchParams.get('brand') || 'All';
+  const selectedBrands = searchParams.getAll('brand');
   const rating = Number(searchParams.get('rating') || '0');
   const maxPrice = Number(searchParams.get('maxPrice') || '200000');
   const sort = searchParams.get('sort') || 'featured';
 
   const brands = useMemo(() => 
-    Array.from(new Set(products.map(p => p.brand).filter(Boolean))), 
+    Array.from(new Set((products || []).map(p => p.brand).filter(Boolean))), 
   [products]);
 
   const [isFiltering, setIsFiltering] = useState(false);
 
   const filteredProducts = useMemo(() => {
-    let result = products.filter(p => {
-      const matchQuery = !q || p.name.toLowerCase().includes(q) || p.brand?.toLowerCase().includes(q);
+    let result = (products || []).filter(p => {
+      if (!p) return false;
+      const productName = p.name || '';
+      const productBrand = p.brand || '';
+      const matchQuery = !q || 
+        productName.toLowerCase().includes(q) || 
+        productBrand.toLowerCase().includes(q);
       const matchCat = category === 'All' || p.category === category;
-      const matchBrand = brand === 'All' || p.brand === brand;
+      const matchBrand = selectedBrands.length === 0 || selectedBrands.includes(p.brand);
       const matchRating = (p.averageRating || 4.5) >= rating;
       const matchPrice = (p.dealPrice || p.price) <= maxPrice;
       return matchQuery && matchCat && matchBrand && matchRating && matchPrice;
@@ -40,7 +45,7 @@ const ProductListing = () => {
     if (sort === 'rating') result.sort((a,b) => (b.averageRating || 4.5) - (a.averageRating || 4.5));
 
     return result;
-  }, [products, q, category, brand, rating, maxPrice, sort]);
+  }, [products, q, category, JSON.stringify(selectedBrands), rating, maxPrice, sort]);
 
   // Simulate network delay for filter changes so it feels like a real query
   React.useEffect(() => {
@@ -49,7 +54,7 @@ const ProductListing = () => {
       const timer = setTimeout(() => setIsFiltering(false), 400); // 400ms mock delay
       return () => clearTimeout(timer);
     }
-  }, [q, category, brand, rating, maxPrice, sort, loadingProducts]);
+  }, [q, category, JSON.stringify(selectedBrands), rating, maxPrice, sort, loadingProducts]);
 
   const updateSort = (val) => {
     const next = new URLSearchParams(searchParams);

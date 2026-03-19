@@ -10,6 +10,7 @@ import toast from 'react-hot-toast';
 const OrderCard = ({ order, index }) => {
   const navigate = useNavigate();
   const { addItem } = useCartStore();
+  const { location } = useAuthStore();
   const [showTracking, setShowTracking] = useState(false);
   
   const statusColors = {
@@ -149,23 +150,61 @@ const OrderCard = ({ order, index }) => {
               exit={{ height: 0, opacity: 0 }}
               className="mb-8 overflow-hidden bg-surface-secondary/50 rounded-xl p-6 border border-border-default"
             >
-               <div className="flex justify-between relative max-w-[600px] mx-auto">
-                 <div className="absolute top-4 left-0 w-full h-0.5 bg-border-default z-0" />
-                 <div className="absolute top-4 left-0 h-0.5 bg-brand-primary z-0 transition-all duration-1000" style={{ width: `${(currentStepIndex / (trackingSteps.length - 1)) * 100}%` }} />
-                 
-                 {trackingSteps.map((s, i) => {
-                   const Icon = s.icon;
-                   const isDone = i <= currentStepIndex;
-                   return (
-                     <div key={s.label} className="relative z-10 flex flex-col items-center gap-2">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all ${isDone ? 'bg-brand-primary border-brand-primary text-white' : 'bg-white border-border-default text-text-muted'}`}>
-                           <Icon size={14} />
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-small font-bold text-text-primary">Logistics Timeline</h4>
+                    <span className="text-[10px] font-mono text-text-muted bg-surface-tertiary px-2 py-1 rounded">Shipment ID: {order._id.slice(0, 8).toUpperCase()}</span>
+                  </div>
+
+                  <div className="space-y-8 relative before:absolute before:left-[15px] before:top-2 before:bottom-2 before:w-0.5 before:bg-border-default">
+                    {trackingSteps.map((s, i) => {
+                      const Icon = s.icon;
+                      const isDone = i <= currentStepIndex;
+                      const isCurrent = i === currentStepIndex;
+                      
+                      return (
+                        <div key={s.label} className="relative pl-10 flex gap-4 animate-in fade-in slide-in-from-left-4 duration-500" style={{ animationDelay: `${i * 100}ms` }}>
+                          <div className={`absolute left-0 w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all z-10 ${
+                            isDone 
+                              ? 'bg-brand-primary border-brand-primary text-white shadow-lg shadow-brand-primary/30' 
+                              : 'bg-white border-border-default text-text-muted'
+                          } ${isCurrent ? 'ring-4 ring-brand-light animate-pulse' : ''}`}>
+                             <Icon size={14} />
+                          </div>
+                          
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between">
+                              <p className={`text-small font-bold ${isDone ? 'text-text-primary' : 'text-text-muted'}`}>{s.label}</p>
+                              {isDone && (
+                                <p className="text-[10px] font-mono text-text-muted">
+                                  {new Date(new Date(order.createdAt).getTime() + (i * 3600000 * 4)).toLocaleString('en-IN', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })}
+                                </p>
+                              )}
+                            </div>
+                            <p className="text-caption text-text-muted mt-0.5 leading-relaxed">
+                              {s.key === 'pending' && 'Order successfully received and verified.'}
+                              {s.key === 'confirmed' && 'Seller has acknowledged the order and started processing.'}
+                              {s.key === 'packed' && 'Item has been carefully inspected and packed for shipping.'}
+                              {s.key === 'shipped' && 'Handed over to our delivery partner. In transit to your city.'}
+                              {s.key === 'delivered' && 'Package has been delivered to your doorstep. Enjoy!'}
+                            </p>
+                            {isCurrent && (
+                               <div className="mt-4 p-3 bg-brand-light/20 border border-brand-primary/10 rounded-lg flex items-center gap-3">
+                                  <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center border border-brand-primary/20 shadow-sm">
+                                     <Truck size={20} className="text-brand-primary" />
+                                  </div>
+                                  <div>
+                                     <p className="text-[10px] font-black text-brand-primary uppercase">Current Status</p>
+                                     <p className="text-small font-bold text-text-primary">Processing at our {location.city || 'Mumbai'} Hub</p>
+                                  </div>
+                               </div>
+                            )}
+                          </div>
                         </div>
-                        <span className={`text-[10px] font-bold uppercase ${isDone ? 'text-brand-primary' : 'text-text-muted'}`}>{s.label}</span>
-                     </div>
-                   );
-                 })}
-               </div>
+                      );
+                    })}
+                  </div>
+                </div>
             </motion.div>
           )}
         </AnimatePresence>

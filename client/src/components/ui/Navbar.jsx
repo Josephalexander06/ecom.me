@@ -13,6 +13,7 @@ import {
   X
 } from 'lucide-react';
 import { useAuthStore, useUIStore, useCartStore } from '../../context/stores';
+import { useStore } from '../../context/StoreContext';
 import LocationModal from './LocationModal';
 
 const Navbar = () => {
@@ -20,6 +21,7 @@ const Navbar = () => {
   const { user, isAuthenticated, logout, location, hasSetLocation, detectLocation } = useAuthStore();
   const { setActiveModal, isMobileMenuOpen, toggleMobileMenu } = useUIStore();
   const { items } = useCartStore();
+  const { products } = useStore();
   const cartCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
   useEffect(() => {
@@ -32,13 +34,28 @@ const Navbar = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const categories = ['All', 'Electronics', 'Mobiles', 'Fashion', 'Home', 'Books', 'Beauty', 'Groceries'];
   const trendingSearches = ['iPhone 15', 'Silk Sarees', 'Running Shoes', 'Smart Watches', 'Kitchenware'];
 
+  const suggestions = useMemo(() => {
+    if (!searchQuery.trim() || searchQuery.length < 2) return [];
+    return (products || [])
+      .filter(p => 
+        p && (
+          (p.name?.toLowerCase().includes(searchQuery.toLowerCase())) || 
+          (p.brand?.toLowerCase().includes(searchQuery.toLowerCase()))
+        ) &&
+        (selectedCategory === 'All' || p.category === selectedCategory)
+      )
+      .slice(0, 6);
+  }, [searchQuery, products, selectedCategory]);
+
   const handleSearch = (e) => {
-    e.preventDefault();
+    e?.preventDefault();
     if (searchQuery.trim()) {
+      setShowSuggestions(false);
       navigate(`/products?q=${encodeURIComponent(searchQuery)}&category=${selectedCategory}`);
     }
   };
@@ -77,25 +94,82 @@ const Navbar = () => {
         </button>
 
         {/* Search Bar (45%) */}
-        <form 
-          onSubmit={handleSearch}
-          className="hidden md:flex flex-1 max-w-[50%] h-11 items-center bg-surface-secondary border border-border-default rounded-lg overflow-hidden focus-within:border-brand-primary focus-within:ring-4 focus-within:ring-brand-light transition-all shadow-sm group"
-        >
-          <div className="h-full border-r border-border-default px-4 flex items-center gap-2 cursor-pointer hover:bg-surface-tertiary transition-colors">
-            <span className="text-small font-bold text-text-primary whitespace-nowrap">{selectedCategory}</span>
-            <ChevronDown size={14} className="text-text-muted" />
-          </div>
-          <input 
-            type="text"
-            placeholder="Search for premium products..."
-            className="flex-1 bg-transparent px-4 py-2 text-small text-text-primary placeholder:text-text-muted focus:outline-none"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <button type="submit" className="h-full px-6 bg-brand-primary text-white hover:bg-brand-hover transition-colors flex items-center gap-2 font-bold">
-            <Search size={18} />
-          </button>
-        </form>
+        <div className="hidden md:flex flex-1 max-w-[50%] relative">
+          <form 
+            onSubmit={handleSearch}
+            className="w-full h-11 flex items-center bg-surface-secondary border border-border-default rounded-lg overflow-hidden focus-within:border-brand-primary focus-within:ring-4 focus-within:ring-brand-light transition-all shadow-sm group"
+          >
+            <div className="h-full border-r border-border-default px-4 flex items-center gap-2 cursor-pointer hover:bg-surface-tertiary transition-colors">
+              <span className="text-small font-bold text-text-primary whitespace-nowrap">{selectedCategory}</span>
+              <ChevronDown size={14} className="text-text-muted" />
+            </div>
+            <input 
+              type="text"
+              placeholder="Search for premium products..."
+              className="flex-1 bg-transparent px-4 py-2 text-small text-text-primary placeholder:text-text-muted focus:outline-none"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setShowSuggestions(true);
+              }}
+              onFocus={() => setShowSuggestions(true)}
+            />
+            <button type="submit" className="h-full px-6 bg-brand-primary text-white hover:bg-brand-hover transition-colors flex items-center gap-2 font-bold">
+              <Search size={18} />
+            </button>
+          </form>
+
+          {/* Autocomplete Suggestions */}
+          <AnimatePresence>
+            {showSuggestions && suggestions.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="absolute top-full left-0 right-0 mt-2 bg-white border border-border-default rounded-pro shadow-premium overflow-hidden z-[110]"
+              >
+                <div className="p-2">
+                  <p className="px-4 py-2 text-[10px] font-bold text-text-muted uppercase tracking-widest bg-surface-secondary rounded-lg mb-2">Suggestions</p>
+                  {suggestions.map((p) => (
+                    <button
+                      key={p._id || p.id}
+                      onClick={() => {
+                        setSearchQuery(p.name);
+                        setShowSuggestions(false);
+                        navigate(`/product/${p._id || p.id}`);
+                      }}
+                      className="w-full flex items-center gap-4 px-4 py-3 hover:bg-surface-secondary transition-colors text-left rounded-lg group"
+                    >
+                      <div className="w-10 h-10 rounded-md bg-surface-tertiary overflow-hidden flex-shrink-0">
+                        <img src={p.images?.[0]} alt="" className="w-full h-full object-contain mix-blend-multiply" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-small font-bold text-text-primary group-hover:text-brand-primary transition-colors line-clamp-1">{p.name}</span>
+                        <span className="text-caption text-text-muted">{p.brand} · ₹{p.price.toLocaleString('en-IN')}</span>
+                      </div>
+                    </button>
+                  ))}
+                  <div className="mt-2 border-t border-border-default pt-2">
+                     <button 
+                       onClick={() => handleSearch()}
+                       className="w-full py-2 text-caption font-bold text-brand-primary hover:bg-brand-primary/5 rounded-lg transition-colors flex items-center justify-center gap-2"
+                     >
+                       See all results for "{searchQuery}"
+                     </button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Click shadow for suggestions */}
+          {showSuggestions && (
+            <div 
+              className="fixed inset-0 z-[100]" 
+              onClick={() => setShowSuggestions(false)}
+            />
+          )}
+        </div>
 
         {/* Utility Icons */}
         <div className="flex items-center gap-4 md:gap-6 ml-auto">
