@@ -89,11 +89,17 @@ const Navbar = () => {
         <div className="flex items-center gap-4 md:gap-6 ml-auto">
           {/* Seller Link */}
           <Link 
-            to={(isAuthenticated && user?.isSeller) ? "/seller/dashboard" : "/seller/onboarding"} 
+            to={(isAuthenticated && (user?.role === 'seller' || user?.isSeller)) ? "/seller/dashboard" : "/seller/onboarding"} 
             className="hidden xl:block text-small font-bold text-text-primary hover:text-brand-primary transition-colors whitespace-nowrap"
           >
             Sell on ecom.me
           </Link>
+
+          {isAuthenticated && user?.role === 'admin' && (
+            <Link to="/admin/dashboard" className="hidden xl:block text-small font-bold text-text-primary hover:text-brand-primary transition-colors whitespace-nowrap">
+              Admin Panel
+            </Link>
+          )}
 
           {/* Mobile Search Icon */}
           <button className="md:hidden p-1 text-text-primary" onClick={() => navigate('/search')}>

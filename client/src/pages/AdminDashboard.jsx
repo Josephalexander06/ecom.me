@@ -1,201 +1,327 @@
-import React, { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Shield, 
-  Users, 
-  ShoppingBag, 
-  DollarSign, 
-  CheckCircle2, 
-  XCircle, 
-  Clock,
-  ExternalLink,
-  Search
-} from 'lucide-react';
-import { useStore } from '../context/StoreContext';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { CheckCircle2, Clock3, Megaphone, Package, Search, Settings2, Shield, ShoppingBag, Trash2, Users, XCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
+import AdminLayout from '../components/admin/AdminLayout';
+import { API_BASE, authHeaders } from '../utils/api';
+import { defaultSiteConfig, fetchSiteConfig, updateSiteConfig } from '../utils/siteConfig';
+
+const sectionByPath = {
+  '/admin/dashboard': 'overview',
+  '/admin/sellers': 'sellers',
+  '/admin/users': 'users',
+  '/admin/orders': 'orders',
+  '/admin/products': 'products',
+  '/admin/settings': 'controls'
+};
+
+const pathBySection = Object.entries(sectionByPath).reduce((acc, [path, section]) => {
+  acc[section] = path;
+  return acc;
+}, {});
 
 const AdminDashboard = () => {
-  const { products, orders } = useStore();
-  const [activeTab, setActiveTab] = useState('system'); // 'system' | 'sellers'
+  const location = useLocation();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+  const [dashboard, setDashboard] = useState(null);
+  const [sellers, setSellers] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [siteConfig, setSiteConfig] = useState(defaultSiteConfig);
 
-  // Simulated Seller Data for the Demo
-  const [sellers, setSellers] = useState([
-    { id: 'sel1', name: 'Quantum Electronics', email: 'quantum@example.com', status: 'Pending', date: '2026-03-15' },
-    { id: 'sel2', name: 'Horizon Threads', email: 'horizon@example.com', status: 'Approved', date: '2026-03-12' },
-    { id: 'sel3', name: 'Neo Kitchen', email: 'neo@example.com', status: 'Pending', date: '2026-03-16' },
-    { id: 'sel4', name: 'Aether Audio', email: 'aether@example.com', status: 'Rejected', date: '2026-03-10' },
-  ]);
+  const activeSection = sectionByPath[location.pathname] || 'overview';
 
-  const handleSellerAction = (id, newStatus) => {
-    setSellers(prev => prev.map(s => s.id === id ? { ...s, status: newStatus } : s));
-    // In a real app, this would trigger a fetch to /api/admin/sellers/status
+  const goSection = (section) => {
+    const next = pathBySection[section] || '/admin/dashboard';
+    if (next !== location.pathname) navigate(next);
   };
 
+  const load = async () => {
+    try {
+      const [d, s, u, o, p, cfg] = await Promise.all([
+        fetch(`${API_BASE}/admin/dashboard`, { headers: authHeaders() }),
+        fetch(`${API_BASE}/admin/sellers`, { headers: authHeaders() }),
+        fetch(`${API_BASE}/admin/users`, { headers: authHeaders() }),
+        fetch(`${API_BASE}/admin/orders`, { headers: authHeaders() }),
+        fetch(`${API_BASE}/products`, { headers: authHeaders() }),
+        fetchSiteConfig()
+      ]);
+      const [dData, sData, uData, oData, pData] = await Promise.all([d.json(), s.json(), u.json(), o.json(), p.json()]);
+      if (!d.ok) throw new Error(dData.message || 'Failed to load dashboard');
+      if (!s.ok) throw new Error(sData.message || 'Failed to load sellers');
+      if (!u.ok) throw new Error(uData.message || 'Failed to load users');
+      if (!o.ok) throw new Error(oData.message || 'Failed to load orders');
+      if (!p.ok) throw new Error(pData.message || 'Failed to load products');
+
+      setDashboard(dData);
+      setSellers(sData);
+      setUsers(uData);
+      setOrders(oData);
+      setProducts(Array.isArray(pData?.products) ? pData.products : []);
+      setSiteConfig(cfg);
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
   const stats = useMemo(() => [
-    { label: 'Platform Revenue', value: '$84,200', icon: DollarSign, color: 'text-success' },
-    { label: 'Active Sellers', value: '124', icon: Users, color: 'text-brand-primary' },
-    { label: 'Live Products', value: products.length, icon: ShoppingBag, color: 'text-warning' },
-    { label: 'Security Level', value: 'High', icon: Shield, color: 'text-violet-500' },
-  ], [products]);
+    { label: 'Total Users', value: dashboard?.totalUsers || 0, icon: Users },
+    { label: 'Total Orders', value: dashboard?.totalOrders || 0, icon: ShoppingBag },
+    { label: 'Revenue', value: `₹${Number(dashboard?.totalRevenue || 0).toLocaleString('en-IN')}`, icon: Shield },
+    { label: 'Pending Sellers', value: dashboard?.pendingSellerApprovals || 0, icon: Clock3 }
+  ], [dashboard]);
+
+  const handleSellerAction = async (id, status) => {
+    try {
+      const response = await fetch(`${API_BASE}/admin/sellers/${id}/status`, {
+        method: 'PUT',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ status })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Failed to update seller status');
+      toast.success(`Seller ${status.toLowerCase()}`);
+      load();
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
+  const toggleBlockUser = async (id, blocked) => {
+    try {
+      const response = await fetch(`${API_BASE}/admin/users/${id}/block`, {
+        method: 'PUT',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ blocked })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Failed to update user');
+      toast.success(data.message || 'User updated');
+      load();
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
+  const removeProduct = async (id) => {
+    try {
+      const response = await fetch(`${API_BASE}/admin/products/${id}`, {
+        method: 'DELETE',
+        headers: authHeaders()
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Failed to remove product');
+      toast.success('Product removed');
+      load();
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
+  const saveConfig = async (nextConfig) => {
+    try {
+      const saved = await updateSiteConfig(nextConfig);
+      setSiteConfig(saved);
+      toast.success('Website settings updated');
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
+  const toggleFlag = (key) => {
+    saveConfig({ ...siteConfig, [key]: !siteConfig[key] });
+  };
 
   return (
-    <div className="bg-surface-secondary min-h-screen py-8">
-      <div className="max-w-[1400px] mx-auto px-4 md:px-8">
-        
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-h2 font-display text-text-primary">Admin Core</h1>
-            <p className="text-text-secondary">Governance and Marketplace Oversight</p>
-          </div>
-          <div className="flex bg-white rounded-pill p-1 border border-border-default">
-            <button 
-              onClick={() => setActiveTab('system')}
-              className={`px-6 py-2 rounded-pill text-small font-bold transition-all ${activeTab === 'system' ? 'bg-brand-primary text-white shadow-sm' : 'text-text-secondary hover:text-text-primary'}`}
-            >
-              System Metrics
-            </button>
-            <button 
-              onClick={() => setActiveTab('sellers')}
-              className={`px-6 py-2 rounded-pill text-small font-bold transition-all ${activeTab === 'sellers' ? 'bg-brand-primary text-white shadow-sm' : 'text-text-secondary hover:text-text-primary'}`}
-            >
-              Marketplace Sellers
-            </button>
-          </div>
+    <AdminLayout>
+      <div className="space-y-6">
+        <div className="flex items-center gap-2 flex-wrap">
+          <button onClick={() => goSection('overview')} className={`px-4 py-2 rounded-lg text-sm font-bold ${activeSection === 'overview' ? 'bg-brand-primary text-white' : 'bg-white border border-border-default'}`}>Overview</button>
+          <button onClick={() => goSection('sellers')} className={`px-4 py-2 rounded-lg text-sm font-bold ${activeSection === 'sellers' ? 'bg-brand-primary text-white' : 'bg-white border border-border-default'}`}>Seller Approvals</button>
+          <button onClick={() => goSection('users')} className={`px-4 py-2 rounded-lg text-sm font-bold ${activeSection === 'users' ? 'bg-brand-primary text-white' : 'bg-white border border-border-default'}`}>Users</button>
+          <button onClick={() => goSection('orders')} className={`px-4 py-2 rounded-lg text-sm font-bold ${activeSection === 'orders' ? 'bg-brand-primary text-white' : 'bg-white border border-border-default'}`}>Orders</button>
+          <button onClick={() => goSection('products')} className={`px-4 py-2 rounded-lg text-sm font-bold ${activeSection === 'products' ? 'bg-brand-primary text-white' : 'bg-white border border-border-default'}`}>Products</button>
+          <button onClick={() => goSection('controls')} className={`px-4 py-2 rounded-lg text-sm font-bold ${activeSection === 'controls' ? 'bg-brand-primary text-white' : 'bg-white border border-border-default'}`}>Website Controls</button>
         </div>
 
-        <AnimatePresence mode="wait">
-          {activeTab === 'system' ? (
-            <motion.div 
-              key="system"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="space-y-8"
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {stats.map(stat => (
-                  <div key={stat.label} className="bg-white p-6 rounded-pro border border-border-default">
-                    <stat.icon className={`${stat.color} mb-4`} size={24} />
-                    <p className="text-caption font-bold text-text-muted uppercase tracking-wider">{stat.label}</p>
-                    <p className="text-h2 font-display text-text-primary">{stat.value}</p>
-                  </div>
-                ))}
+        {activeSection === 'overview' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+            {stats.map((stat) => (
+              <div key={stat.label} className="bg-white p-6 rounded-pro border border-border-default shadow-sm">
+                <stat.icon className="text-brand-primary mb-4" size={22} />
+                <p className="text-caption font-bold text-text-muted uppercase tracking-wider">{stat.label}</p>
+                <p className="text-h2 font-display text-text-primary">{stat.value}</p>
               </div>
+            ))}
+          </div>
+        )}
 
-              <div className="bg-white border border-border-default rounded-pro overflow-hidden">
-                <div className="p-6 border-b border-border-default">
-                  <h3 className="text-body font-bold text-text-primary">Global Transaction Stream</h3>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-surface-secondary">
-                      <tr>
-                        <th className="px-6 py-4 text-caption font-bold text-text-muted uppercase text-left">Order ID</th>
-                        <th className="px-6 py-4 text-caption font-bold text-text-muted uppercase text-left">Status</th>
-                        <th className="px-6 py-4 text-caption font-bold text-text-muted uppercase text-right">Amount</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border-default">
-                      {orders.map(order => (
-                        <tr key={order._id} className="hover:bg-surface-secondary transition-colors">
-                          <td className="px-6 py-4 text-small font-mono text-text-primary">#{order._id.slice(-8).toUpperCase()}</td>
-                          <td className="px-6 py-4">
-                            <span className="px-3 py-1 bg-brand-light text-brand-primary text-[10px] font-bold rounded-full">TRANSIT</span>
-                          </td>
-                          <td className="px-6 py-4 text-small font-bold text-text-primary text-right">${order.totalAmount?.toFixed(2)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </motion.div>
-          ) : (
-            <motion.div 
-              key="sellers"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="space-y-6"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className="relative w-full max-w-md">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" size={18} />
-                  <input 
-                    type="text" 
-                    placeholder="Search by seller name or email..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-border-default rounded-lg focus:outline-none focus:border-brand-primary"
-                  />
-                </div>
-              </div>
-
-              <div className="bg-white border border-border-default rounded-pro overflow-hidden shadow-sm">
-                <table className="w-full text-left">
-                  <thead className="bg-surface-secondary border-b border-border-default">
-                    <tr>
-                      <th className="px-6 py-4 text-caption font-bold text-text-muted uppercase">Seller Name</th>
-                      <th className="px-6 py-4 text-caption font-bold text-text-muted uppercase">Applied Date</th>
-                      <th className="px-6 py-4 text-caption font-bold text-text-muted uppercase">Status</th>
-                      <th className="px-6 py-4 text-caption font-bold text-text-muted uppercase text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border-default">
-                    {sellers.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase())).map((seller) => (
-                      <tr key={seller.id} className="hover:bg-surface-secondary transition-colors">
-                        <td className="px-6 py-4">
-                          <p className="text-small font-bold text-text-primary">{seller.name}</p>
-                          <p className="text-caption text-text-muted">{seller.email}</p>
-                        </td>
-                        <td className="px-6 py-4 text-small text-text-secondary">{seller.date}</td>
-                        <td className="px-6 py-4">
-                          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase ${
-                            seller.status === 'Approved' ? 'bg-success-light text-success' :
-                            seller.status === 'Rejected' ? 'bg-danger-light text-danger' :
-                            'bg-warning-light text-warning'
-                          }`}>
-                            {seller.status === 'Pending' && <Clock size={12} />}
-                            {seller.status === 'Approved' && <CheckCircle2 size={12} />}
-                            {seller.status === 'Rejected' && <XCircle size={12} />}
-                            {seller.status}
-                          </span>
-                        </td>
+        {activeSection === 'sellers' && (
+          <div className="space-y-4">
+            <div className="relative w-full max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" size={18} />
+              <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-10 pr-4 py-2.5 bg-white border border-border-default rounded-lg" placeholder="Search sellers..." />
+            </div>
+            <div className="bg-white border border-border-default rounded-pro overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-surface-secondary">
+                  <tr>
+                    <th className="px-6 py-4 text-caption font-bold text-text-muted uppercase text-left">Seller</th>
+                    <th className="px-6 py-4 text-caption font-bold text-text-muted uppercase text-left">Status</th>
+                    <th className="px-6 py-4 text-caption font-bold text-text-muted uppercase text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border-default">
+                  {sellers
+                    .filter((s) => `${s.name} ${s.email}`.toLowerCase().includes(searchQuery.toLowerCase()))
+                    .map((seller) => (
+                      <tr key={seller._id}>
+                        <td className="px-6 py-4"><p className="text-small font-bold">{seller.name}</p><p className="text-caption text-text-muted">{seller.email}</p></td>
+                        <td className="px-6 py-4">{seller.sellerStatus}</td>
                         <td className="px-6 py-4 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                             {seller.status === 'Pending' && (
-                               <>
-                                 <button 
-                                   onClick={() => handleSellerAction(seller.id, 'Approved')}
-                                   className="p-2 text-success hover:bg-success-light rounded-lg transition-colors"
-                                 >
-                                   <CheckCircle2 size={20} />
-                                 </button>
-                                 <button 
-                                   onClick={() => handleSellerAction(seller.id, 'Rejected')}
-                                   className="p-2 text-danger hover:bg-danger-light rounded-lg transition-colors"
-                                 >
-                                   <XCircle size={20} />
-                                 </button>
-                               </>
-                             )}
-                             <button className="p-2 text-text-muted hover:text-brand-primary rounded-lg transition-colors">
-                               <ExternalLink size={18} />
-                             </button>
+                          <div className="inline-flex gap-2">
+                            <button onClick={() => handleSellerAction(seller._id, 'Approved')} className="p-2 text-success hover:bg-success-light rounded-lg"><CheckCircle2 size={18} /></button>
+                            <button onClick={() => handleSellerAction(seller._id, 'Rejected')} className="p-2 text-danger hover:bg-danger-light rounded-lg"><XCircle size={18} /></button>
                           </div>
                         </td>
                       </tr>
                     ))}
-                  </tbody>
-                </table>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {activeSection === 'users' && (
+          <div className="bg-white border border-border-default rounded-pro overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-surface-secondary">
+                <tr>
+                  <th className="px-6 py-4 text-caption font-bold text-text-muted uppercase text-left">User</th>
+                  <th className="px-6 py-4 text-caption font-bold text-text-muted uppercase text-left">Role</th>
+                  <th className="px-6 py-4 text-caption font-bold text-text-muted uppercase text-right">Block</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border-default">
+                {users.map((u) => (
+                  <tr key={u._id}>
+                    <td className="px-6 py-4"><p className="text-small font-bold">{u.name}</p><p className="text-caption text-text-muted">{u.email}</p></td>
+                    <td className="px-6 py-4 uppercase">{u.role || 'user'}</td>
+                    <td className="px-6 py-4 text-right">
+                      <button onClick={() => toggleBlockUser(u._id, !u.isBlocked)} className={`px-4 py-2 rounded-lg text-caption font-bold ${u.isBlocked ? 'bg-success-light text-success' : 'bg-danger-light text-danger'}`}>
+                        {u.isBlocked ? 'Unblock' : 'Block'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {activeSection === 'orders' && (
+          <div className="bg-white border border-border-default rounded-pro overflow-hidden">
+            <div className="p-6 border-b border-border-default"><h3 className="text-body font-bold">Order Monitoring</h3></div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-surface-secondary">
+                  <tr>
+                    <th className="px-6 py-4 text-caption font-bold text-text-muted uppercase text-left">Order</th>
+                    <th className="px-6 py-4 text-caption font-bold text-text-muted uppercase text-left">Status</th>
+                    <th className="px-6 py-4 text-caption font-bold text-text-muted uppercase text-right">Amount</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border-default">
+                  {orders.map((order) => (
+                    <tr key={order._id}>
+                      <td className="px-6 py-4 text-small font-mono">#{order._id.slice(-8).toUpperCase()}</td>
+                      <td className="px-6 py-4 uppercase">{order.status}</td>
+                      <td className="px-6 py-4 text-right font-bold">₹{Number(order.totalAmount || 0).toLocaleString('en-IN')}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {activeSection === 'products' && (
+          <div className="bg-white border border-border-default rounded-pro overflow-hidden">
+            <div className="p-6 border-b border-border-default"><h3 className="text-body font-bold">Product Moderation</h3></div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-surface-secondary">
+                  <tr>
+                    <th className="px-6 py-4 text-caption font-bold text-text-muted uppercase text-left">Product</th>
+                    <th className="px-6 py-4 text-caption font-bold text-text-muted uppercase text-left">Category</th>
+                    <th className="px-6 py-4 text-caption font-bold text-text-muted uppercase text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border-default">
+                  {products.map((product) => (
+                    <tr key={product._id}>
+                      <td className="px-6 py-4"><p className="text-small font-bold">{product.name}</p><p className="text-caption text-text-muted">{product.brand}</p></td>
+                      <td className="px-6 py-4">{product.category}</td>
+                      <td className="px-6 py-4 text-right">
+                        <button onClick={() => removeProduct(product._id)} className="inline-flex items-center gap-1 px-3 py-2 rounded-md text-caption font-bold text-danger hover:bg-danger/10">
+                          <Trash2 size={14} /> Remove
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {activeSection === 'controls' && (
+          <div className="space-y-6">
+            <div className="bg-white border border-border-default rounded-pro p-6">
+              <h3 className="text-body font-bold text-text-primary mb-4 flex items-center gap-2">
+                <Megaphone size={18} className="text-brand-primary" /> Global Announcement
+              </h3>
+              <div className="space-y-3">
+                <label className="flex items-center gap-2 text-small font-medium">
+                  <input type="checkbox" checked={siteConfig.globalAnnouncementEnabled} onChange={() => toggleFlag('globalAnnouncementEnabled')} />
+                  Enable announcement bar on Home
+                </label>
+                <input
+                  value={siteConfig.globalAnnouncementText}
+                  onChange={(e) => saveConfig({ ...siteConfig, globalAnnouncementText: e.target.value })}
+                  className="w-full bg-surface-secondary border border-border-default rounded-lg px-4 py-2.5"
+                  placeholder="Announcement text"
+                />
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </div>
+
+            <div className="bg-white border border-border-default rounded-pro p-6">
+              <h3 className="text-body font-bold text-text-primary mb-4 flex items-center gap-2">
+                <Settings2 size={18} className="text-brand-primary" /> Home Section Toggles
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-small">
+                {Object.keys(defaultSiteConfig)
+                  .filter((key) => key.startsWith('show'))
+                  .map((key) => (
+                    <label key={key} className="flex items-center gap-2">
+                      <input type="checkbox" checked={siteConfig[key]} onChange={() => toggleFlag(key)} />
+                      {key.replace('show', '').replace(/([A-Z])/g, ' $1').trim()}
+                    </label>
+                  ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-    </div>
+    </AdminLayout>
   );
 };
 
 export default AdminDashboard;
+

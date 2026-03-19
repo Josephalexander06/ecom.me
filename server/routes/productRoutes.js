@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const Product = require('../models/Product');
+const { protect, authorize } = require('../middleware/authMiddleware');
 
 // Create product (seller flow)
-router.post('/', async (req, res) => {
+router.post('/', protect, authorize('seller', 'admin'), async (req, res) => {
   try {
     const {
       name,
@@ -26,6 +27,7 @@ router.post('/', async (req, res) => {
     }
 
     const product = await Product.create({
+      sellerId: req.user._id,
       name,
       brand,
       category,
@@ -44,6 +46,68 @@ router.post('/', async (req, res) => {
     res.status(201).json(product);
   } catch (err) {
     res.status(500).json({ message: 'Product creation failed', error: err.message });
+  }
+});
+
+// Update product (seller/admin flow)
+router.put('/:id', protect, authorize('seller', 'admin'), async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    const isOwner = product.sellerId && product.sellerId.toString() === req.user._id.toString();
+    if (req.user.role === 'seller' && !isOwner) {
+      return res.status(403).json({ message: 'Forbidden: cannot edit another seller product' });
+    }
+
+    const updatableFields = [
+      'name',
+      'brand',
+      'category',
+      'description',
+      'price',
+      'stock',
+      'images',
+      'tags',
+      'variants',
+      'features',
+      'isDeal',
+      'dealPrice',
+      'dealExpiresAt'
+    ];
+
+    updatableFields.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        product[field] = req.body[field];
+      }
+    });
+
+    await product.save();
+    res.json(product);
+  } catch (err) {
+    res.status(500).json({ message: 'Product update failed', error: err.message });
+  }
+});
+
+// Delete product (seller/admin flow)
+router.delete('/:id', protect, authorize('seller', 'admin'), async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    const isOwner = product.sellerId && product.sellerId.toString() === req.user._id.toString();
+    if (req.user.role === 'seller' && !isOwner) {
+      return res.status(403).json({ message: 'Forbidden: cannot delete another seller product' });
+    }
+
+    await product.deleteOne();
+    res.json({ message: 'Product deleted' });
+  } catch (err) {
+    res.status(500).json({ message: 'Product deletion failed', error: err.message });
   }
 });
 
@@ -182,6 +246,17 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Get products for logged-in seller
+router.get('/seller/my-products', protect, authorize('seller', 'admin'), async (req, res) => {
+  try {
+    const match = req.user.role === 'admin' ? {} : { sellerId: req.user._id };
+    const products = await Product.find(match).sort({ createdAt: -1 });
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ message: 'Seller products fetch failed', error: err.message });
+  }
+});
+
 // Get single product
 router.get('/:id', async (req, res) => {
   try {
@@ -190,6 +265,50 @@ router.get('/:id', async (req, res) => {
     res.json(product);
   } catch (err) {
     res.status(500).json({ message: 'Sync Error', error: err.message });
+  }
+});
+
+// Add review and update rating aggregate
+router.post('/:id/reviews', protect, async (req, res) => {
+  try {
+    const { rating, comment } = req.body;
+    const ratingValue = Number(rating);
+
+    if (!ratingValue || ratingValue < 1 || ratingValue > 5) {
+      return res.status(400).json({ message: 'Rating must be between 1 and 5' });
+    }
+
+    const product = await Product.findById(req.params.id);
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    const existingReview = product.reviews.find(
+      (review) => review.userId.toString() === req.user._id.toString()
+    );
+
+    if (existingReview) {
+      existingReview.rating = ratingValue;
+      existingReview.comment = comment || '';
+      existingReview.createdAt = new Date();
+    } else {
+      product.reviews.push({
+        userId: req.user._id,
+        name: req.user.name,
+        rating: ratingValue,
+        comment: comment || ''
+      });
+    }
+
+    product.reviewCount = product.reviews.length;
+    product.averageRating =
+      product.reviews.reduce((sum, review) => sum + review.rating, 0) /
+      (product.reviewCount || 1);
+
+    await product.save();
+    res.status(201).json({ message: 'Review saved', averageRating: product.averageRating });
+  } catch (err) {
+    res.status(500).json({ message: 'Review save failed', error: err.message });
   }
 });
 

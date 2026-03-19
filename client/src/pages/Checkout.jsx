@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useCartStore, useAuthStore, useUIStore } from '../context/stores';
 import SuccessAnimation from '../components/checkout/SuccessAnimation';
+import { API_BASE } from '../utils/api';
 
 const StepIndicator = ({ currentStep }) => {
   const steps = ['Address', 'Payment', 'Review'];
@@ -39,7 +40,7 @@ const StepIndicator = ({ currentStep }) => {
 const Checkout = () => {
   const navigate = useNavigate();
   const { items, subtotal, clearCart } = useCartStore();
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, token } = useAuthStore();
   const { setActiveModal } = useUIStore();
   
   const [step, setStep] = useState(1);
@@ -82,10 +83,11 @@ const Checkout = () => {
       
       setProcessingState('securing');
       
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/orders`, {
+      const response = await fetch(`${API_BASE}/orders`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({
           items: items.map(item => ({
@@ -96,7 +98,6 @@ const Checkout = () => {
             image: item.image || item.images?.[0]
           })),
           totalAmount: total,
-          userId: user?._id || user?.id,
           paymentMethod: formData.paymentMethod,
           shippingAddress: {
             street: formData.address,

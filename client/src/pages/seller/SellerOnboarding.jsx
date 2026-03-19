@@ -22,9 +22,9 @@ const SellerOnboarding = () => {
     
     setIsSubmitting(true);
     try {
-      await upgradeUser(user._id || user.id, formData.storeName, formData.bankAccount);
-      toast.success('Welcome to ecom.me Seller Central!');
-      navigate('/seller/dashboard');
+      await upgradeUser(formData.storeName, formData.bankAccount);
+      toast.success('Seller application submitted. Admin approval pending.');
+      navigate('/');
     } catch (error) {
       toast.error(error.message || 'Failed to upgrade account');
       setIsSubmitting(false);

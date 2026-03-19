@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
+const bcrypt = require('bcryptjs');
 const Product = require('./models/Product');
 const User = require('./models/User');
 
@@ -12,10 +13,46 @@ const seedData = async () => {
 
     // Clear existing data
     await Product.deleteMany({});
-    console.log('Cleared existing products.');
+    await User.deleteMany({});
+    console.log('Cleared existing products and users.');
+
+    const passwordHash = await bcrypt.hash('Password@123', 10);
+    const [adminUser, sellerUser, regularUser] = await User.insertMany([
+      {
+        name: 'Admin User',
+        email: 'admin@ecomme.local',
+        password: passwordHash,
+        role: 'admin',
+        isAdmin: true,
+        isSeller: false,
+        sellerStatus: 'None'
+      },
+      {
+        name: 'Seller User',
+        email: 'seller@ecomme.local',
+        password: passwordHash,
+        role: 'seller',
+        isAdmin: false,
+        isSeller: true,
+        sellerStatus: 'Approved',
+        storeName: 'Matrix Tech Store',
+        bankAccount: '111122223333'
+      },
+      {
+        name: 'Regular User',
+        email: 'user@ecomme.local',
+        password: passwordHash,
+        role: 'user',
+        isAdmin: false,
+        isSeller: false,
+        sellerStatus: 'None'
+      }
+    ]);
+    console.log('Seeded test users: admin, seller, user');
 
     const products = [
       {
+        sellerId: sellerUser._id,
         name: 'Neural Link V4',
         brand: 'AETHER',
         category: 'Neural Wearables',
@@ -33,6 +70,7 @@ const seedData = async () => {
         soldCount: 1542
       },
       {
+        sellerId: sellerUser._id,
         name: 'Retinal Iris Pro',
         brand: 'OPTIC',
         category: 'Visual Augmentation',
@@ -47,6 +85,7 @@ const seedData = async () => {
         dealExpiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7)
       },
       {
+        sellerId: sellerUser._id,
         name: 'Haptic Glove S1',
         brand: 'SENSE',
         category: 'Tactile Peripherals',
@@ -59,6 +98,7 @@ const seedData = async () => {
         soldCount: 843
       },
       {
+        sellerId: sellerUser._id,
         name: 'Cognitive Thread',
         brand: 'AETHER',
         category: 'Bio-Computing',
@@ -74,6 +114,10 @@ const seedData = async () => {
 
     await Product.insertMany(products);
     console.log('Seeded products successfully.');
+    console.log('Login credentials for all seeded users: Password@123');
+    console.log(`Admin: ${adminUser.email}`);
+    console.log(`Seller: ${sellerUser.email}`);
+    console.log(`User: ${regularUser.email}`);
 
     process.exit();
   } catch (err) {

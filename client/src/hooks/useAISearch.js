@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { API_BASE } from '../utils/api';
 
 const useAISearch = () => {
     const [results, setResults] = useState([]);
@@ -15,7 +16,7 @@ const useAISearch = () => {
         setError(null);
 
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'}/products/ai-search?query=${encodeURIComponent(query)}`);
+            const response = await fetch(`${API_BASE}/products/ai-search?query=${encodeURIComponent(query)}`);
             if (!response.ok) throw new Error('Neural search synchronization failed.');
             const data = await response.json();
             setResults(data);

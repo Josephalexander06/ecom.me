@@ -12,11 +12,32 @@ const { Server } = require('socket.io');
 
 const app = express();
 const server = http.createServer(app);
+const isProduction = process.env.NODE_ENV === 'production';
+const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+const isAllowedOrigin = (origin = '') =>
+  allowedOrigins.includes(origin) ||
+  /^https?:\/\/localhost:\d+$/.test(origin) ||
+  /^https?:\/\/127\.0\.0\.1:\d+$/.test(origin);
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!isProduction) {
+      return callback(null, true);
+    }
+    if (!origin || isAllowedOrigin(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true
+};
+
 const io = new Server(server, {
-  cors: {
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
-    credentials: true
-  }
+  cors: corsOptions
 });
 
 app.set('io', io);
@@ -24,10 +45,7 @@ app.set('io', io);
 // Middleware
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
-  credentials: true
-}));
+app.use(cors(corsOptions));
 
 // Socket.io Real-time Logic
 io.on('connection', (socket) => {
@@ -59,11 +77,13 @@ const productRoutes = require('./routes/productRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const siteRoutes = require('./routes/siteRoutes');
 
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/site-config', siteRoutes);
 
 // Basic Route
 app.get('/', (req, res) => {

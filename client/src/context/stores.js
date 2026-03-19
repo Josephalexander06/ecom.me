@@ -1,8 +1,11 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { API_BASE } from '../utils/api';
 
-const API_ROOT = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
-const API_BASE = API_ROOT.endsWith('/api') ? API_ROOT : `${API_ROOT}/api`;
+const getErrorMessage = (error) =>
+  error instanceof TypeError
+    ? 'Unable to reach the server. Check that the backend is running and CORS/API URL are configured.'
+    : error.message;
 
 // --- AUTH STORE ---
 export const useAuthStore = create(
@@ -33,7 +36,7 @@ export const useAuthStore = create(
           });
           return data;
         } catch (error) {
-          set({ error: error.message, loading: false });
+          set({ error: getErrorMessage(error), loading: false });
           throw error;
         }
       },
@@ -57,7 +60,7 @@ export const useAuthStore = create(
           });
           return data;
         } catch (error) {
-          set({ error: error.message, loading: false });
+          set({ error: getErrorMessage(error), loading: false });
           throw error;
         }
       },
@@ -70,13 +73,17 @@ export const useAuthStore = create(
         set((state) => ({ user: { ...state.user, ...updatedUser } }));
       },
 
-      upgradeUser: async (userId, storeName, bankAccount) => {
+      upgradeUser: async (storeName, bankAccount) => {
         set({ loading: true, error: null });
         try {
+          const token = get().token;
           const response = await fetch(`${API_BASE}/auth/upgrade-to-seller`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId, storeName, bankAccount }),
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ storeName, bankAccount }),
           });
           const data = await response.json();
           if (!response.ok) throw new Error(data.message || 'Upgrade failed');
@@ -87,7 +94,7 @@ export const useAuthStore = create(
           }));
           return data;
         } catch (error) {
-          set({ error: error.message, loading: false });
+          set({ error: getErrorMessage(error), loading: false });
           throw error;
         }
       }

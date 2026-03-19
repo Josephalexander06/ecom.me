@@ -48,6 +48,7 @@ Unlike traditional eCommerce stores that calculate counts on the frontend, ecom.
    cd server
    npm install
    # Create .env with MONGO_URI, EMAIL_USER, EMAIL_PASS
+   npm run seed
    npm start
    ```
 
@@ -57,6 +58,19 @@ Unlike traditional eCommerce stores that calculate counts on the frontend, ecom.
    npm install
    npm run dev
    ```
+
+## 🔑 Seeded Test Accounts
+
+After `npm run seed` in `server`, these users are available:
+
+- `admin@ecomme.local` / `Password@123`
+- `seller@ecomme.local` / `Password@123`
+- `user@ecomme.local` / `Password@123`
+
+## 🧪 API Collection
+
+- Postman collection path: `server/postman/ecomme.postman_collection.json`
+- You can import the same JSON into Insomnia as well.
 
 ## 📜 Credits
 Developed as a premium showcase project for Advanced Web Development.

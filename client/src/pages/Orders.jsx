@@ -7,11 +7,14 @@ import EmptyState from '../components/ui/EmptyState';
 
 const OrderCard = ({ order, index }) => {
   const statusColors = {
-    'Order Placed': 'bg-brand-light text-brand-primary',
-    'Processing': 'bg-warning-light text-warning',
-    'Shipped': 'bg-success-light text-success',
-    'Delivered': 'bg-success-light text-success',
+    pending: 'bg-brand-light text-brand-primary',
+    packed: 'bg-warning-light text-warning',
+    shipped: 'bg-success-light text-success',
+    delivered: 'bg-success-light text-success',
   };
+
+  const normalizedStatus = (order.status || 'pending').toLowerCase();
+  const label = normalizedStatus.charAt(0).toUpperCase() + normalizedStatus.slice(1);
 
   return (
     <motion.div
@@ -46,9 +49,9 @@ const OrderCard = ({ order, index }) => {
       <div className="p-6">
         <div className="flex items-start justify-between mb-6">
           <div className="flex items-center gap-3">
-             <div className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase flex items-center gap-1.5 ${statusColors[order.status] || 'bg-brand-light text-brand-primary'}`}>
-               {order.status === 'Shipped' ? <Truck size={12} /> : <Clock size={12} />}
-               {order.status || 'Processing'}
+             <div className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase flex items-center gap-1.5 ${statusColors[normalizedStatus] || 'bg-brand-light text-brand-primary'}`}>
+               {normalizedStatus === 'shipped' || normalizedStatus === 'delivered' ? <Truck size={12} /> : <Clock size={12} />}
+               {label}
              </div>
              <p className="text-small font-bold text-text-primary">Arriving Tuesday</p>
           </div>

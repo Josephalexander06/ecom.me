@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 const productSchema = new mongoose.Schema({
+  sellerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   name: { type: String, required: true },
   brand: { type: String, required: true },
   category: { type: String, required: true },
@@ -26,7 +27,15 @@ const productSchema = new mongoose.Schema({
   
   // Analytics & Aggregations
   averageRating: { type: Number, default: 0 },
+  reviewCount: { type: Number, default: 0 },
   soldCount: { type: Number, default: 0 },
+  reviews: [{
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    name: { type: String, required: true },
+    rating: { type: Number, min: 1, max: 5, required: true },
+    comment: { type: String, default: '' },
+    createdAt: { type: Date, default: Date.now }
+  }],
   
   // Deals
   isDeal: { type: Boolean, default: false },

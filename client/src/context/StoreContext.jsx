@@ -1,13 +1,11 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { fallbackProducts } from '../data/fallbackProducts';
+import { API_BASE, authHeaders } from '../utils/api';
 
 const StoreContext = createContext(null);
 
 const CART_KEY = 'ecomme_cart';
 const LOCAL_ORDERS_KEY = 'ecomme_local_orders';
-const API_ROOT = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
-const API_BASE = API_ROOT.endsWith('/api') ? API_ROOT : `${API_ROOT}/api`;
-
 const getProductId = (product) => product?._id || product?.id;
 const effectivePrice = (product) => (product?.isDeal && product?.dealPrice ? product.dealPrice : product?.price || 0);
 
@@ -145,7 +143,7 @@ export const StoreProvider = ({ children }) => {
     try {
       const response = await fetch(`${API_BASE}/orders`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(payload)
       });
       if (!response.ok) throw new Error('Failed to place order');
@@ -155,7 +153,7 @@ export const StoreProvider = ({ children }) => {
         _id: created.orderId,
         createdAt: new Date().toISOString(),
         totalAmount: payload.totalAmount,
-        status: 'Order Placed',
+        status: 'pending',
         items: payload.items,
         shippingAddress
       };
@@ -168,7 +166,7 @@ export const StoreProvider = ({ children }) => {
         _id: `local-${Date.now()}`,
         createdAt: new Date().toISOString(),
         totalAmount: payload.totalAmount,
-        status: 'Order Placed',
+        status: 'pending',
         items: payload.items,
         shippingAddress,
         isLocalOnly: true
@@ -182,7 +180,9 @@ export const StoreProvider = ({ children }) => {
   const loadOrders = async (userId) => {
     if (!userId) return;
     try {
-      const response = await fetch(`${API_BASE}/orders/user/${userId}`);
+      const response = await fetch(`${API_BASE}/orders/user/${userId}`, {
+        headers: authHeaders()
+      });
       if (!response.ok) throw new Error('Failed to load orders');
       const data = await response.json();
       if (Array.isArray(data) && data.length) {
@@ -207,7 +207,7 @@ export const StoreProvider = ({ children }) => {
     try {
       const response = await fetch(`${API_BASE}/products`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(payload)
       });
       if (!response.ok) throw new Error('Failed to create product');

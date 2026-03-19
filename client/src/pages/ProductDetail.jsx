@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import toast from 'react-hot-toast';
 import { 
   ShieldCheck, 
   Truck, 
@@ -12,14 +13,16 @@ import {
   Share2
 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
-import { useCartStore } from '../context/stores';
+import { useAuthStore, useCartStore } from '../context/stores';
+import { API_BASE, authHeaders } from '../utils/api';
 import ImageZoom from '../components/product/ImageZoom';
 import ProductRow from '../components/home/ProductRow';
 
 const ProductDetail = () => {
   const { id } = useParams();
-  const { products } = useStore();
+  const { products, refreshProducts } = useStore();
   const { addItem } = useCartStore();
+  const { isAuthenticated } = useAuthStore();
 
   const product = useMemo(
     () => products.find((item) => (item._id || item.id) === id),
@@ -27,12 +30,58 @@ const ProductDetail = () => {
   );
 
   const [quantity, setQuantity] = useState(1);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   if (!product) return null;
 
   const currentPrice = product.dealPrice || product.price;
   const isDeal = product.isDeal && product.dealPrice;
   const savings = product.price - currentPrice;
+
+  const toggleWishlist = async () => {
+    if (!isAuthenticated) {
+      toast.error('Please login to manage wishlist');
+      return;
+    }
+    try {
+      const response = await fetch(`${API_BASE}/auth/wishlist/${id}`, {
+        method: 'POST',
+        headers: authHeaders()
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Failed to update wishlist');
+      toast.success(data.message || 'Wishlist updated');
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
+  const submitReview = async (e) => {
+    e.preventDefault();
+    if (!isAuthenticated) {
+      toast.error('Please login to submit a review');
+      return;
+    }
+    setSubmittingReview(true);
+    try {
+      const response = await fetch(`${API_BASE}/products/${id}/reviews`, {
+        method: 'POST',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ rating, comment })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Failed to submit review');
+      toast.success('Review submitted');
+      setComment('');
+      await refreshProducts();
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
 
   return (
     <div className="bg-white min-h-screen">
@@ -198,7 +247,7 @@ const ProductDetail = () => {
               </div>
 
               <div className="mt-6 space-y-3 pt-6 border-t border-border-default">
-                <button className="flex items-center gap-2.5 text-small font-medium text-text-secondary hover:text-brand-primary transition-colors group">
+                <button onClick={toggleWishlist} className="flex items-center gap-2.5 text-small font-medium text-text-secondary hover:text-brand-primary transition-colors group">
                   <Heart size={18} className="group-hover:fill-brand-primary group-hover:stroke-brand-primary transition-colors" /> Save for later
                 </button>
                 <div className="flex items-center gap-2.5 text-small font-medium text-text-secondary">
@@ -211,6 +260,24 @@ const ProductDetail = () => {
 
         {/* Info Tabs / Sections */}
         <div className="mt-20 border-t border-border-default pt-20">
+          <div className="mb-12 bg-surface-secondary border border-border-default rounded-pro p-6">
+            <h3 className="text-body font-bold text-text-primary mb-4">Write a review</h3>
+            <form onSubmit={submitReview} className="space-y-4">
+              <div>
+                <label className="text-caption font-bold text-text-secondary">Rating</label>
+                <select value={rating} onChange={(e) => setRating(Number(e.target.value))} className="w-full mt-1 bg-white border border-border-default rounded-lg px-4 py-2.5">
+                  {[5, 4, 3, 2, 1].map((r) => <option key={r} value={r}>{r} Star{r > 1 ? 's' : ''}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-caption font-bold text-text-secondary">Comment</label>
+                <textarea value={comment} onChange={(e) => setComment(e.target.value)} rows={3} className="w-full mt-1 bg-white border border-border-default rounded-lg px-4 py-2.5" placeholder="Share your experience..." />
+              </div>
+              <button type="submit" disabled={submittingReview} className="bg-brand-primary text-white px-6 py-2.5 rounded-lg font-bold disabled:opacity-70">
+                {submittingReview ? 'Submitting...' : 'Submit Review'}
+              </button>
+            </form>
+          </div>
           <ProductRow 
             eyebrow="YOU MAY ALSO LIKE" 
             title="Customers also shopped for"

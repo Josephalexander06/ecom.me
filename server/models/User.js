@@ -4,8 +4,10 @@ const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
+  role: { type: String, enum: ['user', 'seller', 'admin'], default: 'user' },
   isAdmin: { type: Boolean, default: false },
   isSeller: { type: Boolean, default: false },
+  isBlocked: { type: Boolean, default: false },
   sellerStatus: { 
     type: String, 
     enum: ['None', 'Pending', 'Approved', 'Rejected'], 
