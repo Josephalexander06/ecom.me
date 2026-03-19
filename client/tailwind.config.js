@@ -1,62 +1,62 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
+    './index.html',
+    './src/**/*.{js,ts,jsx,tsx}',
   ],
   theme: {
     extend: {
       colors: {
         brand: {
-          primary: '#0066ff',
-          hover: '#0052cc',
+          primary: '#1859ff',
+          hover: '#0f43ca',
           light: '#e8f0ff',
         },
         surface: {
-          primary: '#ffffff',
-          secondary: '#f7f7f8',
-          tertiary: '#f0f0f2',
+          primary: '#f8f9fc',
+          secondary: '#eef1f7',
+          tertiary: '#e6eaf3',
         },
         border: {
-          default: '#e8e8ec',
-          strong: '#d0d0d8',
+          default: '#dbe0eb',
+          strong: '#b8c0d0',
         },
         text: {
-          primary: '#111118',
-          secondary: '#52525e',
-          muted: '#9898a6',
+          primary: '#111827',
+          secondary: '#334155',
+          muted: '#64748b',
         },
         warning: {
-          DEFAULT: '#ff6b00',
-          light: '#fff3e8',
+          DEFAULT: '#f97316',
+          light: '#ffedd5',
         },
-        success: '#00a86b',
-        danger: '#ff3355',
-        rating: '#ffb800',
+        success: '#16a34a',
+        danger: '#e11d48',
+        rating: '#f59e0b',
       },
       fontFamily: {
-        display: ['Plus Jakarta Sans', 'sans-serif'],
-        body: ['Inter', 'sans-serif'],
+        display: ['Sora', 'sans-serif'],
+        body: ['Manrope', 'sans-serif'],
         mono: ['JetBrains Mono', 'monospace'],
       },
       borderRadius: {
         pill: '9999px',
-        pro: '12px',
-        img: '8px',
+        pro: '14px',
+        img: '10px',
       },
       boxShadow: {
-        premium: '0 4px 24px rgba(0, 0, 0, 0.08)',
+        premium: '0 18px 42px -24px rgba(17, 24, 39, 0.48)',
       },
       transitionProperty: {
-        'smooth': 'all',
+        smooth: 'all',
       },
       transitionDuration: {
-        'smooth': '200ms',
+        smooth: '200ms',
       },
       transitionTimingFunction: {
-        'smooth': 'ease-out',
+        smooth: 'ease-out',
       },
     },
   },
   plugins: [],
-}
+};

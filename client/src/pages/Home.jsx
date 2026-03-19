@@ -1,9 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
-// Layout Components
 import HeroCarousel from '../components/home/HeroCarousel';
 import CategoryQuickLinks from '../components/home/CategoryQuickLinks';
 import DealsSection from '../components/home/DealsSection';
@@ -12,15 +9,12 @@ import CategoryPanels from '../components/home/CategoryPanels';
 import WideBanner from '../components/home/WideBanner';
 import SellerSpotlight from '../components/home/SellerSpotlight';
 
-// State & Data
 import { useStore } from '../context/StoreContext';
 import { useAuthStore, useCartStore } from '../context/stores';
 import { defaultSiteConfig, fetchSiteConfig } from '../utils/siteConfig';
 
-gsap.registerPlugin(ScrollTrigger);
-
 const Home = () => {
-  const { products, loadingProducts } = useStore();
+  const { products } = useStore();
   const { user } = useAuthStore();
   const { recentlyViewed } = useCartStore();
   const isAdmin = user?.role === 'admin' || user?.isAdmin;
@@ -36,12 +30,6 @@ const Home = () => {
     [products]
   );
 
-  // Animation setup removed in favor of instant rendering (2024 standard)
-  useEffect(() => {
-    // We intentionally leave this empty or remove it entirely
-    // Modern e-commerce prioritizes instant Time-To-Interactive over heavy scroll reveals
-  }, [loadingProducts]);
-
   useEffect(() => {
     const loadConfig = async () => {
       try {
@@ -51,136 +39,112 @@ const Home = () => {
         setSiteConfig(defaultSiteConfig);
       }
     };
+
     loadConfig();
   }, []);
 
+  const inspiredByBrowsing = products
+    .filter(
+      (p) =>
+        recentlyViewed.some((rv) => rv.category === p.category) &&
+        !recentlyViewed.some((rv) => (rv._id || rv.id) === (p._id || p.id))
+    )
+    .slice(0, 10);
+
   return (
-    <div className="bg-white min-h-screen flex flex-col space-y-0 pb-12">
-      {/* 1. Hero Carousel (380px) */}
-      <section className="animate-section">
+    <div className="min-h-screen pb-14">
+      <section className="site-shell pt-4 md:pt-6">
         <HeroCarousel />
       </section>
 
       {siteConfig.globalAnnouncementEnabled && siteConfig.globalAnnouncementText && (
-        <section className="bg-brand-primary text-white py-2.5 animate-section">
-          <div className="max-w-[1400px] mx-auto px-4 md:px-8 text-small font-bold text-center tracking-wide">
+        <section className="site-shell mt-4">
+          <div className="rounded-2xl bg-gradient-to-r from-brand-primary to-[#0f2f94] px-4 py-2.5 text-center text-xs md:text-sm font-semibold text-white">
             {siteConfig.globalAnnouncementText}
           </div>
         </section>
       )}
 
       {isAdmin && (
-        <section className="px-4 md:px-8 pt-6 animate-section">
-          <div className="max-w-[1400px] mx-auto">
-            <div className="bg-surface-secondary border border-border-default rounded-pro p-4 md:p-5 flex items-center justify-between gap-4">
-              <div>
-                <p className="text-caption font-bold text-text-muted uppercase tracking-wider">Admin Access</p>
-                <p className="text-small text-text-primary">Manage users, sellers, orders, and platform metrics.</p>
-              </div>
-              <Link to="/admin/dashboard" className="bg-brand-primary text-white px-5 py-2.5 rounded-pill font-bold hover:bg-brand-hover transition-colors whitespace-nowrap">
-                Open Admin Dashboard
-              </Link>
+        <section className="site-shell mt-5">
+          <div className="panel p-4 md:p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.16em] font-bold text-text-muted">Admin Access</p>
+              <p className="text-sm text-text-secondary mt-1">Manage sellers, orders, and platform performance from one place.</p>
             </div>
+            <Link
+              to="/admin/dashboard"
+              className="inline-flex items-center justify-center rounded-pill bg-brand-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-hover"
+            >
+              Open Admin Dashboard
+            </Link>
           </div>
         </section>
       )}
 
-      {/* 2. Category Quick Links (120px) */}
-      <section className="bg-white border-y border-border-default h-[120px] flex items-center animate-section">
-        <CategoryQuickLinks />
+      <section className="site-shell mt-6">
+        <div className="panel p-3 md:p-4">
+          <CategoryQuickLinks />
+        </div>
       </section>
 
       {siteConfig.showDealsSection && (
-        <section className="bg-surface-secondary py-12 animate-section">
-          <div className="max-w-[1400px] mx-auto px-4 md:px-8">
-            <DealsSection products={products.filter(p => p.isDeal)} />
+        <section className="site-shell mt-7">
+          <div className="panel p-4 md:p-6">
+            <DealsSection products={products.filter((p) => p.isDeal)} />
           </div>
         </section>
       )}
 
       {siteConfig.showRecommended && (
-        <section className="py-12 animate-section">
-          <div className="max-w-[1400px] mx-auto px-4 md:px-8">
-            <ProductRow 
-              eyebrow="PERSONALISED" 
-              title="Recommended For You" 
-              products={products.slice(0, 10)} 
-            />
-          </div>
+        <section className="site-shell mt-8">
+          <ProductRow eyebrow="PERSONALISED" title="Recommended For You" products={products.slice(0, 10)} />
         </section>
       )}
 
       {siteConfig.showCategoryPanels && (
-        <section className="py-12 bg-surface-secondary/50 animate-section">
-          <div className="max-w-[1400px] mx-auto px-4 md:px-8">
+        <section className="site-shell mt-9">
+          <div className="panel p-4 md:p-6">
             <CategoryPanels />
           </div>
         </section>
       )}
 
       {siteConfig.showWideBanner && (
-        <section className="px-4 md:px-8 pb-12 animate-section">
-          <div className="max-w-[1400px] mx-auto">
-            <WideBanner />
-          </div>
+        <section className="site-shell mt-9">
+          <WideBanner />
         </section>
       )}
 
       {siteConfig.showBestsellers && (
-        <section className="pb-12 animate-section">
-          <div className="max-w-[1400px] mx-auto px-4 md:px-8">
-            <ProductRow 
-              eyebrow="POPULAR" 
-              title="Bestsellers" 
-              products={bestsellerProducts} 
-            />
-          </div>
+        <section className="site-shell mt-10">
+          <ProductRow eyebrow="POPULAR" title="Bestsellers" products={bestsellerProducts} />
         </section>
       )}
 
       {siteConfig.showNewArrivals && (
-        <section className="pb-12 animate-section">
-          <div className="max-w-[1400px] mx-auto px-4 md:px-8">
-            <ProductRow 
-              eyebrow="JUST IN" 
-              title="New Arrivals" 
-              products={newArrivalProducts} 
-            />
-          </div>
+        <section className="site-shell mt-10">
+          <ProductRow eyebrow="JUST IN" title="New Arrivals" products={newArrivalProducts} />
         </section>
       )}
 
       {siteConfig.showSellerSpotlight && (
-        <section className="py-12 bg-brand-light/30 animate-section">
-          <div className="max-w-[1400px] mx-auto px-4 md:px-8">
+        <section className="site-shell mt-10">
+          <div className="panel p-4 md:p-6">
             <SellerSpotlight />
           </div>
         </section>
       )}
 
-       {siteConfig.showRecentlyViewed && recentlyViewed.length > 0 && (
+      {siteConfig.showRecentlyViewed && recentlyViewed.length > 0 && (
         <>
-          <section className="py-12 animate-section">
-            <div className="max-w-[1400px] mx-auto px-4 md:px-8">
-              <ProductRow 
-                eyebrow="YOUR HISTORY" 
-                title="Recently Viewed" 
-                products={recentlyViewed} 
-              />
-            </div>
+          <section className="site-shell mt-10">
+            <ProductRow eyebrow="YOUR HISTORY" title="Recently Viewed" products={recentlyViewed} />
           </section>
 
-          {/* Inspired by your browsing */}
-          <section className="py-12 bg-surface-secondary/30 animate-section border-y border-border-default">
-            <div className="max-w-[1400px] mx-auto px-4 md:px-8">
-              <ProductRow 
-                eyebrow="AI PERSONALISED" 
-                title="Inspired by your browsing" 
-                products={products.filter(p => 
-                  recentlyViewed.some(rv => rv.category === p.category) && 
-                  !recentlyViewed.some(rv => (rv._id || rv.id) === (p._id || p.id))
-                ).slice(0, 10)} 
-              />
+          <section className="site-shell mt-10">
+            <div className="panel p-4 md:p-6">
+              <ProductRow eyebrow="AI PERSONALISED" title="Inspired by your browsing" products={inspiredByBrowsing} />
             </div>
           </section>
         </>

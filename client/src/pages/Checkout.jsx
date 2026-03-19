@@ -231,13 +231,13 @@ const Checkout = () => {
   }
 
   return (
-    <div className="bg-surface-secondary min-h-screen py-8 md:py-12">
-      <div className="max-w-[1200px] mx-auto px-4 md:px-8">
+    <div className="min-h-screen py-8 md:py-10">
+      <div className="site-shell max-w-[1240px]">
         <StepIndicator currentStep={step} />
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 items-start">
           {/* Main Flow */}
-          <main className="bg-white border border-border-default rounded-pro p-6 md:p-8 relative overflow-hidden shadow-sm">
+          <main className="panel p-5 md:p-7 relative overflow-hidden">
             {step === 1 && (
               <div className="space-y-6 animate-in fade-in zoom-in-95 duration-200">
                 <div className="flex items-center justify-between mb-6 pb-4 border-b border-border-default">
@@ -393,7 +393,7 @@ const Checkout = () => {
                   <button onClick={prevStep} className="flex items-center gap-1.5 text-small font-bold text-text-secondary hover:text-text-primary transition-colors">
                     <ArrowLeft size={16} /> Delivery Details
                   </button>
-                  <button onClick={nextStep} className="w-full md:w-auto bg-brand-primary text-white px-8 py-3 rounded-md font-bold hover:bg-brand-hover transition-all flex items-center justify-center gap-2 shadow-sm">
+                  <button onClick={nextStep} className="w-full md:w-auto bg-brand-primary text-white px-8 py-3 rounded-xl font-bold hover:bg-brand-hover transition-colors flex items-center justify-center gap-2 shadow-sm">
                     Summary <ChevronRight size={16} />
                   </button>
                 </div>
@@ -440,10 +440,10 @@ const Checkout = () => {
                   <button onClick={prevStep} className="flex items-center gap-1.5 text-small font-bold text-text-secondary hover:text-text-primary transition-colors">
                     <ArrowLeft size={16} /> Payment Options
                   </button>
-                  <button 
+                  <button
                     onClick={handlePlaceOrder}
                     disabled={isPlacing}
-                    className="w-full md:w-auto bg-brand-primary text-white px-8 py-3 rounded-md font-bold hover:bg-brand-hover transition-all flex items-center justify-center gap-2 group shadow-sm disabled:opacity-80"
+                    className="w-full md:w-auto bg-brand-primary text-white px-8 py-3 rounded-xl font-bold hover:bg-brand-hover transition-colors flex items-center justify-center gap-2 group shadow-sm disabled:opacity-80"
                   >
                     {isPlacing ? (
                       <div className="flex items-center gap-2">
@@ -468,7 +468,7 @@ const Checkout = () => {
 
           {/* Sidebar Summary */}
           <aside className="sticky top-[100px]">
-            <div className="bg-white border border-border-default rounded-pro p-6 shadow-sm">
+            <div className="panel p-5 md:p-6">
               <h2 className="text-body font-bold text-text-primary mb-5">Price Summary</h2>
               <div className="space-y-3">
                 <div className="flex justify-between text-small text-text-secondary">

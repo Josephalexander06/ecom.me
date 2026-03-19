@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { LayoutGrid, ListFilter, Info } from 'lucide-react';
+import { ListFilter, Info } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import ProductCard from '../components/ui/ProductCard';
 import FilterSidebar from '../components/listing/FilterSidebar';
@@ -11,7 +11,6 @@ const ProductListing = () => {
   const { products, facets, categories, loadingProducts } = useStore();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Filter params
   const q = searchParams.get('q')?.toLowerCase() || '';
   const category = searchParams.get('category') || 'All';
   const selectedBrands = searchParams.getAll('brand');
@@ -19,20 +18,20 @@ const ProductListing = () => {
   const maxPrice = Number(searchParams.get('maxPrice') || '200000');
   const sort = searchParams.get('sort') || 'featured';
 
-  const brands = useMemo(() => 
-    Array.from(new Set((products || []).map(p => p.brand).filter(Boolean))), 
-  [products]);
+  const brands = useMemo(
+    () => Array.from(new Set((products || []).map((p) => p.brand).filter(Boolean))),
+    [products]
+  );
 
   const [isFiltering, setIsFiltering] = useState(false);
 
   const filteredProducts = useMemo(() => {
-    let result = (products || []).filter(p => {
+    let result = (products || []).filter((p) => {
       if (!p) return false;
+
       const productName = p.name || '';
       const productBrand = p.brand || '';
-      const matchQuery = !q || 
-        productName.toLowerCase().includes(q) || 
-        productBrand.toLowerCase().includes(q);
+      const matchQuery = !q || productName.toLowerCase().includes(q) || productBrand.toLowerCase().includes(q);
       const matchCat = category === 'All' || p.category === category;
       const matchBrand = selectedBrands.length === 0 || selectedBrands.includes(p.brand);
       const matchRating = (p.averageRating || 4.5) >= rating;
@@ -40,18 +39,17 @@ const ProductListing = () => {
       return matchQuery && matchCat && matchBrand && matchRating && matchPrice;
     });
 
-    if (sort === 'price-low') result.sort((a,b) => (a.dealPrice || a.price) - (b.dealPrice || b.price));
-    if (sort === 'price-high') result.sort((a,b) => (b.dealPrice || b.price) - (a.dealPrice || a.price));
-    if (sort === 'rating') result.sort((a,b) => (b.averageRating || 4.5) - (a.averageRating || 4.5));
+    if (sort === 'price-low') result.sort((a, b) => (a.dealPrice || a.price) - (b.dealPrice || b.price));
+    if (sort === 'price-high') result.sort((a, b) => (b.dealPrice || b.price) - (a.dealPrice || a.price));
+    if (sort === 'rating') result.sort((a, b) => (b.averageRating || 4.5) - (a.averageRating || 4.5));
 
     return result;
   }, [products, q, category, JSON.stringify(selectedBrands), rating, maxPrice, sort]);
 
-  // Simulate network delay for filter changes so it feels like a real query
   React.useEffect(() => {
     if (!loadingProducts) {
       setIsFiltering(true);
-      const timer = setTimeout(() => setIsFiltering(false), 400); // 400ms mock delay
+      const timer = setTimeout(() => setIsFiltering(false), 300);
       return () => clearTimeout(timer);
     }
   }, [q, category, JSON.stringify(selectedBrands), rating, maxPrice, sort, loadingProducts]);
@@ -62,30 +60,30 @@ const ProductListing = () => {
     setSearchParams(next);
   };
 
-
   return (
-    <div className="bg-white min-h-screen">
-      {/* Search Result Information */}
-      <div className="bg-surface-secondary border-b border-border-default py-3">
-        <div className="max-w-[1400px] mx-auto px-4 md:px-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="text-small text-text-secondary">
+    <div className="min-h-screen pb-10">
+      <section className="site-shell pt-5">
+        <div className="panel px-4 py-3 md:px-6 md:py-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div className="text-sm text-text-secondary">
             {q ? (
-              <span className="flex items-center gap-1.5 flex-wrap">
-                Showing results for <span className="text-text-primary font-bold italic">"{q}"</span> 
-                in <span className="text-text-primary font-bold">{category}</span>
+              <span>
+                Showing results for <span className="font-bold text-text-primary">"{q}"</span> in{' '}
+                <span className="font-bold text-text-primary">{category}</span>
               </span>
             ) : (
-              <span>Explore products in <span className="text-text-primary font-bold">{category}</span></span>
+              <span>
+                Explore products in <span className="font-bold text-text-primary">{category}</span>
+              </span>
             )}
-            <span className="ml-2 text-text-muted font-medium">({filteredProducts.length} items found)</span>
+            <span className="ml-2 text-text-muted">({filteredProducts.length} found)</span>
           </div>
-          
-          <div className="flex items-center gap-3">
-            <span className="text-caption font-bold text-text-secondary whitespace-nowrap hidden sm:block">Sort by:</span>
-            <select 
+
+          <div className="flex items-center gap-2.5">
+            <span className="hidden sm:block text-xs font-bold uppercase tracking-[0.14em] text-text-muted">Sort</span>
+            <select
               value={sort}
               onChange={(e) => updateSort(e.target.value)}
-              className="bg-white border border-border-default rounded-lg px-4 py-2 text-small font-bold text-text-primary focus:outline-none focus:border-brand-primary cursor-pointer shadow-sm min-w-[160px]"
+              className="h-10 rounded-xl border border-border-default bg-white px-3 text-sm font-semibold text-text-primary focus:outline-none focus:border-brand-primary"
             >
               <option value="featured">Most Popular</option>
               <option value="price-low">Price: Low to High</option>
@@ -95,66 +93,63 @@ const ProductListing = () => {
             </select>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-8 flex flex-col lg:flex-row gap-8">
-        {/* Sidebar Filters */}
-        <div className="hidden lg:block w-[280px] flex-shrink-0">
-          <FilterSidebar categories={categories} brands={brands} facets={facets} />
-        </div>
+      <section className="site-shell mt-6 flex flex-col lg:flex-row gap-6 lg:gap-8">
+        <aside className="hidden lg:block w-[280px] shrink-0">
+          <div className="panel p-4">
+            <FilterSidebar categories={categories} brands={brands} facets={facets} />
+          </div>
+        </aside>
 
-        {/* Main Content */}
         <main className="flex-1">
-          {/* Mobile Filter Toggle */}
-          <div className="lg:hidden flex items-center justify-between mb-8 bg-surface-secondary p-4 rounded-pro border border-border-default shadow-sm">
-            <button className="flex items-center gap-2.5 text-small font-bold text-brand-primary">
-              <div className="bg-brand-primary text-white p-1.5 rounded-md">
-                <ListFilter size={18} />
-              </div>
-              REFINE SEARCH
+          <div className="lg:hidden panel px-4 py-3 mb-5 flex items-center justify-between">
+            <button className="inline-flex items-center gap-2 text-sm font-semibold text-brand-primary">
+              <ListFilter size={16} />
+              Refine Search
             </button>
-            <div className="text-caption font-bold text-text-muted uppercase tracking-tighter">{filteredProducts.length} Matches</div>
+            <span className="text-xs font-bold uppercase tracking-[0.14em] text-text-muted">{filteredProducts.length} matches</span>
           </div>
 
-          {/* Sponsored Row (Simulated) */}
           {filteredProducts.length > 0 && !loadingProducts && !q && (
-            <div className="mb-12 p-6 bg-surface-secondary/50 rounded-pro border border-border-default relative">
-              <h3 className="text-small font-bold text-text-secondary mb-6 flex items-center gap-2">
+            <div className="panel p-4 md:p-5 mb-6">
+              <h3 className="text-xs font-bold uppercase tracking-[0.14em] text-text-muted mb-4 inline-flex items-center gap-1.5">
                 Sponsored
-                <Info size={14} className="text-text-muted" />
+                <Info size={13} />
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {filteredProducts.slice(0, 4).map(p => (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-5">
+                {filteredProducts.slice(0, 4).map((p) => (
                   <ProductCard key={`sponsored-${p._id || p.id}`} product={p} />
                 ))}
               </div>
             </div>
           )}
 
-          {/* Product Grid */}
           {loadingProducts || isFiltering ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-              {Array.from({ length: 12 }).map((_, i) => <SkeletonCard key={i} />)}
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-5">
+              {Array.from({ length: 12 }).map((_, i) => (
+                <SkeletonCard key={i} />
+              ))}
             </div>
           ) : filteredProducts.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-12">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-5">
               {filteredProducts.map((product) => (
                 <ProductCard key={product._id || product.id} product={product} />
               ))}
             </div>
           ) : (
-            <div className="py-20">
-              <EmptyState 
-                type="search" 
-                title="No items found" 
-                message="We couldn't find what you're looking for. Please try different filters or keywords."
+            <div className="panel p-8 md:p-10">
+              <EmptyState
+                type="search"
+                title="No items found"
+                message="Try changing filters or searching with another keyword."
                 actionLabel="Reset All Filters"
                 actionLink="/products"
               />
             </div>
           )}
         </main>
-      </div>
+      </section>
     </div>
   );
 };

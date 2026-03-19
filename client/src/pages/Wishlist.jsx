@@ -13,6 +13,7 @@ const Wishlist = () => {
 
   useEffect(() => {
     if (!isAuthenticated) return;
+
     const load = async () => {
       try {
         const response = await fetch(`${API_BASE}/auth/wishlist`, { headers: authHeaders() });
@@ -25,6 +26,7 @@ const Wishlist = () => {
         setLoading(false);
       }
     };
+
     load();
   }, [isAuthenticated]);
 
@@ -34,7 +36,7 @@ const Wishlist = () => {
     try {
       const response = await fetch(`${API_BASE}/auth/wishlist/${id}`, {
         method: 'POST',
-        headers: authHeaders()
+        headers: authHeaders(),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || 'Failed to update wishlist');
@@ -46,17 +48,23 @@ const Wishlist = () => {
   };
 
   return (
-    <div className="bg-surface-secondary min-h-screen py-10">
-      <div className="max-w-[1200px] mx-auto px-4 md:px-8">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-h2 font-display text-text-primary">My Wishlist</h1>
-          <Link to="/products" className="text-small font-bold text-brand-primary hover:underline">Continue Shopping</Link>
+    <div className="min-h-screen pb-10">
+      <section className="site-shell pt-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl md:text-4xl font-display font-bold tracking-tight">My Wishlist</h1>
+          <Link to="/products" className="text-sm font-semibold text-brand-primary hover:underline">
+            Continue Shopping
+          </Link>
         </div>
+      </section>
 
+      <section className="site-shell mt-5">
         {!loading && items.length === 0 ? (
-          <EmptyState type="search" title="Your wishlist is empty" message="Save products you love to find them quickly later." />
+          <div className="panel p-8 md:p-10">
+            <EmptyState type="search" title="Your wishlist is empty" message="Save products you love to revisit them quickly." />
+          </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-5">
             {items.map((product) => {
               const id = product._id || product.id;
               return (
@@ -64,7 +72,7 @@ const Wishlist = () => {
                   <ProductCard product={product} />
                   <button
                     onClick={() => remove(id)}
-                    className="absolute top-3 right-3 bg-white border border-border-default rounded-full px-3 py-1 text-caption font-bold text-danger hover:bg-danger/5"
+                    className="absolute top-3 right-3 rounded-pill border border-border-default bg-white px-3 py-1 text-xs font-semibold text-danger hover:bg-rose-50"
                   >
                     Remove
                   </button>
@@ -73,10 +81,9 @@ const Wishlist = () => {
             })}
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
 };
 
 export default Wishlist;
-

@@ -6,34 +6,28 @@ import { Link } from 'react-router-dom';
 const slides = [
   {
     id: 1,
-    title: "The All-New iPhone 15 Pro",
-    subtitle: "Titanium. So strong. So light. So Pro.",
-    image: "https://images.unsplash.com/photo-1695048133142-1a20484d2569?q=80&w=2670&auto=format&fit=crop",
-    link: "/products?q=iphone",
-    cta: "Buy Now",
-    align: "left",
-    theme: "dark"
+    title: 'Performance-First Devices',
+    subtitle: 'Flagship phones, wearables, and accessories curated for modern workflows.',
+    image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?q=80&w=2670&auto=format&fit=crop',
+    link: '/products?category=Mobiles',
+    cta: 'Explore Mobiles',
   },
   {
     id: 2,
-    title: "Sony WH-1000XM5",
-    subtitle: "Your world. Nothing else.",
-    image: "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?q=80&w=2788&auto=format&fit=crop",
-    link: "/products?category=Electronics",
-    cta: "Shop Audio",
-    align: "right",
-    theme: "light"
+    title: 'Studio Grade Audio',
+    subtitle: 'Immersive sound systems built for focus, creation, and entertainment.',
+    image: 'https://images.unsplash.com/photo-1546435770-a3e426bf472b?q=80&w=2574&auto=format&fit=crop',
+    link: '/products?category=Electronics',
+    cta: 'Shop Audio',
   },
   {
     id: 3,
-    title: "Summer Wardrobe Reset",
-    subtitle: "Up to 40% off on premium lifestyle apparel.",
-    image: "https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?q=80&w=2670&auto=format&fit=crop",
-    link: "/products?category=Fashion",
-    cta: "Explore Fashion",
-    align: "center",
-    theme: "dark"
-  }
+    title: 'Next Season Fashion',
+    subtitle: 'Clean silhouettes and premium essentials with faster doorstep delivery.',
+    image: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=2669&auto=format&fit=crop',
+    link: '/products?category=Fashion',
+    cta: 'View Collection',
+  },
 ];
 
 const HeroCarousel = () => {
@@ -42,7 +36,8 @@ const HeroCarousel = () => {
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrent((prev) => (prev + 1) % slides.length);
-    }, 5000); // 5 second auto-advance
+    }, 5500);
+
     return () => clearInterval(timer);
   }, []);
 
@@ -50,117 +45,75 @@ const HeroCarousel = () => {
   const prev = () => setCurrent((prev) => (prev - 1 + slides.length) % slides.length);
 
   return (
-    <div className="relative w-full h-[400px] md:h-[500px] lg:h-[600px] overflow-hidden bg-surface-secondary group/carousel">
+    <div className="panel relative overflow-hidden min-h-[420px] md:min-h-[520px] group">
       <AnimatePresence initial={false} mode="wait">
         <motion.div
-          key={current}
-          initial={{ x: 300, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          exit={{ x: -300, opacity: 0 }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          key={slides[current].id}
+          initial={{ opacity: 0, scale: 1.02 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 1.02 }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
           className="absolute inset-0"
         >
-          {/* Background Image with Zoom Effect */}
-          <div className="absolute inset-0 overflow-hidden">
-            <motion.img 
-              initial={{ scale: 1.1 }}
-              animate={{ scale: 1 }}
-              transition={{ duration: 6 }}
-              src={slides[current].image} 
-              alt={slides[current].title}
-              className="w-full h-full object-cover object-center"
-            />
-            <div className={`absolute inset-0 bg-gradient-to-r ${
-              slides[current].theme === 'dark' 
-                ? 'from-black/70 via-black/40 to-transparent' 
-                : 'from-white/40 via-transparent to-transparent'
-            }`} />
-          </div>
-
-          {/* Content Wrapper */}
-          <div className="relative h-full max-w-[1400px] mx-auto px-6 md:px-12 flex items-center">
-            <div className={`w-full max-w-2xl ${
-              slides[current].align === 'center' ? 'mx-auto text-center' : 
-              slides[current].align === 'right' ? 'ml-auto text-right' : 'text-left'
-            }`}>
-              <motion.div
-                initial={{ y: 30, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.3, duration: 0.5 }}
-              >
-                 <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-bold tracking-[0.2em] uppercase mb-4 ${
-                   slides[current].theme === 'dark' ? 'bg-white/20 text-white backdrop-blur-md' : 'bg-brand-primary/10 text-brand-primary'
-                 }`}>
-                   Featured Arrival
-                 </span>
-              </motion.div>
-
-              <motion.h2 
-                initial={{ y: 30, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.4, duration: 0.6 }}
-                className={`text-h1 md:text-[64px] font-display font-black leading-[1.05] tracking-tight mb-6 ${slides[current].theme === 'dark' ? 'text-white' : 'text-gray-900'}`}
-              >
-                {slides[current].title}
-              </motion.h2>
-
-              <motion.p 
-                initial={{ y: 30, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.5, duration: 0.6 }}
-                className={`text-body md:text-h3 font-medium mb-10 opacity-90 ${slides[current].theme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}
-              >
-                {slides[current].subtitle}
-              </motion.p>
-
-              <motion.div
-                initial={{ y: 30, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.6, duration: 0.6 }}
-                className={slides[current].align === 'center' ? 'flex justify-center' : slides[current].align === 'right' ? 'flex justify-end' : ''}
-              >
-                <Link 
-                  to={slides[current].link}
-                  className={`group/btn inline-flex items-center gap-3 px-10 py-4 rounded-full font-bold transition-all shadow-2xl hover:scale-105 active:scale-95 ${
-                    slides[current].theme === 'dark' 
-                      ? 'bg-white text-brand-primary hover:shadow-white/20' 
-                      : 'bg-brand-primary text-white hover:bg-brand-hover hover:shadow-brand-primary/20'
-                  }`}
-                >
-                  {slides[current].cta} 
-                  <ArrowRight size={20} className="group-hover/btn:translate-x-1 transition-transform" />
-                </Link>
-              </motion.div>
-            </div>
-          </div>
+          <img
+            src={slides[current].image}
+            alt={slides[current].title}
+            className="h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/75 via-slate-900/45 to-slate-900/10" />
         </motion.div>
       </AnimatePresence>
 
-      {/* Navigation Arrows (Modern Style) */}
-      <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 px-4 md:px-8 flex justify-between items-center pointer-events-none opacity-0 group-hover/carousel:opacity-100 transition-opacity duration-300">
-        <button 
+      <div className="relative z-10 h-full min-h-[420px] md:min-h-[520px] p-6 md:p-10 lg:p-14 flex items-end">
+        <motion.div
+          key={`content-${slides[current].id}`}
+          initial={{ y: 22, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+          className="max-w-2xl"
+        >
+          <span className="inline-flex items-center rounded-pill border border-white/30 bg-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-white/90 backdrop-blur-sm">
+            New Curated Drop
+          </span>
+          <h2 className="mt-4 text-3xl md:text-5xl lg:text-6xl leading-[1.02] font-extrabold text-white text-balance">
+            {slides[current].title}
+          </h2>
+          <p className="mt-4 max-w-xl text-sm md:text-lg text-slate-200 text-balance">
+            {slides[current].subtitle}
+          </p>
+          <Link
+            to={slides[current].link}
+            className="mt-8 inline-flex items-center gap-2 rounded-pill bg-white px-6 py-3 text-sm font-bold text-brand-primary hover:bg-slate-100 transition-colors"
+          >
+            {slides[current].cta}
+            <ArrowRight size={16} />
+          </Link>
+        </motion.div>
+      </div>
+
+      <div className="absolute top-1/2 inset-x-0 -translate-y-1/2 px-3 md:px-5 flex justify-between pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+        <button
           onClick={prev}
-          className="w-12 h-12 md:w-14 md:h-14 bg-white/10 backdrop-blur-xl border border-white/20 text-white rounded-full flex items-center justify-center hover:bg-white hover:text-brand-primary transition-all pointer-events-auto shadow-2xl"
-          aria-label="Previous Slide"
+          aria-label="Previous slide"
+          className="pointer-events-auto h-10 w-10 md:h-11 md:w-11 rounded-full border border-white/30 bg-slate-900/40 text-white grid place-items-center backdrop-blur-sm hover:bg-white hover:text-slate-900 transition-all"
         >
-          <ChevronLeft size={28} />
+          <ChevronLeft size={20} />
         </button>
-        <button 
+        <button
           onClick={next}
-          className="w-12 h-12 md:w-14 md:h-14 bg-white/10 backdrop-blur-xl border border-white/20 text-white rounded-full flex items-center justify-center hover:bg-white hover:text-brand-primary transition-all pointer-events-auto shadow-2xl"
-          aria-label="Next Slide"
+          aria-label="Next slide"
+          className="pointer-events-auto h-10 w-10 md:h-11 md:w-11 rounded-full border border-white/30 bg-slate-900/40 text-white grid place-items-center backdrop-blur-sm hover:bg-white hover:text-slate-900 transition-all"
         >
-          <ChevronRight size={28} />
+          <ChevronRight size={20} />
         </button>
       </div>
 
-      {/* Slide Indicators (Modern Pills) */}
-      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-3 z-10 p-2 rounded-full backdrop-blur-md bg-black/10 border border-white/10">
-        {slides.map((_, idx) => (
+      <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-10 rounded-pill border border-white/20 bg-slate-900/25 px-3 py-2 backdrop-blur-sm flex items-center gap-2">
+        {slides.map((slide, idx) => (
           <button
-            key={idx}
+            key={slide.id}
             onClick={() => setCurrent(idx)}
-            className={`transition-all duration-500 rounded-full h-1.5 ${current === idx ? 'w-10 bg-brand-primary' : 'w-2 bg-white/40 hover:bg-white'}`}
+            className={`h-1.5 rounded-pill transition-all ${idx === current ? 'w-8 bg-white' : 'w-2 bg-white/45 hover:bg-white/70'}`}
             aria-label={`Go to slide ${idx + 1}`}
           />
         ))}

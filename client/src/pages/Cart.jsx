@@ -1,15 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Trash2, 
-  Minus, 
-  Plus, 
-  ShoppingBag, 
-  ArrowRight, 
-  ShieldCheck, 
-  Truck 
-} from 'lucide-react';
+import { Trash2, Minus, Plus, ArrowRight, ShieldCheck, Truck } from 'lucide-react';
 import { useCartStore, useAuthStore, useUIStore } from '../context/stores';
 import { useStore } from '../context/StoreContext';
 import { fetchSiteConfig, defaultSiteConfig } from '../utils/siteConfig';
@@ -19,7 +11,7 @@ import toast from 'react-hot-toast';
 
 const CartItem = ({ item }) => {
   const { updateQuantity, removeItem } = useCartStore();
-  
+
   const handleRemove = () => {
     removeItem(item.productId);
     toast.error(`${item.name} removed from bag`);
@@ -32,51 +24,39 @@ const CartItem = ({ item }) => {
   };
 
   return (
-    <div className="flex gap-4 md:gap-6 py-6 border-b border-border-default last:border-0 group/cart">
-      <Link to={`/product/${item.productId}`} className="w-24 h-24 md:w-32 md:h-32 bg-surface-secondary rounded-img overflow-hidden flex-shrink-0 border border-border-default group-hover/cart:opacity-80 transition-opacity">
+    <div className="flex gap-4 md:gap-5 py-5 border-b border-border-default last:border-0">
+      <Link to={`/product/${item.productId}`} className="w-24 h-24 md:w-28 md:h-28 rounded-xl bg-surface-secondary border border-border-default overflow-hidden shrink-0">
         <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
       </Link>
 
-      <div className="flex-1 flex flex-col justify-between">
-        <div className="flex justify-between gap-4">
+      <div className="flex-1">
+        <div className="flex justify-between gap-3">
           <div>
-            <Link to={`/product/${item.productId}`} className="text-small md:text-body font-bold text-text-primary line-clamp-2 hover:text-brand-primary transition-colors cursor-pointer">
+            <Link to={`/product/${item.productId}`} className="text-sm md:text-base font-semibold text-text-primary line-clamp-2 hover:text-brand-primary">
               {item.name}
             </Link>
-            <p className="text-caption text-text-muted mt-1">In Stock</p>
+            <p className="text-xs text-text-muted mt-1">In stock</p>
           </div>
           <div className="text-right">
-            <span className="text-body font-mono font-bold text-text-primary">
-              ₹{(item.price * item.quantity).toLocaleString('en-IN')}
-            </span>
-            <p className="text-caption text-text-muted mt-1 uppercase tracking-tighter">
-              ₹{item.price.toLocaleString('en-IN')} ea.
-            </p>
+            <p className="text-base font-bold text-text-primary">₹{(item.price * item.quantity).toLocaleString('en-IN')}</p>
+            <p className="text-xs text-text-muted">₹{item.price.toLocaleString('en-IN')} each</p>
           </div>
         </div>
 
-        <div className="flex items-center justify-between mt-4">
-          <div className="flex items-center gap-1.5 bg-surface-secondary rounded-lg border border-border-default p-1">
-            <button 
-              onClick={() => handleUpdate(item.quantity - 1)}
-              className="w-8 h-8 flex items-center justify-center hover:bg-surface-tertiary rounded-md transition-colors"
-            >
+        <div className="mt-4 flex items-center justify-between">
+          <div className="inline-flex items-center rounded-lg border border-border-default bg-surface-secondary p-1">
+            <button onClick={() => handleUpdate(item.quantity - 1)} className="h-7 w-7 grid place-items-center rounded hover:bg-surface-tertiary">
               <Minus size={14} />
             </button>
-            <span className="w-8 text-center text-small font-bold">{item.quantity}</span>
-            <button 
-              onClick={() => handleUpdate(item.quantity + 1)}
-              className="w-8 h-8 flex items-center justify-center hover:bg-surface-tertiary rounded-md transition-colors"
-            >
+            <span className="w-8 text-center text-sm font-semibold">{item.quantity}</span>
+            <button onClick={() => handleUpdate(item.quantity + 1)} className="h-7 w-7 grid place-items-center rounded hover:bg-surface-tertiary">
               <Plus size={14} />
             </button>
           </div>
 
-          <button 
-            onClick={handleRemove}
-            className="flex items-center gap-1.5 text-caption font-bold text-danger hover:underline"
-          >
-            <Trash2 size={14} /> Remove
+          <button onClick={handleRemove} className="inline-flex items-center gap-1 text-xs font-semibold text-danger hover:underline">
+            <Trash2 size={13} />
+            Remove
           </button>
         </div>
       </div>
@@ -104,136 +84,116 @@ const Cart = () => {
     loadConfig();
   }, []);
 
-  const subtotal = useMemo(() => {
-    return items.reduce((sum, item) => sum + (Number(item.price) || 0) * (Number(item.quantity) || 0), 0);
-  }, [items]);
+  const subtotal = useMemo(
+    () => items.reduce((sum, item) => sum + (Number(item.price) || 0) * (Number(item.quantity) || 0), 0),
+    [items]
+  );
 
   const threshold = siteConfig.freeShippingThreshold || 5000;
   const shippingCharge = siteConfig.defaultShippingCharge || 499;
-  
+
   const shipping = subtotal >= threshold ? 0 : shippingCharge;
-  const tax = subtotal * 0.18; // 18% GST for India
+  const tax = subtotal * 0.18;
   const total = subtotal + shipping + tax;
   const progressToFree = Math.min((subtotal / threshold) * 100, 100);
 
   if (items.length === 0) {
     return (
-      <div className="max-w-[1400px] mx-auto px-4 py-12">
-        <EmptyState 
-          type="cart" 
-          actionLabel="Start Shopping" 
-          actionLink="/products" 
-        />
+      <div className="site-shell py-10">
+        <div className="panel p-8 md:p-10">
+          <EmptyState type="cart" actionLabel="Start Shopping" actionLink="/products" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white min-h-screen">
-      <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-8 lg:py-12">
-        <h1 className="text-h2 font-display text-text-primary mb-8 underline decoration-brand-primary decoration-4 underline-offset-8">
-          Shopping Cart
-        </h1>
+    <div className="min-h-screen pb-10">
+      <section className="site-shell pt-6">
+        <h1 className="text-3xl md:text-4xl font-display font-bold tracking-tight">Shopping Cart</h1>
+      </section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-12">
-          {/* Main Column */}
-          <section className="space-y-8">
-            {/* Free Shipping Progress */}
-            <div className="bg-surface-secondary border border-border-default rounded-pro p-6">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <Truck size={20} className={subtotal >= threshold ? 'text-success' : 'text-brand-primary'} />
-                  <span className="text-small font-bold text-text-primary">
-                    {subtotal >= threshold 
-                      ? "You've earned FREE Express Delivery!" 
-                      : `Add ₹${(threshold - subtotal).toLocaleString('en-IN')} for FREE Express Delivery`}
-                  </span>
-                </div>
-                <span className="text-caption font-bold text-text-muted">{Math.round(progressToFree)}%</span>
+      <section className="site-shell mt-5 grid grid-cols-1 lg:grid-cols-[1fr_370px] gap-6 lg:gap-8">
+        <div className="space-y-5">
+          <div className="panel p-4 md:p-5">
+            <div className="flex items-center justify-between mb-3">
+              <div className="inline-flex items-center gap-2 text-sm font-semibold text-text-primary">
+                <Truck size={16} className={subtotal >= threshold ? 'text-success' : 'text-brand-primary'} />
+                {subtotal >= threshold
+                  ? 'You unlocked free express delivery'
+                  : `Add ₹${(threshold - subtotal).toLocaleString('en-IN')} for free delivery`}
               </div>
-              <div className="h-2 w-full bg-white rounded-full overflow-hidden border border-border-default">
-                <motion.div 
-                   initial={{ width: 0 }}
-                   animate={{ width: `${progressToFree}%` }}
-                   transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
-                   className={`h-full ${subtotal >= threshold ? 'bg-success' : 'bg-brand-primary'}`} 
-                />
-              </div>
+              <span className="text-xs font-bold text-text-muted">{Math.round(progressToFree)}%</span>
             </div>
-
-            {/* Item List */}
-            <div className="bg-white border border-border-default rounded-pro p-4 md:p-8">
-              <div className="flex items-center justify-between border-b border-border-default pb-6 mb-2">
-                <h2 className="text-body font-bold text-text-primary">Your Items ({items.length})</h2>
-              </div>
-              <AnimatePresence>
-                {items.map(item => (
-                  <CartItem key={item.productId} item={item} />
-                ))}
-              </AnimatePresence>
+            <div className="h-2 rounded-full bg-surface-secondary border border-border-default overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${progressToFree}%` }}
+                transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
+                className={`h-full ${subtotal >= threshold ? 'bg-success' : 'bg-brand-primary'}`}
+              />
             </div>
-          </section>
+          </div>
 
-          {/* Sidebar: Order Summary */}
-          <aside className="relative">
-            <div className="bg-white border border-border-default rounded-pro p-8 sticky top-[120px] shadow-sm">
-              <h2 className="text-body font-bold text-text-primary mb-6">Price Details</h2>
-              
-              <div className="space-y-4 mb-8">
-                <div className="flex justify-between text-small text-text-secondary">
-                  <span>Price ({items.length} items)</span>
-                  <span className="font-mono text-text-primary font-bold">₹{subtotal.toLocaleString('en-IN')}</span>
-                </div>
-                <div className="flex justify-between text-small text-text-secondary">
-                  <span>Delivery Charges</span>
-                  {shipping === 0 ? (
-                    <span className="text-success font-bold">FREE</span>
-                  ) : (
-                    <span className="font-mono text-text-primary font-bold">₹{shipping}</span>
-                  )}
-                </div>
-                <div className="flex justify-between text-small text-text-secondary">
-                  <span>GST (18%)</span>
-                  <span className="font-mono text-text-primary font-bold">₹{tax.toLocaleString('en-IN')}</span>
-                </div>
-                <div className="h-[1px] bg-border-default my-4" />
-                <div className="flex justify-between text-body font-bold text-text-primary">
-                  <span>Total Amount</span>
-                  <span className="text-h3 font-mono font-bold text-brand-primary">₹{total.toLocaleString('en-IN')}</span>
-                </div>
-              </div>
-
-              <button 
-                onClick={() => {
-                  if (isAuthenticated) {
-                    navigate('/checkout');
-                  } else {
-                    setActiveModal('login');
-                  }
-                }}
-                className="w-full bg-brand-primary hover:bg-brand-hover text-white py-4 rounded-pro font-bold transition-all flex items-center justify-center gap-2 group mb-4 shadow-lg shadow-brand-primary/20"
-              >
-                Place Order
-                <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-              </button>
-              
-              <div className="flex gap-3 text-caption text-text-muted leading-tight mt-6 pt-6 border-t border-border-default">
-                <ShieldCheck size={18} className="text-success flex-shrink-0" />
-                <span>Your transaction is protected by SSL encryption and ecom.me's buyer protection.</span>
-              </div>
+          <div className="panel p-4 md:p-6">
+            <div className="flex items-center justify-between pb-4 border-b border-border-default">
+              <h2 className="text-base font-semibold">Your Items ({items.length})</h2>
             </div>
-          </aside>
+            <AnimatePresence>
+              {items.map((item) => (
+                <CartItem key={item.productId} item={item} />
+              ))}
+            </AnimatePresence>
+          </div>
         </div>
 
-        {/* Recommendations */}
-        <div className="mt-20 border-t border-border-default pt-20">
-          <ProductRow 
-            eyebrow="MORE DISCOVERIES" 
-            title="Customers also bought" 
-            products={products.slice(0, 10)} 
-          />
+        <aside>
+          <div className="panel p-5 md:p-6 sticky top-[110px]">
+            <h2 className="text-base font-semibold mb-5">Price Details</h2>
+
+            <div className="space-y-3.5 text-sm">
+              <div className="flex justify-between text-text-secondary">
+                <span>Items ({items.length})</span>
+                <span className="font-semibold text-text-primary">₹{subtotal.toLocaleString('en-IN')}</span>
+              </div>
+              <div className="flex justify-between text-text-secondary">
+                <span>Delivery</span>
+                {shipping === 0 ? <span className="font-semibold text-success">FREE</span> : <span className="font-semibold text-text-primary">₹{shipping}</span>}
+              </div>
+              <div className="flex justify-between text-text-secondary">
+                <span>Tax (GST)</span>
+                <span className="font-semibold text-text-primary">₹{tax.toLocaleString('en-IN')}</span>
+              </div>
+              <div className="border-t border-border-default pt-3.5 flex justify-between text-base font-bold">
+                <span>Total</span>
+                <span className="text-brand-primary">₹{total.toLocaleString('en-IN')}</span>
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                if (isAuthenticated) navigate('/checkout');
+                else setActiveModal('login');
+              }}
+              className="mt-6 w-full h-11 rounded-xl bg-brand-primary text-white font-semibold hover:bg-brand-hover transition-colors inline-flex items-center justify-center gap-2"
+            >
+              Place Order
+              <ArrowRight size={16} />
+            </button>
+
+            <div className="mt-5 pt-5 border-t border-border-default text-xs text-text-muted inline-flex gap-2">
+              <ShieldCheck size={15} className="text-success shrink-0 mt-0.5" />
+              <span>Secure checkout with encrypted payments and buyer protection.</span>
+            </div>
+          </div>
+        </aside>
+      </section>
+
+      <section className="site-shell mt-12">
+        <div className="panel p-4 md:p-6">
+          <ProductRow eyebrow="MORE DISCOVERIES" title="Customers also bought" products={products.slice(0, 10)} />
         </div>
-      </div>
+      </section>
     </div>
   );
 };

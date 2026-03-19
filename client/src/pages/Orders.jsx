@@ -15,10 +15,10 @@ const OrderCard = ({ order, index }) => {
   
   const statusColors = {
     pending: 'bg-brand-light text-brand-primary',
-    confirmed: 'bg-brand-secondary/20 text-brand-primary',
+    confirmed: 'bg-brand-light text-brand-primary',
     packed: 'bg-warning-light text-warning',
-    shipped: 'bg-success-light text-success',
-    delivered: 'bg-success-light text-success',
+    shipped: 'bg-emerald-100 text-success',
+    delivered: 'bg-emerald-100 text-success',
   };
 
   const normalizedStatus = (order.status || 'pending').toLowerCase();
@@ -96,9 +96,9 @@ const OrderCard = ({ order, index }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1 }}
-      className="bg-white border border-border-default rounded-pro overflow-hidden mb-6 shadow-sm hover:shadow-md transition-shadow"
+      className="panel overflow-hidden mb-5"
     >
-      <div className="bg-surface-secondary px-6 py-4 flex flex-wrap items-center justify-between gap-4 border-b border-border-default">
+      <div className="bg-surface-secondary/70 px-5 py-4 flex flex-wrap items-center justify-between gap-4 border-b border-border-default">
         <div className="flex gap-8">
           <div>
             <p className="text-[10px] font-bold text-text-muted uppercase tracking-wider">Order Placed</p>
@@ -123,7 +123,7 @@ const OrderCard = ({ order, index }) => {
         </div>
       </div>
 
-      <div className="p-6">
+      <div className="p-5 md:p-6">
         <div className="flex items-start justify-between mb-8">
           <div className="flex items-center gap-3">
              <div className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase flex items-center gap-1.5 ${statusColors[normalizedStatus] || 'bg-brand-light text-brand-primary'}`}>
@@ -136,7 +136,7 @@ const OrderCard = ({ order, index }) => {
           </div>
           <button 
             onClick={() => setShowTracking(!showTracking)}
-            className="bg-brand-primary text-white px-6 py-2 rounded-full text-caption font-bold hover:bg-brand-hover transition-all shadow-lg shadow-brand-primary/20"
+            className="h-9 rounded-pill bg-brand-primary px-4 text-xs font-semibold text-white hover:bg-brand-hover transition-colors"
           >
             {showTracking ? 'Close Tracking' : 'Track Package'}
           </button>
@@ -148,7 +148,7 @@ const OrderCard = ({ order, index }) => {
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className="mb-8 overflow-hidden bg-surface-secondary/50 rounded-xl p-6 border border-border-default"
+              className="mb-8 overflow-hidden bg-surface-secondary/50 rounded-2xl p-5 border border-border-default"
             >
                 <div className="space-y-6">
                   <div className="flex items-center justify-between mb-4">
@@ -189,7 +189,7 @@ const OrderCard = ({ order, index }) => {
                               {s.key === 'delivered' && 'Package has been delivered to your doorstep. Enjoy!'}
                             </p>
                             {isCurrent && (
-                               <div className="mt-4 p-3 bg-brand-light/20 border border-brand-primary/10 rounded-lg flex items-center gap-3">
+                               <div className="mt-4 p-3 bg-brand-light/20 border border-brand-primary/10 rounded-xl flex items-center gap-3">
                                   <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center border border-brand-primary/20 shadow-sm">
                                      <Truck size={20} className="text-brand-primary" />
                                   </div>
@@ -211,7 +211,7 @@ const OrderCard = ({ order, index }) => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {(order.items || []).map((item) => (
-            <div key={item.productId} className="flex gap-4 items-center p-3 border border-border-default rounded-xl hover:border-brand-primary transition-colors bg-white shadow-sm group">
+            <div key={item.productId} className="flex gap-4 items-center p-3 border border-border-default rounded-xl hover:border-brand-primary/40 transition-colors bg-white group">
               <Link to={`/product/${item.productId}`} className="w-20 h-20 bg-surface-secondary rounded-lg border border-border-default overflow-hidden flex-shrink-0 group-hover:opacity-80 transition-opacity">
                 <img src={item.image} alt={item.name} className="w-full h-full object-cover mix-blend-multiply" />
               </Link>
@@ -227,7 +227,7 @@ const OrderCard = ({ order, index }) => {
                     e.stopPropagation();
                     handleBuyAgain(item);
                   }}
-                  className="mt-2 text-[10px] font-bold text-brand-primary py-1 px-3 border border-brand-primary/20 rounded-lg hover:bg-brand-primary hover:text-white transition-all"
+                  className="mt-2 text-[10px] font-bold text-brand-primary py-1 px-3 border border-brand-primary/20 rounded-lg hover:bg-brand-primary hover:text-white transition-colors"
                 >
                    Buy Again
                 </button>
@@ -251,9 +251,9 @@ const Orders = () => {
   }, [loadOrders, user]);
 
   return (
-    <div className="bg-surface-primary min-h-screen py-12">
-      <div className="max-w-[1000px] mx-auto px-4 md:px-8">
-        <h1 className="text-h2 font-display text-text-primary mb-8 underline decoration-brand-primary decoration-4 underline-offset-8">
+    <div className="min-h-screen py-8 md:py-10">
+      <div className="site-shell max-w-[1100px]">
+        <h1 className="text-3xl md:text-4xl font-display font-bold tracking-tight mb-7">
           Your Orders
         </h1>
 
@@ -264,7 +264,7 @@ const Orders = () => {
             actionLink="/products" 
           />
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-3">
             {orders.map((order, index) => (
               <OrderCard key={order._id} order={order} index={index} />
             ))}

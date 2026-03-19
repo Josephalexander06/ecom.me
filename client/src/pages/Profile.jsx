@@ -9,7 +9,7 @@ const Profile = () => {
   const [form, setForm] = useState({
     name: user?.name || '',
     email: user?.email || '',
-    password: ''
+    password: '',
   });
   const [saving, setSaving] = useState(false);
 
@@ -22,7 +22,7 @@ const Profile = () => {
       const response = await fetch(`${API_BASE}/auth/profile`, {
         method: 'PUT',
         headers: authHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify(form)
+        body: JSON.stringify(form),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || 'Failed to update profile');
@@ -37,40 +37,44 @@ const Profile = () => {
   };
 
   return (
-    <div className="bg-surface-secondary min-h-screen py-10">
-      <div className="max-w-[900px] mx-auto px-4 md:px-8">
-        <div className="bg-white rounded-pro border border-border-default p-6 md:p-8">
-          <h1 className="text-h2 font-display text-text-primary mb-1">My Profile</h1>
-          <p className="text-small text-text-muted mb-8">
-            Role: <span className="font-bold text-text-primary uppercase">{user?.role || 'user'}</span>
-            {' '}| Seller Status: <span className="font-bold text-text-primary">{user?.sellerStatus || 'None'}</span>
+    <div className="min-h-screen pb-10">
+      <section className="site-shell pt-6">
+        <h1 className="text-3xl md:text-4xl font-display font-bold tracking-tight">My Profile</h1>
+      </section>
+
+      <section className="site-shell mt-5 max-w-4xl">
+        <div className="panel p-5 md:p-7">
+          <p className="text-sm text-text-muted mb-7">
+            Role: <span className="font-semibold text-text-primary uppercase">{user?.role || 'user'}</span>
+            {' | '}
+            Seller Status: <span className="font-semibold text-text-primary">{user?.sellerStatus || 'None'}</span>
           </p>
 
           <form onSubmit={onSubmit} className="space-y-5">
             <div>
-              <label className="text-caption font-bold text-text-secondary">Name</label>
+              <label className="text-xs font-bold uppercase tracking-[0.12em] text-text-muted">Name</label>
               <input
-                className="w-full mt-1 bg-surface-secondary border border-border-default rounded-lg px-4 py-3 focus:outline-none focus:border-brand-primary"
+                className="w-full mt-1.5 h-11 rounded-xl border border-border-default bg-white px-4 text-sm focus:outline-none focus:border-brand-primary"
                 value={form.name}
                 onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
                 required
               />
             </div>
             <div>
-              <label className="text-caption font-bold text-text-secondary">Email</label>
+              <label className="text-xs font-bold uppercase tracking-[0.12em] text-text-muted">Email</label>
               <input
                 type="email"
-                className="w-full mt-1 bg-surface-secondary border border-border-default rounded-lg px-4 py-3 focus:outline-none focus:border-brand-primary"
+                className="w-full mt-1.5 h-11 rounded-xl border border-border-default bg-white px-4 text-sm focus:outline-none focus:border-brand-primary"
                 value={form.email}
                 onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
                 required
               />
             </div>
             <div>
-              <label className="text-caption font-bold text-text-secondary">New Password (optional)</label>
+              <label className="text-xs font-bold uppercase tracking-[0.12em] text-text-muted">New Password (optional)</label>
               <input
                 type="password"
-                className="w-full mt-1 bg-surface-secondary border border-border-default rounded-lg px-4 py-3 focus:outline-none focus:border-brand-primary"
+                className="w-full mt-1.5 h-11 rounded-xl border border-border-default bg-white px-4 text-sm focus:outline-none focus:border-brand-primary"
                 value={form.password}
                 onChange={(e) => setForm((prev) => ({ ...prev, password: e.target.value }))}
               />
@@ -78,16 +82,15 @@ const Profile = () => {
             <button
               type="submit"
               disabled={saving}
-              className="bg-brand-primary text-white px-8 py-3 rounded-pro font-bold hover:bg-brand-hover transition-colors disabled:opacity-70"
+              className="h-11 rounded-xl bg-brand-primary px-6 text-sm font-semibold text-white hover:bg-brand-hover transition-colors disabled:opacity-70"
             >
               {saving ? 'Saving...' : 'Save Changes'}
             </button>
           </form>
         </div>
-      </div>
+      </section>
     </div>
   );
 };
 
 export default Profile;
-
