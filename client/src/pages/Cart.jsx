@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useCartStore } from '../context/stores';
 import { useStore } from '../context/StoreContext';
+import { fetchSiteConfig, defaultSiteConfig } from '../utils/siteConfig';
 import ProductRow from '../components/home/ProductRow';
 import EmptyState from '../components/ui/EmptyState';
 
@@ -72,14 +73,33 @@ const CartItem = ({ item }) => {
 };
 
 const Cart = () => {
-  const { items, subtotal } = useCartStore();
+  const { items } = useCartStore();
   const { products } = useStore();
+  const [siteConfig, setSiteConfig] = useState(defaultSiteConfig);
+
+  useEffect(() => {
+    const loadConfig = async () => {
+      try {
+        const config = await fetchSiteConfig();
+        setSiteConfig(config);
+      } catch (err) {
+        console.error('Failed to load site config:', err);
+      }
+    };
+    loadConfig();
+  }, []);
+
+  const subtotal = useMemo(() => {
+    return items.reduce((sum, item) => sum + (Number(item.price) || 0) * (Number(item.quantity) || 0), 0);
+  }, [items]);
+
+  const threshold = siteConfig.freeShippingThreshold || 5000;
+  const shippingCharge = siteConfig.defaultShippingCharge || 499;
   
-  const FREE_SHIPPING_THRESHOLD = 5000;
-  const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : 499;
+  const shipping = subtotal >= threshold ? 0 : shippingCharge;
   const tax = subtotal * 0.18; // 18% GST for India
   const total = subtotal + shipping + tax;
-  const progressToFree = Math.min((subtotal / FREE_SHIPPING_THRESHOLD) * 100, 100);
+  const progressToFree = Math.min((subtotal / threshold) * 100, 100);
 
   if (items.length === 0) {
     return (
@@ -107,11 +127,11 @@ const Cart = () => {
             <div className="bg-surface-secondary border border-border-default rounded-pro p-6">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <Truck size={20} className={subtotal >= FREE_SHIPPING_THRESHOLD ? 'text-success' : 'text-brand-primary'} />
+                  <Truck size={20} className={subtotal >= threshold ? 'text-success' : 'text-brand-primary'} />
                   <span className="text-small font-bold text-text-primary">
-                    {subtotal >= FREE_SHIPPING_THRESHOLD 
+                    {subtotal >= threshold 
                       ? "You've earned FREE Express Delivery!" 
-                      : `Add ₹${(FREE_SHIPPING_THRESHOLD - subtotal).toLocaleString('en-IN')} for FREE Express Delivery`}
+                      : `Add ₹${(threshold - subtotal).toLocaleString('en-IN')} for FREE Express Delivery`}
                   </span>
                 </div>
                 <span className="text-caption font-bold text-text-muted">{Math.round(progressToFree)}%</span>
@@ -121,7 +141,7 @@ const Cart = () => {
                    initial={{ width: 0 }}
                    animate={{ width: `${progressToFree}%` }}
                    transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
-                   className={`h-full ${subtotal >= FREE_SHIPPING_THRESHOLD ? 'bg-success' : 'bg-brand-primary'}`} 
+                   className={`h-full ${subtotal >= threshold ? 'bg-success' : 'bg-brand-primary'}`} 
                 />
               </div>
             </div>

@@ -145,7 +145,7 @@ export const useCartStore = create(
                 productId: id,
                 name: product.name,
                 image: product.images?.[0] || '',
-                price: product.dealPrice || product.price,
+                price: Number(product.dealPrice || product.price),
                 quantity: quantity
               }
             ]
@@ -169,15 +169,7 @@ export const useCartStore = create(
         }));
       },
 
-      clearCart: () => set({ items: [] }),
-
-      get subtotal() {
-        return get().items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-      },
-
-      get itemCount() {
-        return get().items.reduce((sum, item) => sum + item.quantity, 0);
-      }
+      clearCart: () => set({ items: [] })
     }),
     {
       name: 'ecomme-cart-storage',

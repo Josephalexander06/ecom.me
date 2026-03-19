@@ -14,7 +14,28 @@ const seedData = async () => {
     // Clear existing data
     await Product.deleteMany({});
     await User.deleteMany({});
-    console.log('Cleared existing products and users.');
+    const SiteConfig = require('./models/SiteConfig');
+    await SiteConfig.deleteMany({});
+    console.log('Cleared existing products, users, and site config.');
+
+    await SiteConfig.create({
+      key: 'global',
+      config: {
+        showDealsSection: true,
+        showRecommended: true,
+        showCategoryPanels: true,
+        showWideBanner: true,
+        showBestsellers: true,
+        showNewArrivals: true,
+        showSellerSpotlight: true,
+        showRecentlyViewed: true,
+        globalAnnouncementEnabled: false,
+        globalAnnouncementText: 'Welcome to ecom.me',
+        freeShippingThreshold: 5000,
+        defaultShippingCharge: 499
+      }
+    });
+    console.log('Seeded site config.');
 
     const passwordHash = await bcrypt.hash('Password@123', 10);
     const [adminUser, sellerUser, regularUser, electroSeller, fashionSeller, homeSeller] = await User.insertMany([

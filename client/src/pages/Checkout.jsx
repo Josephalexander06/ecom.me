@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   ChevronRight, 
@@ -13,6 +13,7 @@ import {
 import { useCartStore, useAuthStore, useUIStore } from '../context/stores';
 import SuccessAnimation from '../components/checkout/SuccessAnimation';
 import { API_BASE } from '../utils/api';
+import { fetchSiteConfig, defaultSiteConfig } from '../utils/siteConfig';
 
 const StepIndicator = ({ currentStep }) => {
   const steps = ['Address', 'Payment', 'Review'];
@@ -39,10 +40,34 @@ const StepIndicator = ({ currentStep }) => {
 
 const Checkout = () => {
   const navigate = useNavigate();
-  const { items, subtotal, clearCart } = useCartStore();
+  const { items, clearCart } = useCartStore();
   const { user, isAuthenticated, token } = useAuthStore();
   const { setActiveModal } = useUIStore();
-  
+  const [siteConfig, setSiteConfig] = useState(defaultSiteConfig);
+
+  useEffect(() => {
+    const loadConfig = async () => {
+      try {
+        const config = await fetchSiteConfig();
+        setSiteConfig(config);
+      } catch (err) {
+        console.error('Failed to load site config:', err);
+      }
+    };
+    loadConfig();
+  }, []);
+
+  const subtotal = useMemo(() => {
+    return items.reduce((sum, item) => sum + (Number(item.price) || 0) * (Number(item.quantity) || 0), 0);
+  }, [items]);
+
+  const threshold = siteConfig.freeShippingThreshold || 5000;
+  const shippingCharge = siteConfig.defaultShippingCharge || 499;
+
+  const shipping = subtotal >= threshold ? 0 : shippingCharge;
+  const tax = subtotal * 0.18; // 18% GST
+  const total = subtotal + shipping + tax;
+
   const [step, setStep] = useState(1);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isPlacing, setIsPlacing] = useState(false);
@@ -54,11 +79,6 @@ const Checkout = () => {
     zip: user?.savedAddresses?.[0]?.zip || '400001',
     paymentMethod: 'Card'
   });
-
-  const FREE_SHIPPING_THRESHOLD = 5000;
-  const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : 99;
-  const tax = subtotal * 0.18; // 18% GST
-  const total = subtotal + shipping + tax;
 
   const nextStep = () => setStep(s => s + 1);
   const prevStep = () => setStep(s => s - 1);

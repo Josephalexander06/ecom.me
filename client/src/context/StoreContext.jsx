@@ -7,7 +7,7 @@ const StoreContext = createContext(null);
 const CART_KEY = 'ecomme_cart';
 const LOCAL_ORDERS_KEY = 'ecomme_local_orders';
 const getProductId = (product) => product?._id || product?.id;
-const effectivePrice = (product) => (product?.isDeal && product?.dealPrice ? product.dealPrice : product?.price || 0);
+const effectivePrice = (product) => Number(product?.isDeal && product?.dealPrice ? product.dealPrice : product?.price || 0);
 
 const readJSON = (key, fallback) => {
   try {

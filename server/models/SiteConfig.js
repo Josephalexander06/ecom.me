@@ -13,7 +13,9 @@ const siteConfigSchema = new mongoose.Schema(
       showSellerSpotlight: { type: Boolean, default: true },
       showRecentlyViewed: { type: Boolean, default: true },
       globalAnnouncementEnabled: { type: Boolean, default: false },
-      globalAnnouncementText: { type: String, default: 'Welcome to ecom.me' }
+      globalAnnouncementText: { type: String, default: 'Welcome to ecom.me' },
+      freeShippingThreshold: { type: Number, default: 5000 },
+      defaultShippingCharge: { type: Number, default: 499 }
     }
   },
   { timestamps: true }

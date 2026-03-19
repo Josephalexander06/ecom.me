@@ -13,7 +13,9 @@ const defaultConfig = {
   showSellerSpotlight: true,
   showRecentlyViewed: true,
   globalAnnouncementEnabled: false,
-  globalAnnouncementText: 'Welcome to ecom.me'
+  globalAnnouncementText: 'Welcome to ecom.me',
+  freeShippingThreshold: 5000,
+  defaultShippingCharge: 499
 };
 
 const ensureConfig = async () => {
