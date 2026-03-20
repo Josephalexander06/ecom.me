@@ -6,6 +6,7 @@ import Navbar from './components/ui/Navbar';
 import Footer from './components/ui/Footer';
 import AuthModal from './components/auth/AuthModal';
 import ScrollToTop from './components/ui/ScrollToTop';
+import RouteErrorBoundary from './components/ui/RouteErrorBoundary';
 import Home from './pages/Home';
 import ProductListing from './pages/ProductListing';
 import ProductDetail from './pages/ProductDetail';
@@ -52,29 +53,31 @@ function AppContent() {
               exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.2, ease: 'easeOut' }}
             >
-              <Routes location={location}>
-                <Route path="/" element={<Home />} />
-                <Route path="/products" element={<ProductListing />} />
-                <Route path="/product/:id" element={<ProductDetail />} />
-                <Route path="/cart" element={<Cart />} />
-                <Route path="/checkout" element={<Checkout />} />
-                <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
-                <Route path="/wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
-                <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-                <Route path="/admin/dashboard" element={<ProtectedRoute roles={['admin']}><AdminDashboard /></ProtectedRoute>} />
-                <Route path="/admin/sellers" element={<ProtectedRoute roles={['admin']}><AdminDashboard /></ProtectedRoute>} />
-                <Route path="/admin/products" element={<ProtectedRoute roles={['admin']}><AdminDashboard /></ProtectedRoute>} />
-                <Route path="/admin/orders" element={<ProtectedRoute roles={['admin']}><AdminDashboard /></ProtectedRoute>} />
-                <Route path="/admin/users" element={<ProtectedRoute roles={['admin']}><AdminDashboard /></ProtectedRoute>} />
-                <Route path="/admin/settings" element={<ProtectedRoute roles={['admin']}><AdminDashboard /></ProtectedRoute>} />
-                <Route path="/seller/onboarding" element={<ProtectedRoute><SellerOnboarding /></ProtectedRoute>} />
-                <Route path="/seller/dashboard" element={<ProtectedRoute roles={['seller', 'admin']}><SellerDashboard /></ProtectedRoute>} />
-                <Route path="/seller/add-product" element={<ProtectedRoute roles={['seller', 'admin']}><AddProduct /></ProtectedRoute>} />
-                <Route path="/seller/orders" element={<ProtectedRoute roles={['seller', 'admin']}><SellerDashboard /></ProtectedRoute>} />
-                <Route path="/seller/inventory" element={<ProtectedRoute roles={['seller', 'admin']}><SellerDashboard /></ProtectedRoute>} />
-                <Route path="/seller/analytics" element={<ProtectedRoute roles={['seller', 'admin']}><SellerDashboard /></ProtectedRoute>} />
-                <Route path="/seller/settings" element={<ProtectedRoute roles={['seller', 'admin']}><SellerDashboard /></ProtectedRoute>} />
-              </Routes>
+              <RouteErrorBoundary>
+                <Routes location={location}>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/products" element={<ProductListing />} />
+                  <Route path="/product/:id" element={<ProductDetail />} />
+                  <Route path="/cart" element={<Cart />} />
+                  <Route path="/checkout" element={<Checkout />} />
+                  <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
+                  <Route path="/wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
+                  <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                  <Route path="/admin/dashboard" element={<ProtectedRoute roles={['admin']}><AdminDashboard /></ProtectedRoute>} />
+                  <Route path="/admin/sellers" element={<ProtectedRoute roles={['admin']}><AdminDashboard /></ProtectedRoute>} />
+                  <Route path="/admin/products" element={<ProtectedRoute roles={['admin']}><AdminDashboard /></ProtectedRoute>} />
+                  <Route path="/admin/orders" element={<ProtectedRoute roles={['admin']}><AdminDashboard /></ProtectedRoute>} />
+                  <Route path="/admin/users" element={<ProtectedRoute roles={['admin']}><AdminDashboard /></ProtectedRoute>} />
+                  <Route path="/admin/settings" element={<ProtectedRoute roles={['admin']}><AdminDashboard /></ProtectedRoute>} />
+                  <Route path="/seller/onboarding" element={<ProtectedRoute><SellerOnboarding /></ProtectedRoute>} />
+                  <Route path="/seller/dashboard" element={<ProtectedRoute roles={['seller', 'admin']}><SellerDashboard /></ProtectedRoute>} />
+                  <Route path="/seller/add-product" element={<ProtectedRoute roles={['seller', 'admin']}><AddProduct /></ProtectedRoute>} />
+                  <Route path="/seller/orders" element={<ProtectedRoute roles={['seller', 'admin']}><SellerDashboard /></ProtectedRoute>} />
+                  <Route path="/seller/inventory" element={<ProtectedRoute roles={['seller', 'admin']}><SellerDashboard /></ProtectedRoute>} />
+                  <Route path="/seller/analytics" element={<ProtectedRoute roles={['seller', 'admin']}><SellerDashboard /></ProtectedRoute>} />
+                  <Route path="/seller/settings" element={<ProtectedRoute roles={['seller', 'admin']}><SellerDashboard /></ProtectedRoute>} />
+                </Routes>
+              </RouteErrorBoundary>
             </motion.div>
           </AnimatePresence>
         </main>

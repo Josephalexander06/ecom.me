@@ -214,7 +214,8 @@ export const useCartStore = create(
       
       trackProduct: (product) => {
         set((state) => {
-          const filtered = state.recentlyViewed.filter(p => (p._id || p.id) !== (product._id || product.id));
+          const recentlyViewed = Array.isArray(state.recentlyViewed) ? state.recentlyViewed : [];
+          const filtered = recentlyViewed.filter((p) => (p?._id || p?.id) !== (product?._id || product?.id));
           return {
             recentlyViewed: [product, ...filtered].slice(0, 10)
           };
@@ -224,10 +225,11 @@ export const useCartStore = create(
       addItem: (product, quantity = 1) => {
         const id = product._id || product.id;
         set((state) => {
-          const existing = state.items.find(item => item.productId === id);
+          const items = Array.isArray(state.items) ? state.items : [];
+          const existing = items.find(item => item.productId === id);
           if (existing) {
             return {
-              items: state.items.map(item =>
+              items: items.map(item =>
                 item.productId === id
                   ? { ...item, quantity: item.quantity + quantity }
                   : item
@@ -236,7 +238,7 @@ export const useCartStore = create(
           }
           return {
             items: [
-              ...state.items,
+              ...items,
               {
                 productId: id,
                 name: product.name,

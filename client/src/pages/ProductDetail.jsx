@@ -29,7 +29,11 @@ const ProductDetail = () => {
   const { user, isAuthenticated, toggleWishlist } = useAuthStore();
   const { setActiveModal } = useUIStore();
 
-  const product = useMemo(() => products.find((item) => (item._id || item.id) === id), [products, id]);
+  const safeProducts = useMemo(
+    () => (Array.isArray(products) ? products.filter((item) => item && typeof item === 'object') : []),
+    [products]
+  );
+  const product = useMemo(() => safeProducts.find((item) => (item._id || item.id) === id), [safeProducts, id]);
 
   useEffect(() => {
     if (product) trackProduct(product);
@@ -69,13 +73,54 @@ const ProductDetail = () => {
     );
   }
 
-  const isInWishlist = user?.wishlist?.some((w) => (w._id || w) === id);
-  const currentPrice = product.dealPrice || product.price;
-  const isDeal = product.isDeal && product.dealPrice;
-  const savings = Math.max((product.price || 0) - (currentPrice || 0), 0);
+  const isInWishlist = Array.isArray(user?.wishlist)
+    ? user.wishlist.some((w) => (w?._id || w) === id)
+    : false;
+  const productName = typeof product.name === 'string' || typeof product.name === 'number'
+    ? String(product.name)
+    : 'Untitled Product';
+  const productBrand = typeof product.brand === 'string' || typeof product.brand === 'number'
+    ? String(product.brand)
+    : 'Unbranded';
+  const productCategory = typeof product.category === 'string' || typeof product.category === 'number'
+    ? String(product.category)
+    : 'General';
+  const productDescription = typeof product.description === 'string' || typeof product.description === 'number'
+    ? String(product.description)
+    : 'No description provided yet.';
+  const productImagesRaw = Array.isArray(product.images)
+    ? product.images
+    : product.images
+      ? [product.images]
+      : [];
+  const productImages = productImagesRaw.length
+    ? productImagesRaw
+    : ['https://via.placeholder.com/800'];
+  const basePrice = Number(product.price || 0);
+  const currentPrice = Number(product.dealPrice || product.price || 0);
+  const isDeal = Boolean(product.isDeal && Number(product.dealPrice || 0) > 0);
+  const savings = Math.max(basePrice - currentPrice, 0);
+  const averageRating = Number(product.averageRating || 4.5);
+  const ratingValue = Number.isFinite(averageRating) ? averageRating : 4.5;
+  const reviewCount = Number(product.reviewCount || 128);
+  const formatVariantLabel = (variant) => {
+    if (variant === null || variant === undefined) return 'Option';
+    if (typeof variant === 'string' || typeof variant === 'number') return String(variant);
+    if (typeof variant === 'object') {
+      if (variant.name) return String(variant.name);
+      const bits = [variant.color, variant.size]
+        .filter((v) => typeof v === 'string' || typeof v === 'number')
+        .map(String);
+      if (typeof variant.priceDelta === 'number' && variant.priceDelta !== 0) {
+        bits.push(`${variant.priceDelta > 0 ? '+' : '-'}₹${Math.abs(variant.priceDelta)}`);
+      }
+      return bits.length ? bits.join(' · ') : 'Option';
+    }
+    return 'Option';
+  };
 
-  const similarProducts = products
-    .filter((p) => p.category === product.category && (p._id || p.id) !== id)
+  const similarProducts = safeProducts
+    .filter((p) => p?.category === productCategory && (p._id || p.id) !== id)
     .slice(0, 10);
 
   const bundleProducts = similarProducts.slice(0, 2);
@@ -123,29 +168,29 @@ const ProductDetail = () => {
         <div className="text-xs text-text-muted inline-flex items-center gap-1.5 whitespace-nowrap overflow-hidden">
           <Link to="/products" className="hover:text-brand-primary">Products</Link>
           <ChevronRight size={12} />
-          <Link to={`/products?category=${product.category}`} className="hover:text-brand-primary">{product.category}</Link>
+          <Link to={`/products?category=${productCategory}`} className="hover:text-brand-primary">{productCategory}</Link>
           <ChevronRight size={12} />
-          <span className="truncate text-text-secondary">{product.name}</span>
+          <span className="truncate text-text-secondary">{productName}</span>
         </div>
       </section>
 
       <section className="site-shell mt-4 grid grid-cols-1 xl:grid-cols-[1fr_400px] gap-6 xl:gap-8">
         <div className="grid grid-cols-1 lg:grid-cols-[110px_1fr] gap-4">
           <div className="order-2 lg:order-1 flex lg:flex-col gap-2.5 overflow-x-auto lg:overflow-visible no-scrollbar">
-            {(product.images || []).map((img, idx) => (
+            {productImages.map((img, idx) => (
               <button
                 key={img + idx}
                 onClick={() => setSelectedImage(idx)}
                 className={`shrink-0 h-20 w-20 rounded-xl border overflow-hidden ${selectedImage === idx ? 'border-brand-primary ring-2 ring-brand-primary/20' : 'border-border-default'}`}
               >
-                <img src={img} alt={`${product.name} ${idx + 1}`} className="h-full w-full object-cover" />
+                <img src={img} alt={`${productName} ${idx + 1}`} className="h-full w-full object-cover" />
               </button>
             ))}
           </div>
 
           <div className="order-1 lg:order-2 panel overflow-hidden">
             <div className="relative">
-              <ImageZoom src={product.images?.[selectedImage] || product.images?.[0] || 'https://via.placeholder.com/800'} alt={product.name} />
+              <ImageZoom src={productImages[selectedImage] || productImages[0]} alt={productName} />
               <button
                 onClick={() => setShowARPreview(true)}
                 className="absolute bottom-4 right-4 rounded-pill border border-border-default bg-white/90 backdrop-blur px-4 py-2 text-[11px] font-semibold text-brand-primary hover:bg-brand-primary hover:text-white transition-colors"
@@ -160,10 +205,10 @@ const ProductDetail = () => {
           <div className="panel p-5 md:p-6 xl:sticky xl:top-[110px] space-y-5">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <Link to={`/products?brand=${product.brand}`} className="text-xs font-bold uppercase tracking-[0.14em] text-brand-primary hover:underline">
-                  {product.brand}
+                <Link to={`/products?brand=${encodeURIComponent(productBrand)}`} className="text-xs font-bold uppercase tracking-[0.14em] text-brand-primary hover:underline">
+                  {productBrand}
                 </Link>
-                <h1 className="mt-2 text-2xl md:text-3xl font-display font-bold tracking-tight text-balance">{product.name}</h1>
+                <h1 className="mt-2 text-2xl md:text-3xl font-display font-bold tracking-tight text-balance">{productName}</h1>
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -182,14 +227,14 @@ const ProductDetail = () => {
 
             <div className="inline-flex items-center gap-2 rounded-pill bg-warning-light border border-warning/20 px-3 py-1.5 text-sm text-warning">
               <Star size={14} fill="currentColor" />
-              <span className="font-semibold">{(product.averageRating || 4.5).toFixed(1)}</span>
-              <span className="text-xs text-text-muted">({product.reviewCount || 128} ratings)</span>
+              <span className="font-semibold">{ratingValue.toFixed(1)}</span>
+              <span className="text-xs text-text-muted">({reviewCount} ratings)</span>
             </div>
 
             <div className="rounded-2xl border border-border-default bg-surface-secondary/70 p-4">
               <div className="flex items-baseline gap-3">
                 <p className="text-3xl md:text-4xl font-display font-bold text-text-primary">₹{currentPrice.toLocaleString('en-IN')}</p>
-                {isDeal && <p className="text-sm text-text-muted line-through">₹{product.price.toLocaleString('en-IN')}</p>}
+                {isDeal && <p className="text-sm text-text-muted line-through">₹{basePrice.toLocaleString('en-IN')}</p>}
               </div>
               {isDeal && (
                 <p className="mt-2 inline-flex rounded-md bg-danger/10 text-danger text-xs font-semibold px-2 py-1">
@@ -267,14 +312,14 @@ const ProductDetail = () => {
       <section className="site-shell mt-7 grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="panel p-5 md:p-6">
           <h2 className="text-lg font-display font-bold tracking-tight">Product Description</h2>
-          <p className="mt-3 text-sm text-text-secondary whitespace-pre-line leading-relaxed">{product.description}</p>
+          <p className="mt-3 text-sm text-text-secondary whitespace-pre-line leading-relaxed">{productDescription}</p>
           {!!product.variants?.length && (
             <div className="mt-4 pt-4 border-t border-border-default">
               <p className="text-xs font-bold uppercase tracking-[0.14em] text-text-muted mb-2">Available Options</p>
               <div className="flex flex-wrap gap-2">
                 {product.variants.map((variant, idx) => (
-                  <span key={`${variant}-${idx}`} className="rounded-lg border border-border-default bg-white px-3 py-1.5 text-sm text-text-secondary">
-                    {variant.name || variant}
+                  <span key={`${variant?._id || 'variant'}-${idx}`} className="rounded-lg border border-border-default bg-white px-3 py-1.5 text-sm text-text-secondary">
+                    {formatVariantLabel(variant)}
                   </span>
                 ))}
               </div>
@@ -324,9 +369,13 @@ const ProductDetail = () => {
                 <React.Fragment key={p._id || p.id || idx}>
                   <div className="w-28">
                     <div className="aspect-square rounded-xl border border-border-default bg-white p-3 overflow-hidden">
-                      <img src={p.images?.[0]} alt={p.name} className="h-full w-full object-contain" />
+                      <img
+                        src={Array.isArray(p.images) ? p.images[0] : p.images || 'https://via.placeholder.com/400'}
+                        alt={p.name || 'Product'}
+                        className="h-full w-full object-contain"
+                      />
                     </div>
-                    <p className="mt-2 text-xs text-text-secondary line-clamp-2">{p.name}</p>
+                    <p className="mt-2 text-xs text-text-secondary line-clamp-2">{p.name || 'Untitled Product'}</p>
                   </div>
                   {idx < 2 && <span className="text-xl text-text-muted">+</span>}
                 </React.Fragment>
@@ -335,7 +384,7 @@ const ProductDetail = () => {
 
             <div className="rounded-2xl border border-border-default bg-surface-secondary/60 p-4">
               <p className="text-sm text-text-secondary">Bundle Price</p>
-              <p className="text-2xl font-display font-bold text-brand-primary mt-1">₹{(product.price * 2.4).toLocaleString('en-IN')}</p>
+              <p className="text-2xl font-display font-bold text-brand-primary mt-1">₹{(basePrice * 2.4).toLocaleString('en-IN')}</p>
               <button
                 onClick={() => {
                   addItem(product);
@@ -387,7 +436,7 @@ const ProductDetail = () => {
                 <motion.img
                   drag
                   dragConstraints={{ left: -120, right: 120, top: -80, bottom: 80 }}
-                  src={product.images?.[selectedImage] || product.images?.[0]}
+                  src={productImages[selectedImage] || productImages[0]}
                   alt="AR Preview"
                   className="relative z-10 h-56 w-56 object-contain drop-shadow-2xl cursor-move"
                 />

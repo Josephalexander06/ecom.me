@@ -14,16 +14,29 @@ const ProductCard = ({ product, compact = false }) => {
   const [isAdded, setIsAdded] = useState(false);
 
   const id = product._id || product.id;
-  const isInWishlist = user?.wishlist?.some((w) => (w._id || w) === id);
-  const currentPrice = product.dealPrice || product.price;
-  const discount = product.isDeal ? Math.round(((product.price - currentPrice) / product.price) * 100) : 0;
+  const isInWishlist = Array.isArray(user?.wishlist)
+    ? user.wishlist.some((w) => (w?._id || w) === id)
+    : false;
+  const basePrice = Number(product.price || 0);
+  const currentPrice = Number(product.dealPrice || product.price || 0);
+  const discount = product.isDeal && basePrice > 0 ? Math.round(((basePrice - currentPrice) / basePrice) * 100) : 0;
+  const averageRating = Number(product.averageRating || 4.5);
+  const ratingValue = Number.isFinite(averageRating) ? averageRating : 4.5;
+  const stock = Number(product.stock || 0);
+  const reviewCount = Number(product.reviewCount || 128);
+  const brandLabel = typeof product.brand === 'string' || typeof product.brand === 'number'
+    ? String(product.brand)
+    : 'Unbranded';
+  const nameLabel = typeof product.name === 'string' || typeof product.name === 'number'
+    ? String(product.name)
+    : 'Untitled Product';
 
   const handleAddToCart = (e) => {
     e.preventDefault();
     e.stopPropagation();
     addItem(product);
     setIsAdded(true);
-    toast.success(`${product.name} added to cart`);
+    toast.success(`${nameLabel} added to cart`);
     setTimeout(() => setIsAdded(false), 1800);
   };
 
@@ -53,7 +66,7 @@ const ProductCard = ({ product, compact = false }) => {
         <div className="relative aspect-[4/5] bg-gradient-to-b from-slate-100 to-slate-50 p-4 md:p-5 overflow-hidden">
           <img
             src={product.images?.[0] || 'https://via.placeholder.com/400'}
-            alt={product.name}
+            alt={nameLabel}
             className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
           />
 
@@ -96,12 +109,12 @@ const ProductCard = ({ product, compact = false }) => {
 
         <div className="p-4 flex flex-col flex-1">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-text-muted truncate">{product.brand}</span>
-            <span className="text-[10px] text-text-muted">{product.reviewCount || 128} reviews</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-text-muted truncate">{brandLabel}</span>
+            <span className="text-[10px] text-text-muted">{reviewCount} reviews</span>
           </div>
 
           <h3 className={`mt-2 font-semibold text-text-primary leading-tight line-clamp-2 ${compact ? 'text-sm min-h-[40px]' : 'text-base min-h-[44px]'}`}>
-            {product.name}
+            {nameLabel}
           </h3>
 
           <div className="mt-2 flex items-center gap-1.5">
@@ -110,27 +123,27 @@ const ProductCard = ({ product, compact = false }) => {
                 <Star
                   key={i}
                   size={compact ? 10 : 12}
-                  fill={i < Math.floor(product.averageRating || 4.5) ? 'currentColor' : 'none'}
-                  className={i < Math.floor(product.averageRating || 4.5) ? '' : 'text-border-default'}
+                  fill={i < Math.floor(ratingValue) ? 'currentColor' : 'none'}
+                  className={i < Math.floor(ratingValue) ? '' : 'text-border-default'}
                 />
               ))}
             </div>
-            <span className="text-[11px] text-text-muted font-medium">{(product.averageRating || 4.5).toFixed(1)}</span>
+            <span className="text-[11px] text-text-muted font-medium">{ratingValue.toFixed(1)}</span>
           </div>
 
           <div className="mt-auto pt-3 flex items-end justify-between gap-2">
             <div>
               {product.isDeal ? (
                 <>
-                  <p className="text-[11px] text-text-muted line-through">₹{product.price.toLocaleString('en-IN')}</p>
+                  <p className="text-[11px] text-text-muted line-through">₹{basePrice.toLocaleString('en-IN')}</p>
                   <p className="text-lg font-display font-bold text-brand-primary">₹{currentPrice.toLocaleString('en-IN')}</p>
                 </>
               ) : (
-                <p className="text-lg font-display font-bold text-text-primary">₹{product.price.toLocaleString('en-IN')}</p>
+                <p className="text-lg font-display font-bold text-text-primary">₹{basePrice.toLocaleString('en-IN')}</p>
               )}
             </div>
-            <span className={`text-[11px] font-semibold ${product.stock < 10 ? 'text-danger' : 'text-success'}`}>
-              {product.stock < 10 ? `${product.stock} left` : 'In stock'}
+            <span className={`text-[11px] font-semibold ${stock < 10 ? 'text-danger' : 'text-success'}`}>
+              {stock < 10 ? `${stock} left` : 'In stock'}
             </span>
           </div>
         </div>

@@ -10,6 +10,16 @@ const PRODUCTS_CACHE_KEY = 'ecomme_products_cache';
 const FACETS_CACHE_KEY = 'ecomme_facets_cache';
 const getProductId = (product) => product?._id || product?.id;
 const effectivePrice = (product) => Number(product?.isDeal && product?.dealPrice ? product.dealPrice : product?.price || 0);
+const asArray = (value) => (Array.isArray(value) ? value : []);
+const normalizeProducts = (value) => asArray(value).filter((item) => item && typeof item === 'object');
+const normalizeFacets = (value) => ({
+  categories: asArray(value?.categories),
+  brands: asArray(value?.brands),
+  priceRange: {
+    min: Number(value?.priceRange?.min || 0),
+    max: Number(value?.priceRange?.max || 0)
+  }
+});
 
 const readJSON = (key, fallback) => {
   try {
@@ -23,8 +33,8 @@ const readJSON = (key, fallback) => {
 };
 
 export const StoreProvider = ({ children }) => {
-  const [products, setProducts] = useState(() => readJSON(PRODUCTS_CACHE_KEY, []));
-  const [facets, setFacets] = useState(() => readJSON(FACETS_CACHE_KEY, { categories: [], brands: [], priceRange: { min: 0, max: 0 } }));
+  const [products, setProducts] = useState(() => normalizeProducts(readJSON(PRODUCTS_CACHE_KEY, [])));
+  const [facets, setFacets] = useState(() => normalizeFacets(readJSON(FACETS_CACHE_KEY, { categories: [], brands: [], priceRange: { min: 0, max: 0 } })));
   const [isUsingFallback, setIsUsingFallback] = useState(false);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [cart, setCart] = useState(() => readJSON(CART_KEY, []));
@@ -37,18 +47,18 @@ export const StoreProvider = ({ children }) => {
       if (!response.ok) throw new Error('Failed to fetch products');
       const data = await response.json();
       if (data.products && Array.isArray(data.products)) {
-        setProducts(data.products);
-        setFacets(data.facets || { categories: [], brands: [], priceRange: { min: 0, max: 0 } });
+        setProducts(normalizeProducts(data.products));
+        setFacets(normalizeFacets(data.facets));
         setIsUsingFallback(false);
       } else if (!Array.isArray(data) || data.length === 0) {
-        setProducts(fallbackProducts);
+        setProducts(normalizeProducts(fallbackProducts));
         setIsUsingFallback(true);
       } else {
-        setProducts(data);
+        setProducts(normalizeProducts(data));
         setIsUsingFallback(false);
       }
     } catch {
-      setProducts(fallbackProducts);
+      setProducts(normalizeProducts(fallbackProducts));
       setIsUsingFallback(true);
     } finally {
       setLoadingProducts(false);
@@ -78,7 +88,7 @@ export const StoreProvider = ({ children }) => {
   }, [facets]);
 
   const categories = useMemo(() => {
-    const unique = new Set(products.map((p) => p.category).filter(Boolean));
+    const unique = new Set(asArray(products).map((p) => p?.category).filter(Boolean));
     return ['All', ...Array.from(unique)];
   }, [products]);
 
