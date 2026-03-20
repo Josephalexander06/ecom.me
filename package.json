@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "build": "npm --prefix client run build"
+  },
   "dependencies": {
     "vite": "^7.3.1"
   }
