@@ -16,12 +16,29 @@ const isProduction = process.env.NODE_ENV === 'production';
 const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173')
   .split(',')
   .map((origin) => origin.trim())
+  .map((origin) => origin.replace(/\/+$/, ''))
   .filter(Boolean);
 
-const isAllowedOrigin = (origin = '') =>
-  allowedOrigins.includes(origin) ||
-  /^https?:\/\/localhost:\d+$/.test(origin) ||
-  /^https?:\/\/127\.0\.0\.1:\d+$/.test(origin);
+const wildcardToRegex = (pattern) => {
+  const escaped = pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`^${escaped.replace(/\\\*/g, '.*')}$`);
+};
+
+const allowedOriginRegexes = allowedOrigins
+  .filter((origin) => origin.includes('*'))
+  .map(wildcardToRegex);
+
+const allowedOriginExact = allowedOrigins.filter((origin) => !origin.includes('*'));
+
+const isAllowedOrigin = (origin = '') => {
+  const normalizedOrigin = origin.replace(/\/+$/, '');
+  return (
+    allowedOriginExact.includes(normalizedOrigin) ||
+    allowedOriginRegexes.some((regex) => regex.test(normalizedOrigin)) ||
+    /^https?:\/\/localhost:\d+$/.test(normalizedOrigin) ||
+    /^https?:\/\/127\.0\.0\.1:\d+$/.test(normalizedOrigin)
+  );
+};
 
 const corsOptions = {
   origin: (origin, callback) => {
@@ -84,6 +101,9 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/site-config', siteRoutes);
+app.get('/api/health', (req, res) => {
+  res.json({ ok: true, service: 'ecom.me-api', time: new Date().toISOString() });
+});
 
 // Basic Route
 app.get('/', (req, res) => {
