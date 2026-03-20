@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutDashboard, PlusCircle, Package, ShoppingBag, TrendingUp, Settings, Menu, X, LogOut, Bell } from 'lucide-react';
+import { LayoutDashboard, PlusCircle, Package, ShoppingBag, TrendingUp, Settings, Menu, X, LogOut, Bell, Landmark } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../context/stores';
 
@@ -16,6 +16,7 @@ const SellerLayout = ({ children }) => {
     { icon: ShoppingBag, label: 'Orders', path: '/seller/orders' },
     { icon: Package, label: 'Inventory', path: '/seller/inventory' },
     { icon: TrendingUp, label: 'Analytics', path: '/seller/analytics' },
+    { icon: Landmark, label: 'Payouts', path: '/seller/payouts' },
     { icon: Settings, label: 'Alerts', path: '/seller/settings' },
   ];
 
@@ -26,7 +27,7 @@ const SellerLayout = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-surface-primary flex">
-      <aside className="hidden lg:flex w-72 shrink-0 border-r border-border-default bg-white/90 backdrop-blur-sm p-6 flex-col">
+      <aside className="hidden lg:flex sticky top-0 h-screen overflow-y-auto w-72 shrink-0 border-r border-border-default bg-white/95 backdrop-blur-sm p-6 flex-col">
         <Link to="/seller/dashboard" className="inline-flex items-center gap-2.5 mb-8">
           <span className="h-8 w-8 rounded-lg bg-brand-primary text-white grid place-items-center text-sm font-bold">S</span>
           <span className="font-display text-lg font-bold tracking-tight">Seller Hub</span>

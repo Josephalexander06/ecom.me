@@ -15,6 +15,8 @@ import Checkout from './pages/Checkout';
 import AdminDashboard from './pages/AdminDashboard';
 import SellerDashboard from './pages/seller/Dashboard';
 import AddProduct from './pages/seller/AddProduct';
+import ProductEdit from './pages/seller/ProductEdit';
+import Payouts from './pages/seller/Payouts';
 import SellerOnboarding from './pages/seller/SellerOnboarding';
 import Orders from './pages/Orders';
 import Wishlist from './pages/Wishlist';
@@ -83,7 +85,9 @@ function AppContent() {
                   <Route path="/seller/add-product" element={<ProtectedRoute roles={['seller', 'admin']}><AddProduct /></ProtectedRoute>} />
                   <Route path="/seller/orders" element={<ProtectedRoute roles={['seller', 'admin']}><SellerDashboard /></ProtectedRoute>} />
                   <Route path="/seller/inventory" element={<ProtectedRoute roles={['seller', 'admin']}><SellerDashboard /></ProtectedRoute>} />
+                  <Route path="/seller/products/:id/edit" element={<ProtectedRoute roles={['seller', 'admin']}><ProductEdit /></ProtectedRoute>} />
                   <Route path="/seller/analytics" element={<ProtectedRoute roles={['seller', 'admin']}><SellerDashboard /></ProtectedRoute>} />
+                  <Route path="/seller/payouts" element={<ProtectedRoute roles={['seller', 'admin']}><Payouts /></ProtectedRoute>} />
                   <Route path="/seller/settings" element={<ProtectedRoute roles={['seller', 'admin']}><SellerDashboard /></ProtectedRoute>} />
                 </Routes>
               </RouteErrorBoundary>
