@@ -19,6 +19,9 @@ import SellerOnboarding from './pages/seller/SellerOnboarding';
 import Orders from './pages/Orders';
 import Wishlist from './pages/Wishlist';
 import Profile from './pages/Profile';
+import ControlsSite from './pages/admin/ControlsSite';
+import ControlsPolicies from './pages/admin/ControlsPolicies';
+import ControlsSettlements from './pages/admin/ControlsSettlements';
 import { StoreProvider } from './context/StoreContext';
 import { useAuthStore } from './context/stores';
 
@@ -32,6 +35,7 @@ function ProtectedRoute({ children, roles }) {
 
 function AppContent() {
   const location = useLocation();
+  const isBackofficeRoute = location.pathname.startsWith('/admin') || location.pathname.startsWith('/seller');
 
   return (
     <div className="min-h-screen bg-surface-primary text-text-primary flex flex-col relative">
@@ -43,7 +47,7 @@ function AppContent() {
       <AuthModal />
 
       <div className="relative z-10 flex min-h-screen flex-col">
-        <Navbar />
+        {!isBackofficeRoute && <Navbar />}
         <main className="flex-1">
           <AnimatePresence mode="wait">
             <motion.div
@@ -69,7 +73,11 @@ function AppContent() {
                   <Route path="/admin/orders" element={<ProtectedRoute roles={['admin']}><AdminDashboard /></ProtectedRoute>} />
                   <Route path="/admin/users" element={<ProtectedRoute roles={['admin']}><AdminDashboard /></ProtectedRoute>} />
                   <Route path="/admin/analytics" element={<ProtectedRoute roles={['admin']}><AdminDashboard /></ProtectedRoute>} />
-                  <Route path="/admin/settings" element={<ProtectedRoute roles={['admin']}><AdminDashboard /></ProtectedRoute>} />
+                  <Route path="/admin/settings" element={<ProtectedRoute roles={['admin']}><ControlsSite /></ProtectedRoute>} />
+                  <Route path="/admin/controls" element={<ProtectedRoute roles={['admin']}><ControlsSite /></ProtectedRoute>} />
+                  <Route path="/admin/controls/site" element={<ProtectedRoute roles={['admin']}><ControlsSite /></ProtectedRoute>} />
+                  <Route path="/admin/controls/policies" element={<ProtectedRoute roles={['admin']}><ControlsPolicies /></ProtectedRoute>} />
+                  <Route path="/admin/controls/settlements" element={<ProtectedRoute roles={['admin']}><ControlsSettlements /></ProtectedRoute>} />
                   <Route path="/seller/onboarding" element={<ProtectedRoute><SellerOnboarding /></ProtectedRoute>} />
                   <Route path="/seller/dashboard" element={<ProtectedRoute roles={['seller', 'admin']}><SellerDashboard /></ProtectedRoute>} />
                   <Route path="/seller/add-product" element={<ProtectedRoute roles={['seller', 'admin']}><AddProduct /></ProtectedRoute>} />
@@ -82,7 +90,7 @@ function AppContent() {
             </motion.div>
           </AnimatePresence>
         </main>
-        <Footer />
+        {!isBackofficeRoute && <Footer />}
       </div>
     </div>
   );

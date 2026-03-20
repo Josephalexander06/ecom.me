@@ -17,7 +17,7 @@ const AdminLayout = ({ children }) => {
     { icon: ShoppingBag, label: 'Orders', path: '/admin/orders' },
     { icon: Package, label: 'Products', path: '/admin/products' },
     { icon: BarChart3, label: 'Analytics', path: '/admin/analytics' },
-    { icon: Settings, label: 'Site Controls', path: '/admin/settings' },
+    { icon: Settings, label: 'Site Controls', path: '/admin/controls/site' },
   ];
 
   const handleLogout = () => {
@@ -27,7 +27,7 @@ const AdminLayout = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-surface-primary flex">
-      <aside className="hidden lg:flex w-72 shrink-0 border-r border-border-default bg-white/90 backdrop-blur-sm p-6 flex-col">
+      <aside className="hidden lg:flex sticky top-0 h-screen overflow-y-auto w-72 shrink-0 border-r border-border-default bg-white/95 backdrop-blur-sm p-6 flex-col">
         <Link to="/admin/dashboard" className="inline-flex items-center gap-2.5 mb-8">
           <span className="h-8 w-8 rounded-lg bg-brand-primary text-white grid place-items-center text-sm font-bold">A</span>
           <span className="font-display text-lg font-bold tracking-tight">Admin Console</span>
@@ -36,7 +36,9 @@ const AdminLayout = ({ children }) => {
         <nav className="space-y-1.5">
           {menuItems.map((item) => {
             const Icon = item.icon;
-            const isActive = location.pathname === item.path;
+            const isActive = item.path.startsWith('/admin/controls')
+              ? location.pathname.startsWith('/admin/controls') || location.pathname === '/admin/settings'
+              : location.pathname === item.path;
             return (
               <Link
                 key={item.path}
@@ -105,7 +107,9 @@ const AdminLayout = ({ children }) => {
               <nav className="space-y-1.5">
                 {menuItems.map((item) => {
                   const Icon = item.icon;
-                  const isActive = location.pathname === item.path;
+                  const isActive = item.path.startsWith('/admin/controls')
+                    ? location.pathname.startsWith('/admin/controls') || location.pathname === '/admin/settings'
+                    : location.pathname === item.path;
                   return (
                     <Link
                       key={item.path}

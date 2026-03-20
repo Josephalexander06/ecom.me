@@ -33,6 +33,10 @@ const sectionByPath = {
   '/admin/products': 'products',
   '/admin/analytics': 'analytics',
   '/admin/settings': 'controls',
+  '/admin/controls': 'controls',
+  '/admin/controls/site': 'controls',
+  '/admin/controls/policies': 'controls',
+  '/admin/controls/settlements': 'controls',
 };
 
 const pathBySection = Object.entries(sectionByPath).reduce((acc, [path, section]) => {
@@ -60,6 +64,10 @@ const defaultAdminOpsControls = {
   maxProductsPerSeller: 1200,
   maxOrderItems: 15,
   supportEscalationHours: 24,
+  commissionRatePercent: 18,
+  settlementCycleDays: 7,
+  settlementReservePercent: 5,
+  autoPayoutEnabled: true,
 };
 
 const AdminDashboard = () => {
@@ -88,9 +96,14 @@ const AdminDashboard = () => {
   });
 
   const activeSection = sectionByPath[location.pathname] || 'overview';
+  const activeControlTab = location.pathname.startsWith('/admin/controls/settlements')
+    ? 'settlements'
+    : location.pathname.startsWith('/admin/controls/policies')
+      ? 'policies'
+      : 'site';
 
   const goSection = (section) => {
-    const next = pathBySection[section] || '/admin/dashboard';
+    const next = section === 'controls' ? '/admin/controls/site' : pathBySection[section] || '/admin/dashboard';
     if (next !== location.pathname) navigate(next);
   };
 
@@ -273,6 +286,61 @@ const AdminDashboard = () => {
     ],
     [pendingSellers.length, unshippedOrders.length, outOfStockProducts.length, blockedUsers.length]
   );
+
+  const slaBoard = useMemo(() => {
+    const lanes = [
+      { status: 'pending', label: 'Pending Review', targetHours: 1 },
+      { status: 'confirmed', label: 'Confirmed', targetHours: 4 },
+      { status: 'packed', label: 'Packed', targetHours: 8 },
+      { status: 'shipped', label: 'Shipped', targetHours: 24 },
+    ];
+    const now = Date.now();
+
+    return lanes.map((lane) => {
+      const laneOrders = orders.filter((o) => String(o.status || '').toLowerCase() === lane.status);
+      const overdue = laneOrders.filter((o) => {
+        if (!o.createdAt) return false;
+        const ageHours = (now - new Date(o.createdAt).getTime()) / (1000 * 60 * 60);
+        return ageHours > lane.targetHours;
+      }).length;
+      return { ...lane, total: laneOrders.length, overdue };
+    });
+  }, [orders]);
+
+  const fraudSignals = useMemo(() => {
+    const highValueOrders = orders.filter((o) => Number(o.totalAmount || 0) >= 50000);
+    const highValueCOD = orders.filter(
+      (o) => String(o.paymentMethod || '').toLowerCase().includes('cod') && Number(o.totalAmount || 0) >= 20000
+    );
+    const userOrderMap = {};
+    orders.forEach((o) => {
+      const uid = String(o.userId || o.user || '');
+      if (!uid) return;
+      userOrderMap[uid] = (userOrderMap[uid] || 0) + 1;
+    });
+    const rapidRepeatBuyers = Object.values(userOrderMap).filter((count) => count >= 3).length;
+
+    const riskScore = Math.min(
+      100,
+      highValueOrders.length * 8 + highValueCOD.length * 10 + rapidRepeatBuyers * 6 + blockedUsers.length * 2
+    );
+
+    return {
+      riskScore,
+      highValueOrders: highValueOrders.length,
+      highValueCOD: highValueCOD.length,
+      rapidRepeatBuyers,
+      totalFlags: highValueOrders.length + highValueCOD.length + rapidRepeatBuyers,
+    };
+  }, [orders, blockedUsers.length]);
+
+  const settlementPreview = useMemo(() => {
+    const grossRevenue = Number(dashboard?.totalRevenue || 0);
+    const commissionAmount = (grossRevenue * Number(opsControls.commissionRatePercent || 0)) / 100;
+    const reserveAmount = (grossRevenue * Number(opsControls.settlementReservePercent || 0)) / 100;
+    const netSellerPayout = Math.max(grossRevenue - commissionAmount - reserveAmount, 0);
+    return { grossRevenue, commissionAmount, reserveAmount, netSellerPayout };
+  }, [dashboard, opsControls.commissionRatePercent, opsControls.settlementReservePercent]);
 
   const handleSellerAction = async (id, status) => {
     try {
@@ -462,7 +530,7 @@ const AdminDashboard = () => {
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-5">
               {stats.map((stat) => (
-                <div key={stat.label} className="panel p-5">
+                <div key={stat.label} className="panel p-5 h-full">
                   <stat.icon className="text-brand-primary mb-3" size={20} />
                   <p className="text-xs uppercase tracking-[0.14em] font-bold text-text-muted">{stat.label}</p>
                   <p className="text-2xl font-display font-bold text-text-primary mt-1">{stat.value}</p>
@@ -471,8 +539,8 @@ const AdminDashboard = () => {
               ))}
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
-              <div className="panel p-5 xl:col-span-2">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-5 items-stretch">
+              <div className="panel p-5 xl:col-span-2 h-full">
                 <h3 className="text-base font-semibold mb-4">Operational risk queue</h3>
                 <div className="space-y-3">
                   {riskQueue.map((risk) => (
@@ -495,7 +563,7 @@ const AdminDashboard = () => {
                 </div>
               </div>
 
-              <div className="panel p-5">
+              <div className="panel p-5 h-full">
                 <h3 className="text-base font-semibold mb-4">Instant actions</h3>
                 <div className="space-y-2.5">
                   <button
@@ -526,8 +594,8 @@ const AdminDashboard = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
-              <div className="panel p-5">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 items-stretch">
+              <div className="panel p-5 h-full">
                 <h3 className="text-base font-semibold mb-4">Order status distribution</h3>
                 <ResponsiveContainer width="100%" height={280}>
                   <BarChart data={ordersByStatus}>
@@ -540,7 +608,7 @@ const AdminDashboard = () => {
                 </ResponsiveContainer>
               </div>
 
-              <div className="panel p-5">
+              <div className="panel p-5 h-full">
                 <h3 className="text-base font-semibold mb-4">Top viewed products</h3>
                 <div className="space-y-2.5">
                   {mostViewed.map((p, idx) => (
@@ -552,6 +620,47 @@ const AdminDashboard = () => {
                       <span className="text-sm font-semibold text-brand-primary">{p.views || 0} views</span>
                     </div>
                   ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-5 items-stretch">
+              <div className="panel p-5 xl:col-span-2 h-full">
+                <h3 className="text-base font-semibold mb-4">Order SLA board</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {slaBoard.map((lane) => (
+                    <div key={lane.status} className="rounded-xl border border-border-default bg-white p-3">
+                      <p className="text-xs uppercase tracking-[0.12em] font-bold text-text-muted">{lane.label}</p>
+                      <p className="mt-1 text-xl font-display font-bold text-text-primary">{lane.total}</p>
+                      <div className="mt-2 flex items-center justify-between text-xs">
+                        <span className="text-text-muted">Target: {lane.targetHours}h</span>
+                        <span className={lane.overdue > 0 ? 'text-danger font-semibold' : 'text-success font-semibold'}>
+                          Overdue: {lane.overdue}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="panel p-5 h-full">
+                <h3 className="text-base font-semibold mb-4">Fraud / risk engine</h3>
+                <div className="rounded-xl border border-border-default bg-white p-4">
+                  <p className="text-xs uppercase tracking-[0.12em] font-bold text-text-muted">Risk score</p>
+                  <p className={`mt-1 text-3xl font-display font-bold ${fraudSignals.riskScore >= 60 ? 'text-danger' : fraudSignals.riskScore >= 35 ? 'text-warning' : 'text-success'}`}>
+                    {fraudSignals.riskScore}
+                  </p>
+                  <div className="mt-3 h-2 rounded-full bg-surface-secondary overflow-hidden">
+                    <div
+                      className={`h-full ${fraudSignals.riskScore >= 60 ? 'bg-danger' : fraudSignals.riskScore >= 35 ? 'bg-warning' : 'bg-success'}`}
+                      style={{ width: `${fraudSignals.riskScore}%` }}
+                    />
+                  </div>
+                  <div className="mt-4 space-y-2 text-xs text-text-secondary">
+                    <p className="flex items-center justify-between"><span>High-value orders</span><strong>{fraudSignals.highValueOrders}</strong></p>
+                    <p className="flex items-center justify-between"><span>High-value COD</span><strong>{fraudSignals.highValueCOD}</strong></p>
+                    <p className="flex items-center justify-between"><span>Rapid repeat buyers</span><strong>{fraudSignals.rapidRepeatBuyers}</strong></p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -834,8 +943,30 @@ const AdminDashboard = () => {
         {activeSection === 'controls' && (
           <>
             {renderSectionHeader('Website Command Controls', 'Manage storefront modules, messaging and commerce rules from one place.')}
+            <div className="panel p-3 md:p-4">
+              <div className="flex items-center gap-2 flex-wrap">
+                {[
+                  ['site', 'Site Modules', '/admin/controls/site'],
+                  ['policies', 'Ops Policies', '/admin/controls/policies'],
+                  ['settlements', 'Settlement Controls', '/admin/controls/settlements'],
+                ].map(([key, label, path]) => (
+                  <button
+                    key={key}
+                    onClick={() => navigate(path)}
+                    className={`h-9 rounded-lg px-3 text-sm font-semibold ${
+                      activeControlTab === key
+                        ? 'bg-brand-primary text-white'
+                        : 'bg-white border border-border-default text-text-secondary hover:text-text-primary'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
               <div className="xl:col-span-2 space-y-5">
+                {(activeControlTab === 'site' || activeControlTab === 'policies') && (
                 <div className="panel p-5">
                   <h3 className="text-base font-semibold mb-4 inline-flex items-center gap-2">
                     <Shield size={16} className="text-brand-primary" />
@@ -900,7 +1031,9 @@ const AdminDashboard = () => {
                     </label>
                   </div>
                 </div>
+                )}
 
+                {activeControlTab === 'site' && (
                 <div className="panel p-5">
                   <h3 className="text-base font-semibold mb-4 inline-flex items-center gap-2">
                     <Megaphone size={16} className="text-brand-primary" />
@@ -923,7 +1056,9 @@ const AdminDashboard = () => {
                     />
                   </div>
                 </div>
+                )}
 
+                {activeControlTab === 'site' && (
                 <div className="panel p-5">
                   <h3 className="text-base font-semibold mb-4 inline-flex items-center gap-2">
                     <Settings2 size={16} className="text-brand-primary" />
@@ -940,7 +1075,9 @@ const AdminDashboard = () => {
                       ))}
                   </div>
                 </div>
+                )}
 
+                {(activeControlTab === 'site' || activeControlTab === 'policies') && (
                 <div className="panel p-5">
                   <h3 className="text-base font-semibold mb-4 inline-flex items-center gap-2">
                     <Shield size={16} className="text-brand-primary" />
@@ -969,6 +1106,63 @@ const AdminDashboard = () => {
                     </label>
                   </div>
                 </div>
+                )}
+
+                {(activeControlTab === 'settlements' || activeControlTab === 'policies') && (
+                <div className="panel p-5">
+                  <h3 className="text-base font-semibold mb-4 inline-flex items-center gap-2">
+                    <BarChart3 size={16} className="text-brand-primary" />
+                    Commission & settlement controls
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <label className="text-sm text-text-secondary">
+                      <span className="block mb-1">Commission rate (%)</span>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={opsControls.commissionRatePercent}
+                        onChange={(e) => setOpsControls((prev) => ({ ...prev, commissionRatePercent: Number(e.target.value || 0) }))}
+                        className="w-full h-10 rounded-xl border border-border-default bg-white px-3"
+                      />
+                    </label>
+                    <label className="text-sm text-text-secondary">
+                      <span className="block mb-1">Settlement cycle (days)</span>
+                      <input
+                        type="number"
+                        min="1"
+                        value={opsControls.settlementCycleDays}
+                        onChange={(e) => setOpsControls((prev) => ({ ...prev, settlementCycleDays: Number(e.target.value || 1) }))}
+                        className="w-full h-10 rounded-xl border border-border-default bg-white px-3"
+                      />
+                    </label>
+                    <label className="text-sm text-text-secondary">
+                      <span className="block mb-1">Settlement reserve (%)</span>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={opsControls.settlementReservePercent}
+                        onChange={(e) => setOpsControls((prev) => ({ ...prev, settlementReservePercent: Number(e.target.value || 0) }))}
+                        className="w-full h-10 rounded-xl border border-border-default bg-white px-3"
+                      />
+                    </label>
+                    <label className="inline-flex items-center justify-between rounded-lg border border-border-default bg-white px-3 py-2 text-text-secondary text-sm">
+                      <span>Auto seller payouts</span>
+                      <input type="checkbox" checked={Boolean(opsControls.autoPayoutEnabled)} onChange={() => toggleOpsControl('autoPayoutEnabled')} />
+                    </label>
+                  </div>
+                  <div className="mt-4 rounded-xl border border-border-default bg-surface-secondary/40 p-3 text-sm">
+                    <p className="text-xs uppercase tracking-[0.12em] font-bold text-text-muted mb-2">Settlement preview</p>
+                    <div className="grid grid-cols-2 gap-2 text-text-secondary">
+                      <p>Gross Revenue</p><p className="text-right font-semibold text-text-primary">₹{settlementPreview.grossRevenue.toLocaleString('en-IN')}</p>
+                      <p>Commission</p><p className="text-right font-semibold text-text-primary">₹{settlementPreview.commissionAmount.toLocaleString('en-IN')}</p>
+                      <p>Reserve Hold</p><p className="text-right font-semibold text-text-primary">₹{settlementPreview.reserveAmount.toLocaleString('en-IN')}</p>
+                      <p>Net Seller Payout</p><p className="text-right font-semibold text-success">₹{settlementPreview.netSellerPayout.toLocaleString('en-IN')}</p>
+                    </div>
+                  </div>
+                </div>
+                )}
               </div>
 
               <div className="space-y-5">
