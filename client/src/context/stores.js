@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { API_BASE } from '../utils/api';
+import { API_BASE, apiFetchJson } from '../utils/api';
 
 const getErrorMessage = (error) =>
   error instanceof TypeError
@@ -59,13 +59,11 @@ export const useAuthStore = create(
       login: async (email, password) => {
         set({ loading: true, error: null });
         try {
-          const response = await fetch(`${API_BASE}/auth/login`, {
+          const data = await apiFetchJson(`${API_BASE}/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password }),
           });
-          const data = await response.json();
-          if (!response.ok) throw new Error(data.message || 'Login failed');
           
           set({ 
             user: data, 
@@ -83,13 +81,11 @@ export const useAuthStore = create(
       register: async (name, email, password) => {
         set({ loading: true, error: null });
         try {
-          const response = await fetch(`${API_BASE}/auth/register`, {
+          const data = await apiFetchJson(`${API_BASE}/auth/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name, email, password }),
           });
-          const data = await response.json();
-          if (!response.ok) throw new Error(data.message || 'Registration failed');
 
           set({ 
             user: data, 
@@ -116,7 +112,7 @@ export const useAuthStore = create(
         set({ loading: true, error: null });
         try {
           const token = get().token;
-          const response = await fetch(`${API_BASE}/auth/profile`, {
+          const data = await apiFetchJson(`${API_BASE}/auth/profile`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
@@ -124,8 +120,6 @@ export const useAuthStore = create(
             },
             body: JSON.stringify(profileData),
           });
-          const data = await response.json();
-          if (!response.ok) throw new Error(data.message || 'Update failed');
 
           set((state) => ({
             user: { ...state.user, ...data },
@@ -142,7 +136,7 @@ export const useAuthStore = create(
         set({ loading: true, error: null });
         try {
           const token = get().token;
-          const response = await fetch(`${API_BASE}/auth/upgrade-to-seller`, {
+          const data = await apiFetchJson(`${API_BASE}/auth/upgrade-to-seller`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -150,8 +144,6 @@ export const useAuthStore = create(
             },
             body: JSON.stringify({ storeName, bankAccount }),
           });
-          const data = await response.json();
-          if (!response.ok) throw new Error(data.message || 'Upgrade failed');
 
           set((state) => ({
             user: { ...state.user, ...data },
@@ -168,12 +160,10 @@ export const useAuthStore = create(
         if (!get().isAuthenticated) throw new Error('Sign in to save items');
         try {
           const token = get().token;
-          const response = await fetch(`${API_BASE}/auth/wishlist/${productId}`, {
+          const data = await apiFetchJson(`${API_BASE}/auth/wishlist/${productId}`, {
             method: 'POST',
             headers: { Authorization: `Bearer ${token}` }
           });
-          const data = await response.json();
-          if (!response.ok) throw new Error(data.message || 'Toggle failed');
 
           set((state) => ({
             user: { ...state.user, wishlist: data.wishlist }

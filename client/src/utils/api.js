@@ -40,3 +40,40 @@ export const authHeaders = (extra = {}) => {
     ...(token ? { Authorization: `Bearer ${token}` } : {})
   };
 };
+
+const safeJsonParse = (text) => {
+  if (!text || !text.trim()) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+};
+
+export const parseApiResponse = async (response) => {
+  const text = await response.text();
+  const data = safeJsonParse(text);
+  return { text, data };
+};
+
+export const apiFetchJson = async (url, options = {}) => {
+  const response = await fetch(url, options);
+  const { text, data } = await parseApiResponse(response);
+
+  if (!response.ok) {
+    const fallback =
+      response.status === 404 && url.includes('/api/')
+        ? `API route not found (${url}). Check VITE_API_BASE_URL and backend deployment.`
+        : `Request failed (${response.status})`;
+    throw new Error(data?.message || fallback);
+  }
+
+  if (data === null) {
+    throw new Error(
+      `API did not return JSON for ${url}.` +
+      (text ? ` Response starts with: ${text.slice(0, 80)}` : '')
+    );
+  }
+
+  return data;
+};
