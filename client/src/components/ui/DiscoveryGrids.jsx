@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import SafeImage from './SafeImage';
 
 const gridData = [
   {
@@ -52,7 +53,7 @@ const DiscoveryGrids = () => {
               {panel.items.map((item, iIdx) => (
                 <div key={iIdx} className="group cursor-pointer">
                   <div className="aspect-square bg-gray-50 rounded-sm overflow-hidden mb-2">
-                    <img 
+                    <SafeImage 
                       src={item.image} 
                       alt={item.name} 
                       className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"

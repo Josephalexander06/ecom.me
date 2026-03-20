@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Zap, ArrowRight, Shield, Cpu } from 'lucide-react';
+import SafeImage from './SafeImage';
 
 const ImpactSection = () => {
   return (
@@ -20,7 +21,7 @@ const ImpactSection = () => {
           transition={{ duration: 1 }}
           className="relative aspect-square glass rounded-[4rem] border-white/5 overflow-hidden group"
         >
-          <img 
+          <SafeImage 
             src="https://images.unsplash.com/photo-1544365558-35aa4afcf11f?auto=format&fit=crop&q=80&w=1200" 
             alt="Flagship Hardware" 
             className="w-full h-full object-cover grayscale brightness-75 group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000"

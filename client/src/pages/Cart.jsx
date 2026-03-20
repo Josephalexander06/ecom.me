@@ -7,6 +7,7 @@ import { useStore } from '../context/StoreContext';
 import { fetchSiteConfig, defaultSiteConfig } from '../utils/siteConfig';
 import ProductRow from '../components/home/ProductRow';
 import EmptyState from '../components/ui/EmptyState';
+import SafeImage from '../components/ui/SafeImage';
 import toast from 'react-hot-toast';
 
 const CartItem = ({ item }) => {
@@ -26,7 +27,7 @@ const CartItem = ({ item }) => {
   return (
     <div className="flex gap-4 md:gap-5 py-5 border-b border-border-default last:border-0">
       <Link to={`/product/${item.productId}`} className="w-24 h-24 md:w-28 md:h-28 rounded-xl bg-surface-secondary border border-border-default overflow-hidden shrink-0">
-        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+        <SafeImage src={item.image} alt={item.name} className="w-full h-full object-cover" />
       </Link>
 
       <div className="flex-1">

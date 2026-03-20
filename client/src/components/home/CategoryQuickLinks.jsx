@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import SafeImage from '../ui/SafeImage';
 
 const categories = [
   { name: 'Mobiles', image: 'https://images.unsplash.com/photo-1598327105666-5b89a81a1bb4?auto=format&fit=crop&w=150&q=80' },
@@ -23,7 +24,7 @@ const CategoryQuickLinks = () => {
             className="group panel-soft hover-lift flex flex-col items-center justify-center gap-2 min-w-[92px] md:min-w-[110px] px-3 py-3"
           >
             <div className="h-12 w-12 md:h-14 md:w-14 rounded-full overflow-hidden ring-2 ring-white/80 shadow-sm">
-              <img
+              <SafeImage
                 src={cat.image}
                 alt={cat.name}
                 className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"

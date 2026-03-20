@@ -1,10 +1,11 @@
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
+import SafeImage from '../ui/SafeImage';
 
 const WideBanner = () => {
   return (
     <div className="relative w-full h-[250px] md:h-[350px] rounded-pro overflow-hidden group border border-border-default/50 shadow-sm">
-      <img 
+      <SafeImage 
         src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1500&q=80" 
         alt="Promotion" 
         className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"

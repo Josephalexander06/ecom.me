@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { ShoppingCart, Heart, Star, Zap, Check } from 'lucide-react';
 import { useAuthStore, useCartStore, useUIStore } from '../../context/stores';
 import toast from 'react-hot-toast';
+import SafeImage from './SafeImage';
 
 const ProductCard = ({ product, compact = false }) => {
   const { addItem } = useCartStore();
@@ -64,7 +65,7 @@ const ProductCard = ({ product, compact = false }) => {
     >
       <Link to={`/product/${id}`} className="flex flex-col flex-1">
         <div className="relative aspect-[4/5] bg-gradient-to-b from-slate-100 to-slate-50 p-4 md:p-5 overflow-hidden">
-          <img
+          <SafeImage
             src={product.images?.[0] || 'https://via.placeholder.com/400'}
             alt={nameLabel}
             className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"

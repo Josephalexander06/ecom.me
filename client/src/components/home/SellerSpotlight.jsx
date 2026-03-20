@@ -1,11 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Star, CheckCircle2 } from 'lucide-react';
+import SafeImage from '../ui/SafeImage';
 
 const SellerCard = ({ seller }) => (
   <div className="bg-white border border-border-default rounded-pro p-6 flex flex-col items-center text-center hover:shadow-premium transition-all">
     <div className="w-16 h-16 rounded-full overflow-hidden bg-brand-light mb-4 border-2 border-brand-primary/10">
-      <img src={seller.logo} alt={seller.name} className="w-full h-full object-cover" />
+      <SafeImage src={seller.logo} alt={seller.name} className="w-full h-full object-cover" />
     </div>
     <div className="flex items-center gap-1.5 mb-1">
       <h3 className="font-bold text-text-primary">{seller.name}</h3>

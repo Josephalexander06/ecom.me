@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import SafeImage from './SafeImage';
 
 const banners = [
   {
@@ -56,7 +57,7 @@ const Hero = () => {
           transition={{ duration: 0.5 }}
           className="absolute inset-0 w-full h-full flex items-center justify-between"
         >
-          <img 
+          <SafeImage 
             src={banners[currentIndex].image} 
             alt={banners[currentIndex].title}
             className="w-full h-full object-contain"

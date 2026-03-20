@@ -17,6 +17,7 @@ import {
 import { useAuthStore, useUIStore, useCartStore } from '../../context/stores';
 import { useStore } from '../../context/StoreContext';
 import LocationModal from './LocationModal';
+import SafeImage from './SafeImage';
 
 const categories = ['All', 'Electronics', 'Mobiles', 'Fashion', 'Home', 'Books', 'Beauty', 'Groceries'];
 const trendingSearches = ['iPhone 15', 'Running Shoes', 'Noise Cancelling', 'Premium Watches', 'Kitchen Smart'];
@@ -168,7 +169,7 @@ const Navbar = () => {
                         className="w-full rounded-xl px-3 py-2.5 text-left hover:bg-surface-secondary transition-colors flex items-center gap-3"
                       >
                         <div className="h-10 w-10 rounded-lg border border-border-default bg-surface-secondary overflow-hidden">
-                          <img src={p.images?.[0]} alt="" className="h-full w-full object-contain" />
+                          <SafeImage src={p.images?.[0]} alt="" className="h-full w-full object-contain" />
                         </div>
                         <div className="min-w-0">
                           <p className="truncate text-sm font-semibold text-text-primary">{p.name}</p>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ShoppingCart, Info, Star } from 'lucide-react';
+import SafeImage from '../ui/SafeImage';
 
 const QuickView = ({ product, isOpen, onClose }) => {
   if (!product) return null;
@@ -36,7 +37,7 @@ const QuickView = ({ product, isOpen, onClose }) => {
 
             {/* Left: Image Canvas */}
             <div className="w-full md:w-1/2 h-[40%] md:h-full bg-white/5 relative">
-              <img 
+              <SafeImage
                 src={product.images[0]} 
                 alt={product.name}
                 className="w-full h-full object-cover opacity-60"

@@ -20,6 +20,7 @@ import { useAuthStore, useCartStore, useUIStore } from '../context/stores';
 import { API_BASE, authHeaders } from '../utils/api';
 import ImageZoom from '../components/product/ImageZoom';
 import ProductRow from '../components/home/ProductRow';
+import SafeImage from '../components/ui/SafeImage';
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -183,7 +184,7 @@ const ProductDetail = () => {
                 onClick={() => setSelectedImage(idx)}
                 className={`shrink-0 h-20 w-20 rounded-xl border overflow-hidden ${selectedImage === idx ? 'border-brand-primary ring-2 ring-brand-primary/20' : 'border-border-default'}`}
               >
-                <img src={img} alt={`${productName} ${idx + 1}`} className="h-full w-full object-cover" />
+                <SafeImage src={img} alt={`${productName} ${idx + 1}`} className="h-full w-full object-cover" />
               </button>
             ))}
           </div>
@@ -369,7 +370,7 @@ const ProductDetail = () => {
                 <React.Fragment key={p._id || p.id || idx}>
                   <div className="w-28">
                     <div className="aspect-square rounded-xl border border-border-default bg-white p-3 overflow-hidden">
-                      <img
+                      <SafeImage
                         src={Array.isArray(p.images) ? p.images[0] : p.images || 'https://via.placeholder.com/400'}
                         alt={p.name || 'Product'}
                         className="h-full w-full object-contain"

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronRight, ShoppingCart, Clock } from 'lucide-react';
+import SafeImage from './SafeImage';
 
 const deals = [
   {
@@ -88,7 +89,7 @@ const DealSection = () => {
         {deals.map((deal) => (
           <div key={deal.id} className="min-w-[150px] md:min-w-[200px] flex flex-col items-center text-center group cursor-pointer transition-transform hover:scale-105">
              <div className="w-24 h-24 md:w-40 md:h-40 mb-4 flex items-center justify-center p-2">
-                <img src={deal.image} alt={deal.name} className="max-w-full max-h-full object-contain" />
+                <SafeImage src={deal.image} alt={deal.name} className="max-w-full max-h-full object-contain" />
              </div>
              <h3 className="text-[14px] font-medium text-text-main mb-1 line-clamp-1">{deal.name}</h3>
              <div className="flex flex-col gap-0.5">

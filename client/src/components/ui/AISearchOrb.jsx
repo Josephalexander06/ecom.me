@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Sparkles, X, ArrowRight, Command, Cpu, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import useAISearch from '../../hooks/useAISearch';
+import SafeImage from './SafeImage';
 
 const AISearchOrb = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -148,7 +149,7 @@ const AISearchOrb = () => {
                          className="flex items-center gap-6 p-4 rounded-2xl bg-black/5 hover:bg-white border border-transparent hover:border-accent-primary/20 cursor-pointer group transition-all"
                        >
                          <div className="w-16 h-16 rounded-xl overflow-hidden bg-black/5 flex-shrink-0">
-                           <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
+                           <SafeImage src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
                          </div>
                          <div className="flex-1">
                            <h3 className="font-display text-lg text-text-main italic group-hover:text-accent-primary transition-colors">{product.name}</h3>

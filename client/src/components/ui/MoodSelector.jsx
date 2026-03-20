@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import SafeImage from './SafeImage';
 // No icons used currently
 
 const collections = [
@@ -62,7 +63,7 @@ const Collections = () => {
             className={`relative group overflow-hidden rounded-[3rem] glass border-white/5 cursor-pointer ${col.span}`}
           >
             <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors duration-700 z-10" />
-            <img 
+            <SafeImage 
               src={col.image} 
               alt={col.id} 
               className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1.5s] ease-out grayscale group-hover:grayscale-0"

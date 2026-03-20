@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import SafeImage from '../ui/SafeImage';
 
 const slides = [
   {
@@ -55,7 +56,7 @@ const HeroCarousel = () => {
           transition={{ duration: 0.6, ease: 'easeOut' }}
           className="absolute inset-0"
         >
-          <img
+          <SafeImage
             src={slides[current].image}
             alt={slides[current].title}
             className="h-full w-full object-cover"

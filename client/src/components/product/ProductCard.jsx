@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingCart, Heart, Star, Zap, Info, Check } from 'lucide-react';
 import { useAuthStore, useCartStore, useUIStore } from '../../context/stores';
 import toast from 'react-hot-toast';
+import SafeImage from '../ui/SafeImage';
 
 const ProductCard = ({ product }) => {
   const navigate = useNavigate();
@@ -77,7 +78,7 @@ const ProductCard = ({ product }) => {
 
       {/* Image Container */}
       <div className="relative aspect-square overflow-hidden bg-surface-secondary">
-        <img 
+        <SafeImage
           src={product.images?.[0] || 'https://via.placeholder.com/400'} 
           alt={product.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"

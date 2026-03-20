@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import SafeImage from '../ui/SafeImage';
 
 const ImageZoom = ({ src, alt }) => {
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -21,7 +22,7 @@ const ImageZoom = ({ src, alt }) => {
       onPointerMove={handlePointerMove}
       className="relative w-full aspect-square bg-surface-secondary rounded-img overflow-hidden cursor-zoom-in border border-border-default"
     >
-      <img 
+      <SafeImage 
         src={src} 
         alt={alt} 
         className="w-full h-full object-cover"

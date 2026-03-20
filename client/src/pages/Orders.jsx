@@ -5,6 +5,7 @@ import { Package, ChevronRight, Clock, CheckCircle2, Truck, LayoutGrid } from 'l
 import { useStore } from '../context/StoreContext';
 import { useAuthStore, useCartStore } from '../context/stores';
 import EmptyState from '../components/ui/EmptyState';
+import SafeImage from '../components/ui/SafeImage';
 import toast from 'react-hot-toast';
 
 const OrderCard = ({ order, index }) => {
@@ -213,7 +214,7 @@ const OrderCard = ({ order, index }) => {
           {(order.items || []).map((item) => (
             <div key={item.productId} className="flex gap-4 items-center p-3 border border-border-default rounded-xl hover:border-brand-primary/40 transition-colors bg-white group">
               <Link to={`/product/${item.productId}`} className="w-20 h-20 bg-surface-secondary rounded-lg border border-border-default overflow-hidden flex-shrink-0 group-hover:opacity-80 transition-opacity">
-                <img src={item.image} alt={item.name} className="w-full h-full object-cover mix-blend-multiply" />
+                <SafeImage src={item.image} alt={item.name} className="w-full h-full object-cover mix-blend-multiply" />
               </Link>
               <div className="flex-1">
                 <Link to={`/product/${item.productId}`} className="text-caption font-bold text-text-primary line-clamp-1 hover:text-brand-primary transition-colors">

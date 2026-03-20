@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Clock, ChevronRight } from 'lucide-react';
+import SafeImage from '../ui/SafeImage';
 
 const RecentlyViewed = () => {
   const [items, setItems] = React.useState([]);
@@ -50,7 +51,7 @@ const RecentlyViewed = () => {
             className="w-72 lg:w-auto h-40 flex-shrink-0 glass p-4 rounded-3xl border border-black/5 hover:border-accent-primary/40 transition-all group flex items-center gap-6 snap-center"
           >
             <div className="w-32 h-32 rounded-2xl overflow-hidden bg-black/5 grayscale group-hover:grayscale-0 transition-all duration-500">
-              <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+              <SafeImage src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
             </div>
             <div className="flex-1">
               <h3 className="font-display text-text-main text-sm lg:text-base italic mb-1 truncate">{item.name}</h3>

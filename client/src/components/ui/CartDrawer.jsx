@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Minus, Plus, Trash2, X } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
+import SafeImage from './SafeImage';
 
 const CartDrawer = ({ open, onClose }) => {
   const { cart, cartSubtotal, updateCartQuantity, removeFromCart } = useStore();
@@ -42,7 +43,7 @@ const CartDrawer = ({ open, onClose }) => {
                 {cart.map((item) => (
                   <motion.div key={item.productId} layout className="border border-cyan-200/20 rounded-xl p-3 bg-[#0b1530]/70">
                     <div className="flex gap-3">
-                      <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded" />
+                      <SafeImage src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded" />
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-sm line-clamp-2 text-blue-50">{item.name}</p>
                         <p className="text-cyan-200 font-semibold mt-1">${item.price.toFixed(2)}</p>

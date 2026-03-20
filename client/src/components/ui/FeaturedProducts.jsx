@@ -5,6 +5,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { motion } from 'framer-motion';
 import { ShoppingCart, ArrowRight } from 'lucide-react';
 import useIsDesktop from '../../hooks/useIsDesktop';
+import SafeImage from './SafeImage';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -146,7 +147,7 @@ const FeaturedProducts = () => {
               className="absolute top-12 left-10 right-10 aspect-[4/5] z-10"
             >
                 <div className="relative w-full h-full rounded-[2.5rem] overflow-hidden shadow-2xl">
-                    <img 
+                    <SafeImage 
                       src={product.image} 
                       alt={product.name}
                       className="w-full h-full object-cover grayscale brightness-90 group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-[1.2s]"

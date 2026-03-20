@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import SafeImage from './SafeImage';
 
 const BrandStory = () => {
   return (
@@ -7,7 +8,7 @@ const BrandStory = () => {
       {/* Background Visual Influence - Only for lg+ */}
       <div className="absolute inset-0 opacity-10 hidden lg:block">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-accent-secondary/10 to-transparent" />
-        <img 
+        <SafeImage 
           src="https://images.unsplash.com/photo-1639322537228-f710d846310a?auto=format&fit=crop&q=80&w=2000" 
           alt="Neural Pattern"
           className="w-full h-full object-cover grayscale opacity-30"

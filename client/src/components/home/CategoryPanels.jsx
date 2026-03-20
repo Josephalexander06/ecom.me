@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
+import SafeImage from '../ui/SafeImage';
 
 const CategoryGrid = ({ title, items, link, delay }) => {
   return (
@@ -22,7 +23,7 @@ const CategoryGrid = ({ title, items, link, delay }) => {
         {items.map((item, idx) => (
           <Link key={idx} to={link} className="flex flex-col gap-2 group/item cursor-pointer">
             <div className="aspect-square bg-surface-secondary rounded-xl overflow-hidden border border-border-default shadow-sm group-hover/item:border-brand-primary/30 transition-all">
-               <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover/item:scale-110 transition-transform duration-700 ease-out" />
+               <SafeImage src={item.image} alt={item.name} className="w-full h-full object-cover group-hover/item:scale-110 transition-transform duration-700 ease-out" />
             </div>
             <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider group-hover/item:text-brand-primary transition-colors text-center line-clamp-1">{item.name}</span>
           </Link>

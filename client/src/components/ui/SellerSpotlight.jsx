@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Star, Verified, Store } from 'lucide-react';
+import SafeImage from './SafeImage';
 
 const sellers = [
   {
@@ -51,7 +52,7 @@ const SellerSpotlight = () => {
              <div className="relative z-10">
                 <div className="flex items-center gap-4 mb-6">
                    <div className="w-16 h-16 rounded-md bg-white overflow-hidden border border-border-main group-hover:border-accent-primary transition-all">
-                      <img src={seller.logo} alt={seller.name} className="w-full h-full object-contain" />
+                      <SafeImage src={seller.logo} alt={seller.name} className="w-full h-full object-contain" />
                    </div>
                    <div>
                       <h3 className="text-text-main font-bold text-lg flex items-center gap-2">
