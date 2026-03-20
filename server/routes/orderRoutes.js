@@ -5,6 +5,8 @@ const Order = require('../models/Order');
 const Product = require('../models/Product');
 const User = require('../models/User');
 const { protect, authorize } = require('../middleware/authMiddleware');
+const Stripe = require('stripe');
+const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
 const VALID_STATUS = ['pending', 'confirmed', 'packed', 'shipped', 'delivered'];
 const COUPONS = {
@@ -159,6 +161,55 @@ router.post('/', protect, async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ message: 'Order Sync Failed', error: err.message });
+  }
+});
+
+// Create Stripe Checkout Session
+router.post('/create-stripe-session', protect, async (req, res) => {
+  try {
+    const { items, totalAmount } = req.body;
+    
+    const lineItems = items.map(item => ({
+      price_data: {
+        currency: 'inr',
+        product_data: {
+          name: item.name,
+          images: [item.image]
+        },
+        unit_amount: Math.round(item.price * 100),
+      },
+      quantity: item.quantity,
+    }));
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: lineItems,
+      mode: 'payment',
+      success_url: `${process.env.CLIENT_URL}/checkout?success=true&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.CLIENT_URL}/checkout?canceled=true`,
+      customer_email: req.user.email,
+      metadata: {
+        userId: req.user._id.toString()
+      }
+    });
+
+    res.json({ id: session.id, url: session.url });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to create Stripe session', error: err.message });
+  }
+});
+
+// Verify Stripe Session (Simple fallback for webhooks)
+router.get('/verify-stripe-session/:sessionId', protect, async (req, res) => {
+  try {
+    const session = await stripe.checkout.sessions.retrieve(req.params.sessionId);
+    if (session.payment_status === 'paid') {
+      res.json({ verified: true, session });
+    } else {
+      res.json({ verified: false });
+    }
+  } catch (err) {
+    res.status(500).json({ message: 'Session verification failed', error: err.message });
   }
 });
 

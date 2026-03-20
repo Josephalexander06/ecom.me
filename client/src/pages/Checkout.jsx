@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   ChevronRight, 
   MapPin, 
@@ -90,8 +90,8 @@ const Checkout = () => {
     paymentMethod: 'Card'
   });
 
-  // Re-sync formData if user loads late or location changes
   useEffect(() => {
+
     if (user) {
       setFormData(prev => ({
         ...prev,
@@ -111,25 +111,74 @@ const Checkout = () => {
   const prevStep = () => setStep(s => s - 1);
 
   const [processingState, setProcessingState] = useState(''); // 'verifying', 'allocating', 'securing'
+  const [searchParams] = useSearchParams();
 
-  const handlePlaceOrder = async () => {
-    if (!isAuthenticated || !user) {
-      setActiveModal('login');
-      return;
+  useEffect(() => {
+    const success = searchParams.get('success');
+    const sessionId = searchParams.get('session_id');
+
+    if (success === 'true' && sessionId) {
+      handlePostStripeSuccess(sessionId);
     }
+  }, [searchParams]);
 
-    setIsPlacing(true);
-    
+  const handlePostStripeSuccess = async (sessionId) => {
     try {
-      // Setup Gateway Simulation
       setProcessingState('verifying');
-      await new Promise(r => setTimeout(r, 600)); 
+      const res = await fetch(`${API_BASE}/orders/verify-stripe-session/${sessionId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
       
-      setProcessingState('allocating');
-      await new Promise(r => setTimeout(r, 800)); 
-      
-      setProcessingState('securing');
-      
+      if (data.verified) {
+        await finalizeOrder(sessionId);
+        // Clear query params to prevent re-execution
+        window.history.replaceState({}, document.title, "/checkout");
+      }
+    } catch (err) {
+      console.error("Stripe Verification Error:", err);
+    } finally {
+      setProcessingState('');
+    }
+  };
+
+  const handleStripePayment = async () => {
+    try {
+      setProcessingState('verifying');
+      const response = await fetch(`${API_BASE}/orders/create-stripe-session`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          items: items.map(item => ({
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            image: item.image || item.images?.[0]
+          })),
+          totalAmount: total
+        })
+      });
+
+      const session = await response.json();
+      if (!response.ok) throw new Error(session.message || 'Payment session failed');
+
+      // Redirect to Stripe
+      window.location.href = session.url;
+    } catch (err) {
+      alert("Payment Error: " + err.message);
+    } finally {
+      setProcessingState('');
+    }
+  };
+
+  const finalizeOrder = async (paymentId = null) => {
+    setIsPlacing(true);
+    setProcessingState('allocating');
+
+    try {
       const response = await fetch(`${API_BASE}/orders`, {
         method: 'POST',
         headers: {
@@ -146,6 +195,7 @@ const Checkout = () => {
           })),
           totalAmount: total,
           paymentMethod: formData.paymentMethod,
+          paymentId: paymentId,
           shippingAddress: {
             street: formData.address,
             city: formData.city,
@@ -156,52 +206,32 @@ const Checkout = () => {
 
       if (response.status === 401) {
         logout();
-        throw new Error('Session expired or user not found. Please log in again.');
+        throw new Error('Session expired. Please log in again.');
       }
 
       const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Order creation failed');
 
-      if (!response.ok) {
-        throw new Error(data.error || data.message || 'Order Transmission Failed');
-      }
-
-      await new Promise(r => setTimeout(r, 400)); 
       setIsSuccess(true);
       clearCart();
-
-      // Automatically save new address if not already present
-      if (user && formData.address) {
-        const addressExists = user.savedAddresses?.some(a => 
-          a.street === formData.address && a.zip === formData.zip
-        );
-        
-        if (!addressExists) {
-          const newAddress = {
-            street: formData.address,
-            city: formData.city,
-            zip: formData.zip,
-            isDefault: user.savedAddresses?.length === 0
-          };
-          
-          try {
-            await updateProfile({
-              savedAddresses: [...(user.savedAddresses || []), newAddress]
-            });
-          } catch (err) {
-            console.error('Failed to save address:', err);
-          }
-        }
-      }
     } catch (error) {
-      console.error('Order Sync Error:', error);
-      alert('Transaction Failed: ' + error.message);
-      if (error.message.includes('Session expired')) {
-        navigate('/');
-        setActiveModal('login');
-      }
+      alert('Order completion failed: ' + error.message);
     } finally {
       setIsPlacing(false);
       setProcessingState('');
+    }
+  };
+
+  const handlePlaceOrder = async () => {
+    if (!isAuthenticated || !user) {
+      setActiveModal('login');
+      return;
+    }
+
+    if (formData.paymentMethod === 'COD') {
+      await finalizeOrder();
+    } else {
+      await handleStripePayment();
     }
   };
 
@@ -393,7 +423,10 @@ const Checkout = () => {
                   <button onClick={prevStep} className="flex items-center gap-1.5 text-small font-bold text-text-secondary hover:text-text-primary transition-colors">
                     <ArrowLeft size={16} /> Delivery Details
                   </button>
-                  <button onClick={nextStep} className="w-full md:w-auto bg-brand-primary text-white px-8 py-3 rounded-xl font-bold hover:bg-brand-hover transition-colors flex items-center justify-center gap-2 shadow-sm">
+                  <button 
+                    onClick={nextStep} 
+                    className="w-full md:w-auto bg-brand-primary text-white px-8 py-3 rounded-xl font-bold hover:bg-brand-hover transition-colors flex items-center justify-center gap-2 shadow-sm"
+                  >
                     Summary <ChevronRight size={16} />
                   </button>
                 </div>
