@@ -34,7 +34,21 @@ const orderSchema = new mongoose.Schema({
     default: 'pending'
   },
   statusHistory: [statusHistorySchema],
-  paymentMethod: { type: String, default: 'UPI' }
+  paymentMethod: { type: String, default: 'UPI' },
+  shipment: {
+    hubs: [{
+      sellerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      storeName: String,
+      city: String,
+      pincode: String
+    }],
+    destination: {
+      city: String,
+      pincode: String
+    },
+    routeSummary: String,
+    currentHubCity: String
+  }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Order', orderSchema);

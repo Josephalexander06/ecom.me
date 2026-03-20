@@ -161,7 +161,8 @@ export const StoreProvider = ({ children }) => {
       })),
       totalAmount: finalTotal,
       userId: userId,
-      paymentMethod: paymentMethod || 'Card'
+      paymentMethod: paymentMethod || 'Card',
+      shippingAddress
     };
 
     try {
@@ -179,7 +180,16 @@ export const StoreProvider = ({ children }) => {
         totalAmount: payload.totalAmount,
         status: 'pending',
         items: payload.items,
-        shippingAddress
+        shippingAddress,
+        shipment: {
+          hubs: [],
+          destination: {
+            city: shippingAddress?.city || '',
+            pincode: shippingAddress?.zip || ''
+          },
+          routeSummary: `Seller Hub -> ${shippingAddress?.city || 'Destination'}`,
+          currentHubCity: 'Seller Hub'
+        }
       };
       setOrders((prev) => [localOrder, ...prev]);
       clearCart();
@@ -193,6 +203,15 @@ export const StoreProvider = ({ children }) => {
         status: 'pending',
         items: payload.items,
         shippingAddress,
+        shipment: {
+          hubs: [],
+          destination: {
+            city: shippingAddress?.city || '',
+            pincode: shippingAddress?.zip || ''
+          },
+          routeSummary: `Seller Hub -> ${shippingAddress?.city || 'Destination'}`,
+          currentHubCity: 'Seller Hub'
+        },
         isLocalOnly: true
       };
       setOrders((prev) => [localOrder, ...prev]);

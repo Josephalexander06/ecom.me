@@ -13,6 +13,15 @@ const OrderCard = ({ order, index }) => {
   const { addItem } = useCartStore();
   const { location } = useAuthStore();
   const [showTracking, setShowTracking] = useState(false);
+  const shipment = order.shipment || {};
+  const hubs = Array.isArray(shipment.hubs) ? shipment.hubs : [];
+  const primaryHub = hubs[0];
+  const destinationCity = order.shippingAddress?.city || shipment.destination?.city || location.city || 'Destination';
+  const destinationPincode = order.shippingAddress?.zip || shipment.destination?.pincode || location.pincode || '';
+  const originHubLabel = primaryHub?.city
+    ? `${primaryHub.city}${primaryHub.pincode ? ` - ${primaryHub.pincode}` : ''}`
+    : 'Seller Hub';
+  const routeSummary = shipment.routeSummary || `${originHubLabel} -> ${destinationCity}`;
   
   const statusColors = {
     pending: 'bg-brand-light text-brand-primary',
@@ -91,6 +100,15 @@ const OrderCard = ({ order, index }) => {
   ];
 
   const currentStepIndex = trackingSteps.findIndex(s => s.key === normalizedStatus);
+  const currentStatusMessage = (() => {
+    if (normalizedStatus === 'delivered') {
+      return `Delivered at ${destinationCity}${destinationPincode ? ` - ${destinationPincode}` : ''}`;
+    }
+    if (normalizedStatus === 'shipped') {
+      return `In transit from ${originHubLabel} to ${destinationCity}${destinationPincode ? ` - ${destinationPincode}` : ''}`;
+    }
+    return `Processing at seller hub: ${originHubLabel}`;
+  })();
 
   return (
     <motion.div
@@ -156,6 +174,20 @@ const OrderCard = ({ order, index }) => {
                     <h4 className="text-small font-bold text-text-primary">Logistics Timeline</h4>
                     <span className="text-[10px] font-mono text-text-muted bg-surface-tertiary px-2 py-1 rounded">Shipment ID: {order._id.slice(0, 8).toUpperCase()}</span>
                   </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-5">
+                    <div className="rounded-xl border border-border-default bg-white px-3 py-2">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-text-muted">From Hub</p>
+                      <p className="text-small font-bold text-text-primary">{originHubLabel}</p>
+                    </div>
+                    <div className="rounded-xl border border-border-default bg-white px-3 py-2">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-text-muted">To Location</p>
+                      <p className="text-small font-bold text-text-primary">{destinationCity}{destinationPincode ? ` - ${destinationPincode}` : ''}</p>
+                    </div>
+                    <div className="rounded-xl border border-border-default bg-white px-3 py-2">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-text-muted">Route</p>
+                      <p className="text-small font-bold text-text-primary line-clamp-1">{routeSummary}</p>
+                    </div>
+                  </div>
 
                   <div className="space-y-8 relative before:absolute before:left-[15px] before:top-2 before:bottom-2 before:w-0.5 before:bg-border-default">
                     {trackingSteps.map((s, i) => {
@@ -196,7 +228,7 @@ const OrderCard = ({ order, index }) => {
                                   </div>
                                   <div>
                                      <p className="text-[10px] font-black text-brand-primary uppercase">Current Status</p>
-                                     <p className="text-small font-bold text-text-primary">Processing at our {location.city || 'Mumbai'} Hub</p>
+                                     <p className="text-small font-bold text-text-primary">{currentStatusMessage}</p>
                                   </div>
                                </div>
                             )}

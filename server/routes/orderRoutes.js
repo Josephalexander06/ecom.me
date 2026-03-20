@@ -3,12 +3,40 @@ const mongoose = require('mongoose');
 const router = express.Router();
 const Order = require('../models/Order');
 const Product = require('../models/Product');
+const User = require('../models/User');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
 const VALID_STATUS = ['pending', 'confirmed', 'packed', 'shipped', 'delivered'];
 const COUPONS = {
   SAVE10: 10,
   WELCOME5: 5
+};
+const HUB_NETWORK = [
+  { city: 'Mumbai', pincode: '400001' },
+  { city: 'Delhi', pincode: '110001' },
+  { city: 'Bengaluru', pincode: '560001' },
+  { city: 'Hyderabad', pincode: '500001' },
+  { city: 'Chennai', pincode: '600001' },
+  { city: 'Pune', pincode: '411001' },
+  { city: 'Kolkata', pincode: '700001' },
+  { city: 'Ahmedabad', pincode: '380001' }
+];
+
+const hashObjectId = (value = '') =>
+  String(value)
+    .split('')
+    .reduce((acc, char) => acc + char.charCodeAt(0), 0);
+
+const pickSellerHub = (seller) => {
+  const defaultAddress = seller?.savedAddresses?.find((addr) => addr?.isDefault) || seller?.savedAddresses?.[0];
+  if (defaultAddress?.city) {
+    return {
+      city: defaultAddress.city,
+      pincode: defaultAddress.zip || ''
+    };
+  }
+  const index = hashObjectId(seller?._id) % HUB_NETWORK.length;
+  return HUB_NETWORK[index];
 };
 
 // Initialize Checkout Flow
@@ -49,6 +77,34 @@ router.post('/', protect, async (req, res) => {
       });
     }
 
+    const uniqueSellerIds = [...new Set(
+      normalizedItems
+        .map((item) => item.sellerId && item.sellerId.toString())
+        .filter(Boolean)
+    )];
+    const sellers = uniqueSellerIds.length
+      ? await User.find({ _id: { $in: uniqueSellerIds } }).select('_id storeName savedAddresses')
+      : [];
+    const sellerMap = new Map(sellers.map((seller) => [seller._id.toString(), seller]));
+    const hubs = uniqueSellerIds.map((sellerId) => {
+      const seller = sellerMap.get(sellerId);
+      const hub = pickSellerHub(seller);
+      return {
+        sellerId,
+        storeName: seller?.storeName || 'Seller Hub',
+        city: hub.city,
+        pincode: hub.pincode
+      };
+    });
+
+    const destination = {
+      city: shippingAddress?.city || 'Destination City',
+      pincode: shippingAddress?.zip || ''
+    };
+    const routeSummary = hubs.length <= 1
+      ? `${hubs[0]?.city || 'Origin Hub'} Hub -> ${destination.city}`
+      : `${hubs.length} Seller Hubs -> ${destination.city}`;
+
     const normalizedCoupon = couponCode ? String(couponCode).toUpperCase().trim() : '';
     const discountPct = COUPONS[normalizedCoupon] || 0;
     const discountAmount = Number(((subtotalAmount * discountPct) / 100).toFixed(2));
@@ -65,7 +121,13 @@ router.post('/', protect, async (req, res) => {
       couponCode: discountPct ? normalizedCoupon : undefined,
       paymentMethod: paymentMethod || 'UPI',
       status: 'pending',
-      statusHistory: [{ stage: 'pending' }]
+      statusHistory: [{ stage: 'pending' }],
+      shipment: {
+        hubs,
+        destination,
+        routeSummary,
+        currentHubCity: hubs[0]?.city || destination.city
+      }
     });
 
     const savedOrder = await newOrder.save();
