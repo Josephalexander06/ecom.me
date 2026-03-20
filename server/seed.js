@@ -164,8 +164,20 @@ const getRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
 const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
 const buildSellerUsers = (passwordHash) => {
-  const sellers = [];
-  for (let i = 1; i <= TOTAL_SELLERS; i += 1) {
+  const sellers = [
+    {
+      name: 'Demo Seller Owner',
+      email: 'seller@ecomme.local',
+      password: passwordHash,
+      role: 'seller',
+      isAdmin: false,
+      isSeller: true,
+      sellerStatus: 'Approved',
+      storeName: 'Demo Seller Store',
+      bankAccount: '900000000000',
+    },
+  ];
+  for (let i = 1; i < TOTAL_SELLERS; i += 1) {
     const storeName = `${sellerPrefixes[(i - 1) % sellerPrefixes.length]} ${sellerSuffixes[(i - 1) % sellerSuffixes.length]} ${i}`;
     sellers.push({
       name: `${storeName} Owner`,
