@@ -44,8 +44,20 @@ const pickSellerHub = (seller) => {
 // Initialize Checkout Flow
 router.post('/', protect, async (req, res) => {
   try {
-    const { items, paymentMethod, shippingAddress, couponCode } = req.body;
+    const { items, paymentMethod, paymentId, shippingAddress, couponCode } = req.body;
     const userId = req.user._id;
+
+    // Idempotency check: If paymentId is provided, check if order already exists
+    if (paymentId) {
+      const existingOrder = await Order.findOne({ paymentId });
+      if (existingOrder) {
+        return res.status(200).json({ 
+          message: 'Order already exists in neural memory', 
+          orderId: existingOrder._id,
+          totalAmount: existingOrder.totalAmount
+        });
+      }
+    }
 
     if (!items || items.length === 0) {
       return res.status(400).json({ message: 'Neural reservoir empty. Add nodes to sync.' });
@@ -122,6 +134,7 @@ router.post('/', protect, async (req, res) => {
       discountAmount,
       couponCode: discountPct ? normalizedCoupon : undefined,
       paymentMethod: paymentMethod || 'UPI',
+      paymentId: paymentId || undefined,
       status: 'pending',
       statusHistory: [{ stage: 'pending' }],
       shipment: {
@@ -202,9 +215,18 @@ router.post('/create-stripe-session', protect, async (req, res) => {
 // Verify Stripe Session (Simple fallback for webhooks)
 router.get('/verify-stripe-session/:sessionId', protect, async (req, res) => {
   try {
-    const session = await stripe.checkout.sessions.retrieve(req.params.sessionId);
+    const session = await stripe.checkout.sessions.retrieve(req.params.sessionId, {
+      expand: ['payment_intent.payment_method']
+    });
+
     if (session.payment_status === 'paid') {
-      res.json({ verified: true, session });
+      const paymentMethod = session.payment_intent?.payment_method;
+      const cardDetails = paymentMethod?.card ? {
+        brand: paymentMethod.card.brand,
+        last4: paymentMethod.card.last4
+      } : null;
+
+      res.json({ verified: true, session, cardDetails });
     } else {
       res.json({ verified: false });
     }

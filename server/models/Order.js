@@ -35,6 +35,7 @@ const orderSchema = new mongoose.Schema({
   },
   statusHistory: [statusHistorySchema],
   paymentMethod: { type: String, default: 'UPI' },
+  paymentId: { type: String, unique: true, sparse: true },
   shipment: {
     hubs: [{
       sellerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

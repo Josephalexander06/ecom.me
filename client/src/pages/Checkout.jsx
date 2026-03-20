@@ -111,6 +111,8 @@ const Checkout = () => {
   const prevStep = () => setStep(s => s - 1);
 
   const [processingState, setProcessingState] = useState(''); // 'verifying', 'allocating', 'securing'
+  const [orderData, setOrderData] = useState(null);
+  const hasFinalized = React.useRef(false);
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
@@ -118,9 +120,13 @@ const Checkout = () => {
     const sessionId = searchParams.get('session_id');
 
     if (success === 'true' && sessionId) {
-      handlePostStripeSuccess(sessionId);
+      if (!hasFinalized.current) {
+        handlePostStripeSuccess(sessionId);
+      }
     }
   }, [searchParams]);
+
+  const isVerifyingStripe = searchParams.get('success') === 'true' && searchParams.get('session_id') && !isSuccess;
 
   const handlePostStripeSuccess = async (sessionId) => {
     try {
@@ -131,7 +137,7 @@ const Checkout = () => {
       const data = await res.json();
       
       if (data.verified) {
-        await finalizeOrder(sessionId);
+        await finalizeOrder(sessionId, data.cardDetails);
         // Clear query params to prevent re-execution
         window.history.replaceState({}, document.title, "/checkout");
       }
@@ -174,7 +180,10 @@ const Checkout = () => {
     }
   };
 
-  const finalizeOrder = async (paymentId = null) => {
+  const finalizeOrder = async (paymentId = null, cardDetails = null) => {
+    if (hasFinalized.current) return;
+    hasFinalized.current = true;
+    
     setIsPlacing(true);
     setProcessingState('allocating');
 
@@ -212,6 +221,18 @@ const Checkout = () => {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Order creation failed');
 
+      setOrderData({
+        orderId: data.orderId,
+        totalAmount: total,
+        paymentMethod: formData.paymentMethod,
+        cardDetails: cardDetails,
+        shippingAddress: {
+          name: formData.name,
+          street: formData.address,
+          city: formData.city,
+          zip: formData.zip
+        }
+      });
       setIsSuccess(true);
       clearCart();
     } catch (error) {
@@ -238,15 +259,17 @@ const Checkout = () => {
   if (isSuccess) {
     return (
       <div className="max-w-[800px] mx-auto px-4 py-20">
-        <SuccessAnimation />
-        <div className="flex flex-col sm:flex-row justify-center gap-4 mt-12">
-          <Link to="/orders" className="bg-brand-primary text-white px-10 py-3.5 rounded-pro font-bold hover:bg-brand-hover transition-all text-center shadow-sm">
-            Track My Order
-          </Link>
-          <Link to="/" className="bg-surface-secondary text-text-primary px-10 py-3.5 rounded-pro font-bold border border-border-default hover:bg-surface-tertiary transition-all text-center">
-            Back to Home
-          </Link>
-        </div>
+        <SuccessAnimation orderData={orderData} />
+      </div>
+    );
+  }
+
+  if (isVerifyingStripe) {
+    return (
+      <div className="max-w-[800px] mx-auto px-4 py-20 flex flex-col items-center justify-center min-h-[60vh]">
+        <div className="w-12 h-12 border-4 border-brand-primary/20 border-t-brand-primary rounded-full animate-spin mb-4" />
+        <h2 className="text-h3 font-display text-text-primary">Syncing Transaction...</h2>
+        <p className="text-text-secondary mt-2">Please do not refresh the page.</p>
       </div>
     );
   }
