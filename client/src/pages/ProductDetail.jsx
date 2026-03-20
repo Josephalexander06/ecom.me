@@ -21,6 +21,7 @@ import { API_BASE, authHeaders } from '../utils/api';
 import ImageZoom from '../components/product/ImageZoom';
 import ProductRow from '../components/home/ProductRow';
 import SafeImage from '../components/ui/SafeImage';
+import RecentlyViewed from '../components/product/RecentlyViewed';
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -406,6 +407,8 @@ const ProductDetail = () => {
           <ProductRow eyebrow="YOU MAY LIKE" title="Similar Products" products={similarProducts} />
         </div>
       </section>
+
+      <RecentlyViewed title="Recently Browsed" limit={6} />
 
       <AnimatePresence>
         {showARPreview && (

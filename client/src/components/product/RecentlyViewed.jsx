@@ -1,67 +1,91 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Clock, ChevronRight } from 'lucide-react';
-import SafeImage from '../ui/SafeImage';
+import { History, Sparkles, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { API_BASE, authHeaders } from '../../utils/api';
+import { useAuthStore, useCartStore } from '../../context/stores';
+import ProductCard from '../ui/ProductCard';
 
-const RecentlyViewed = () => {
-  const [items, setItems] = React.useState([]);
+const RecentlyViewed = ({ limit = 6, title = "Picked for you" }) => {
+  const { isAuthenticated } = useAuthStore();
+  const { recentlyViewed: localHistory } = useCartStore();
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  React.useEffect(() => {
-    const history = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
-    if (history.length > 0) {
-        setItems(history);
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchHistory();
     } else {
-        // Fallback demo data
-        setItems([
-            { id: 1, name: 'Neural Link V4', price: 2499, image: 'https://images.unsplash.com/photo-1633167606207-d840b5070fc2?auto=format&fit=crop&q=80&w=400' },
-            { id: 2, name: 'Retinal Iris Pro', price: 1899, image: 'https://images.unsplash.com/photo-1576086213369-9713438b11ad?auto=format&fit=crop&q=80&w=400' },
-            { id: 3, name: 'Haptic Glove S1', price: 999, image: 'https://images.unsplash.com/photo-1558444479-2706fa53002d?auto=format&fit=crop&q=80&w=400' }
-        ]);
+      setItems(Array.isArray(localHistory) ? localHistory : []);
     }
-  }, []);
+  }, [isAuthenticated, localHistory]);
 
-  const clearHistory = () => {
-    localStorage.removeItem('recentlyViewed');
-    setItems([]);
+  const fetchHistory = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/auth/recently-viewed`, {
+        headers: authHeaders()
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setItems(Array.isArray(data) ? data : []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch recently viewed', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  if (items.length === 0) return null;
-  return (
-    <section className="py-24 px-6 md:px-12 bg-white/[0.02]">
-      <div className="flex items-center justify-between mb-12 px-2">
-        <div className="flex items-center gap-3">
-          <Clock size={16} className="text-accent-primary" />
-          <h2 className="font-display text-text-main text-2xl italic">Recent Pulses.</h2>
-        </div>
-        <button 
-          onClick={clearHistory}
-          className="font-mono text-[9px] uppercase tracking-widest text-text-muted hover:text-accent-primary transition-colors flex items-center gap-2"
-        >
-          Clear History <ChevronRight size={12} />
-        </button>
-      </div>
+  const displayItems = items.slice(0, limit);
 
-      <div className="flex lg:grid lg:grid-cols-4 gap-6 overflow-x-auto pb-8 lg:pb-0 no-scrollbar snap-x snap-mandatory">
-        {items.map((item) => (
-          <motion.div
-            key={item.id}
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            className="w-72 lg:w-auto h-40 flex-shrink-0 glass p-4 rounded-3xl border border-black/5 hover:border-accent-primary/40 transition-all group flex items-center gap-6 snap-center"
-          >
-            <div className="w-32 h-32 rounded-2xl overflow-hidden bg-black/5 grayscale group-hover:grayscale-0 transition-all duration-500">
-              <SafeImage src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+  if (displayItems.length === 0 && !loading) return null;
+
+  return (
+    <section className="py-12 border-t border-border-default/50 bg-surface-secondary/20">
+      <div className="site-shell">
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-brand-primary/10 flex items-center justify-center text-brand-primary">
+              <History size={20} />
             </div>
-            <div className="flex-1">
-              <h3 className="font-display text-text-main text-sm lg:text-base italic mb-1 truncate">{item.name}</h3>
-              <p className="font-mono text-accent-primary text-[10px] md:text-xs font-bold">${item.price}</p>
-              <button className="mt-4 w-full py-2 rounded-lg bg-black/5 text-text-main font-mono text-[8px] uppercase tracking-widest hover:bg-accent-primary hover:text-black transition-all">
-                Quick Re-sync
-              </button>
+            <div>
+              <h2 className="text-xl md:text-2xl font-display font-bold tracking-tight">{title}</h2>
+              <p className="text-xs text-text-muted font-medium uppercase tracking-wider mt-0.5 flex items-center gap-1.5">
+                <Sparkles size={12} className="text-brand-primary" />
+                Based on your recent activity
+              </p>
             </div>
-          </motion.div>
-        ))}
+          </div>
+          {displayItems.length > 0 && (
+            <Link to="/products" className="group text-sm font-semibold text-brand-primary inline-flex items-center gap-1 hover:underline">
+              See more
+              <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+          )}
+        </div>
+
+        {loading ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-5">
+            {[...Array(limit)].map((_, i) => (
+              <div key={i} className="aspect-[3/4] rounded-2xl bg-white border border-border-default animate-pulse" />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-5">
+            {displayItems.map((product, idx) => (
+              <motion.div
+                key={`${product._id || product.id}-${idx}`}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: idx * 0.05 }}
+              >
+                <ProductCard product={product} />
+              </motion.div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

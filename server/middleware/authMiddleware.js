@@ -41,6 +41,31 @@ const protect = async (req, res, next) => {
   }
 };
 
+const protectOptional = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization || '';
+    const [scheme, token] = authHeader.split(' ');
+
+    if (scheme !== 'Bearer' || !token) {
+      return next();
+    }
+
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(decoded.id).select('-password');
+
+    if (user && !user.isBlocked) {
+      req.user = {
+        ...user.toObject(),
+        role: getRoleFromUser(user)
+      };
+    }
+    return next();
+  } catch (error) {
+    // If token is invalid, we still proceed but without a user
+    return next();
+  }
+};
+
 const authorize = (...roles) => (req, res, next) => {
   const userRole = req.user?.role;
   if (!userRole || !roles.includes(userRole)) {
@@ -51,6 +76,7 @@ const authorize = (...roles) => (req, res, next) => {
 
 module.exports = {
   protect,
+  protectOptional,
   authorize,
   getRoleFromUser
 };

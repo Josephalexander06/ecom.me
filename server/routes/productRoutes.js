@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const Product = require('../models/Product');
-const { protect, authorize } = require('../middleware/authMiddleware');
+const User = require('../models/User');
+const { protect, protectOptional, authorize } = require('../middleware/authMiddleware');
 
 // Create product (seller flow)
 router.post('/', protect, authorize('seller', 'admin'), async (req, res) => {
@@ -271,14 +272,31 @@ router.get('/seller/my-products', protect, authorize('seller', 'admin'), async (
   }
 });
 
-// Get single product (with view increment and smart pricing)
-router.get('/:id', async (req, res) => {
+// Get single product (with view increment and recently viewed tracking)
+router.get('/:id', protectOptional, async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ message: 'Product not found' });
     
     // Increment views
     product.views = (product.views || 0) + 1;
+
+    // Track Recently Viewed for logged in users
+    if (req.user) {
+      try {
+        const user = await User.findById(req.user._id);
+        if (user) {
+          // Add to front, remove duplicates, limit to 12
+          const history = [product._id, ...(user.recentlyViewed || [])]
+            .map(id => id.toString());
+          
+          user.recentlyViewed = [...new Set(history)].slice(0, 12);
+          await user.save();
+        }
+      } catch (err) {
+        console.error('Recently viewed sync failed', err);
+      }
+    }
 
     // Smart Pricing Engine (Simple Rule-based)
     // 1. Demand Spike: views > 100 and low stock -> +5% price

@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const Product = require('../models/Product');
+const Order = require('../models/Order');
 const { protect, getRoleFromUser } = require('../middleware/authMiddleware');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'ecomme_secret_key_2035';
@@ -185,15 +186,53 @@ router.post('/wishlist/:productId', protect, async (req, res) => {
 
     if (exists) {
       user.wishlist = user.wishlist.filter((id) => id.toString() !== productId);
-    } else {
-      user.wishlist.push(productId);
     }
-
     await user.save();
     res.json({
       message: exists ? 'Removed from wishlist' : 'Added to wishlist',
       wishlist: user.wishlist
     });
+  } catch (error) {
+    res.status(500).json({ message: 'Server Error', error: error.message });
+  }
+});
+
+// @desc    Get dashboard stats
+// @route   GET /api/auth/dashboard-stats
+// @access  Private
+router.get('/dashboard-stats', protect, async (req, res) => {
+  try {
+    const userId = req.user._id;
+    
+    // Get Orders Stats
+    const orders = await Order.find({ userId });
+    const totalOrders = orders.length;
+    const totalSpent = orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+    
+    // Get User Details for wishlist and addresses
+    const user = await User.findById(userId);
+    const wishlistCount = user.wishlist?.length || 0;
+    const addressCount = user.savedAddresses?.length || 0;
+
+    res.json({
+      totalOrders,
+      totalSpent,
+      wishlistCount,
+      addressCount,
+      joinDate: user.createdAt
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server Error', error: error.message });
+  }
+});
+
+// @desc    Get recently viewed products
+// @route   GET /api/auth/recently-viewed
+// @access  Private
+router.get('/recently-viewed', protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).populate('recentlyViewed');
+    res.json(user?.recentlyViewed || []);
   } catch (error) {
     res.status(500).json({ message: 'Server Error', error: error.message });
   }

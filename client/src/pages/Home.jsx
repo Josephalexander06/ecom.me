@@ -8,6 +8,7 @@ import ProductRow from '../components/home/ProductRow';
 import CategoryPanels from '../components/home/CategoryPanels';
 import WideBanner from '../components/home/WideBanner';
 import SellerSpotlight from '../components/home/SellerSpotlight';
+import RecentlyViewed from '../components/product/RecentlyViewed';
 
 import { useStore } from '../context/StoreContext';
 import { useAuthStore, useCartStore } from '../context/stores';
@@ -136,18 +137,8 @@ const Home = () => {
         </section>
       )}
 
-      {siteConfig.showRecentlyViewed && recentlyViewed.length > 0 && (
-        <>
-          <section className="site-shell mt-10">
-            <ProductRow eyebrow="YOUR HISTORY" title="Recently Viewed" products={recentlyViewed} />
-          </section>
-
-          <section className="site-shell mt-10">
-            <div className="panel p-4 md:p-6">
-              <ProductRow eyebrow="AI PERSONALISED" title="Inspired by your browsing" products={inspiredByBrowsing} />
-            </div>
-          </section>
-        </>
+      {siteConfig.showRecentlyViewed && (
+        <RecentlyViewed title="Recently Viewed" limit={6} />
       )}
     </div>
   );
