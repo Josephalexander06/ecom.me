@@ -30,6 +30,14 @@ const categoryConfig = {
     images: [
       'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=900&q=80',
       'https://images.unsplash.com/photo-1598327105666-5b89a81a1bb4?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1601784551446-20c9e07cddea?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1533228100845-08145b01de14?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1575311373937-040b8e1fd5b6?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1541560052-5e137f229371?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1605236453806-6ff36851218e?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1585060544812-6b45742d762f?auto=format&fit=crop&w=900&q=80',
     ],
   },
   Fashion: {

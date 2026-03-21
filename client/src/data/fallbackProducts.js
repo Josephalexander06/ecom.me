@@ -98,5 +98,31 @@ export const fallbackProducts = [
     images: ['https://images.unsplash.com/photo-1556228578-8c89e6adf883?auto=format&fit=crop&w=1000&q=80'],
     averageRating: 4.0,
     soldCount: 645
+  },
+  {
+    _id: '65f1aeb4c9d2a3f123456789',
+    name: 'Ultra Max 5G Edition',
+    brand: 'Apple',
+    category: 'Mobiles',
+    description: 'The latest flagship smartphone with a pro-grade camera system.',
+    price: 1099,
+    stock: 54,
+    images: ['https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?auto=format&fit=crop&w=1000&q=80'],
+    averageRating: 4.8,
+    soldCount: 4125
+  },
+  {
+    _id: '65f1aeb4c9d2a3f123456790',
+    name: 'Turbo Smartphone Edge',
+    brand: 'Samsung',
+    category: 'Mobiles',
+    description: 'High-performance Android phone with edge-to-edge display.',
+    price: 899,
+    stock: 32,
+    images: ['https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?auto=format&fit=crop&w=1000&q=80'],
+    averageRating: 4.6,
+    soldCount: 2315,
+    isDeal: true,
+    dealPrice: 799
   }
 ];

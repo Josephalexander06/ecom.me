@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { ShoppingCart, Heart, Star, Zap, Check } from 'lucide-react';
 import { useAuthStore, useCartStore, useUIStore } from '../../context/stores';
 import toast from 'react-hot-toast';
@@ -59,9 +58,8 @@ const ProductCard = ({ product, compact = false }) => {
   };
 
   return (
-    <motion.article
-      whileHover={{ y: -4 }}
-      className={`group panel overflow-hidden h-full flex flex-col ${compact ? 'max-w-[238px]' : ''}`}
+    <article
+      className={`group panel overflow-hidden h-full flex flex-col transition-transform hover:-translate-y-1 ${compact ? 'max-w-[238px]' : ''}`}
     >
       <Link to={`/product/${id}`} className="flex flex-col flex-1">
         <div className="relative aspect-[4/5] bg-gradient-to-b from-slate-100 to-slate-50 p-4 md:p-5 overflow-hidden">
@@ -149,7 +147,7 @@ const ProductCard = ({ product, compact = false }) => {
           </div>
         </div>
       </Link>
-    </motion.article>
+    </article>
   );
 };
 

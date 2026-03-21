@@ -28,6 +28,8 @@ const SafeImage = ({ src, fallbackSrc = DEFAULT_FALLBACK, alt = '', ...props }) 
     <img
       src={currentSrc || fallbackSrc}
       alt={alt}
+      loading="lazy"
+      decoding="async"
       onError={() => {
         if (currentSrc !== fallbackSrc) setCurrentSrc(fallbackSrc);
       }}

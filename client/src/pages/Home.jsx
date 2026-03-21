@@ -54,7 +54,28 @@ const Home = () => {
 
   return (
     <div className="min-h-screen pb-14">
-      <section className="site-shell pt-4 md:pt-6">
+      {user && (
+        <section className="site-shell pt-4 pb-2 md:hidden">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs text-text-muted font-medium mb-0.5">Welcome back,</p>
+              <h2 className="text-xl font-bold text-text-primary tracking-tight truncate max-w-[220px]">
+                {user.name || 'User'}
+              </h2>
+            </div>
+            <Link 
+              to="/profile" 
+              className="w-11 h-11 rounded-full bg-gradient-to-br from-brand-primary/20 to-brand-primary/5 text-brand-primary flex items-center justify-center shrink-0 border border-brand-primary/20 shadow-sm"
+            >
+              <span className="font-display font-bold text-base">
+                {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+              </span>
+            </Link>
+          </div>
+        </section>
+      )}
+
+      <section className={`site-shell ${user ? 'pt-2 md:pt-6' : 'pt-4 md:pt-6'}`}>
         <HeroCarousel />
       </section>
 
