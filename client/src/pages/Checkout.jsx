@@ -44,6 +44,18 @@ const Checkout = () => {
   const { user, isAuthenticated, token, logout, updateProfile } = useAuthStore();
   const { setActiveModal } = useUIStore();
   const [siteConfig, setSiteConfig] = useState(defaultSiteConfig);
+  const [opsControls, setOpsControls] = useState({ allowCashOnDelivery: true });
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('ecomme_admin_ops_controls');
+      if (raw) {
+        setOpsControls(JSON.parse(raw));
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -414,7 +426,9 @@ const Checkout = () => {
                 </div>
 
                 <div className="space-y-3">
-                  {['Card', 'UPI', 'COD'].map(method => (
+                  {['Card', 'COD']
+                    .filter(method => method !== 'COD' || opsControls.allowCashOnDelivery !== false)
+                    .map(method => (
                     <label 
                       key={method}
                       className={`flex items-center justify-between p-4 border rounded-md cursor-pointer transition-all ${
@@ -431,10 +445,10 @@ const Checkout = () => {
                         />
                         <div className="flex flex-col">
                           <span className="text-small font-bold text-text-primary">
-                            {method === 'Card' ? 'Credit / Debit Card' : method === 'UPI' ? 'UPI (Google Pay, PhonePe)' : 'Cash on Delivery'}
+                            {method === 'Card' ? 'Credit / Debit Card' : 'Cash on Delivery'}
                           </span>
                           <span className="text-[12px] text-text-muted">
-                            {method === 'Card' ? 'Visa, Mastercard, RuPay' : method === 'UPI' ? 'Instant payment via App' : 'Pay when you receive items'}
+                            {method === 'Card' ? 'Visa, Mastercard, RuPay' : 'Pay when you receive items'}
                           </span>
                         </div>
                       </div>
