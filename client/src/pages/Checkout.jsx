@@ -41,7 +41,7 @@ const StepIndicator = ({ currentStep }) => {
 const Checkout = () => {
   const navigate = useNavigate();
   const { items, clearCart } = useCartStore();
-  const { user, isAuthenticated, token, logout, updateProfile } = useAuthStore();
+  const { user, isAuthenticated, token, logout, updateProfile, updateUser } = useAuthStore();
   const { setActiveModal } = useUIStore();
   const [siteConfig, setSiteConfig] = useState(defaultSiteConfig);
   const [opsControls, setOpsControls] = useState({ allowCashOnDelivery: true });
@@ -80,12 +80,25 @@ const Checkout = () => {
     return items.reduce((sum, item) => sum + (Number(item.price) || 0) * (Number(item.quantity) || 0), 0);
   }, [items]);
 
+  const [searchParams] = useSearchParams();
+  
+  // Persist promo code into sessionStorage to survive login redirects
+  const urlPromo = searchParams.get('promo');
+  if (urlPromo) {
+    sessionStorage.setItem('active_promo', urlPromo);
+  }
+  const appliedPromo = urlPromo || sessionStorage.getItem('active_promo');
+  
+  const discountPct = String(appliedPromo || '').toUpperCase().trim() === 'HESITATE10' ? 10 : 0;
+  const discountAmount = (subtotal * discountPct) / 100;
+  const discountedSubtotal = subtotal - discountAmount;
+
   const threshold = siteConfig.freeShippingThreshold || 5000;
   const shippingCharge = siteConfig.defaultShippingCharge || 499;
 
-  const shipping = subtotal >= threshold ? 0 : shippingCharge;
-  const tax = subtotal * 0.18; // 18% GST
-  const total = subtotal + shipping + tax;
+  const shipping = discountedSubtotal >= threshold ? 0 : shippingCharge;
+  const tax = discountedSubtotal * 0.18; // 18% GST
+  const total = discountedSubtotal + shipping + tax;
 
   const [step, setStep] = useState(1);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -125,7 +138,6 @@ const Checkout = () => {
   const [processingState, setProcessingState] = useState(''); // 'verifying', 'allocating', 'securing'
   const [orderData, setOrderData] = useState(null);
   const hasFinalized = React.useRef(false);
-  const [searchParams] = useSearchParams();
 
   useEffect(() => {
     const success = searchParams.get('success');
@@ -176,7 +188,8 @@ const Checkout = () => {
             quantity: item.quantity,
             image: item.image || item.images?.[0]
           })),
-          totalAmount: total
+          totalAmount: total,
+          couponCode: appliedPromo || undefined
         })
       });
 
@@ -217,6 +230,7 @@ const Checkout = () => {
           totalAmount: total,
           paymentMethod: formData.paymentMethod,
           paymentId: paymentId,
+          couponCode: appliedPromo || undefined,
           shippingAddress: {
             street: formData.address,
             city: formData.city,
@@ -247,6 +261,22 @@ const Checkout = () => {
       });
       setIsSuccess(true);
       clearCart();
+      sessionStorage.removeItem('active_promo');
+
+      // Instantly sync the user's permanent address book if the backend generated a new one
+      if (data.updatedAddresses && data.updatedAddresses.length > 0 && updateUser) {
+        updateUser({ savedAddresses: data.updatedAddresses });
+      }
+
+      // Hard-fetch profile just in case local state desynced
+      try {
+        const meRes = await fetch(`${API_BASE}/auth/me`, { headers: { Authorization: `Bearer ${token}` } });
+        if (meRes.ok) {
+           const userData = await meRes.json();
+           updateUser(userData);
+        }
+      } catch (err) { /* silent fail */ }
+      
     } catch (error) {
       alert('Order completion failed: ' + error.message);
     } finally {
@@ -545,6 +575,12 @@ const Checkout = () => {
                   <span>Items ({items.length})</span>
                   <span className="font-mono text-text-primary font-bold">₹{subtotal.toLocaleString('en-IN')}</span>
                 </div>
+                {discountAmount > 0 && (
+                  <div className="flex justify-between text-small text-success font-bold">
+                    <span>Hesitation Discount (10%)</span>
+                    <span className="font-mono border-b border-success border-dashed tracking-tighter">-₹{discountAmount.toLocaleString('en-IN')}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-small text-text-secondary">
                   <span>Shipping</span>
                   {shipping === 0 ? <span className="text-success font-bold text-[12px] uppercase">Free</span> : <span className="font-mono text-text-primary font-bold">₹{shipping}</span>}

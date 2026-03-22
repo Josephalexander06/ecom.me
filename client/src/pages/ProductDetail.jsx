@@ -50,6 +50,43 @@ const ProductDetail = () => {
   const [showFloatingIcon, setShowFloatingIcon] = useState(false);
   const [showARPreview, setShowARPreview] = useState(false);
 
+  // 2040 Hesitation Engine State
+  const [hasHesitated, setHasHesitated] = useState(false);
+  const [hesitationTimer, setHesitationTimer] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(600);
+
+  useEffect(() => {
+    if (!hasHesitated) return;
+    const interval = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          setHasHesitated(false);
+          return 600;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [hasHesitated]);
+
+  const handleMouseEnterCTA = () => {
+    if (hasHesitated) return;
+    const timer = setTimeout(() => {
+      setHasHesitated(true);
+    }, 2000); 
+    setHesitationTimer(timer);
+  };
+
+  const handleMouseLeaveCTA = () => {
+    if (hesitationTimer) clearTimeout(hesitationTimer);
+  };
+
+  const clearHesitation = () => {
+    if (hesitationTimer) clearTimeout(hesitationTimer);
+    setHasHesitated(false);
+  };
+
   if (loadingProducts) {
     return (
       <div className="min-h-screen grid place-items-center">
@@ -263,7 +300,46 @@ const ProductDetail = () => {
               </select>
             </div>
 
-            <div className="space-y-2.5 relative">
+            <div 
+              className="space-y-2.5 relative z-20"
+              onMouseEnter={handleMouseEnterCTA}
+              onMouseLeave={handleMouseLeaveCTA}
+            >
+              <AnimatePresence>
+                {hasHesitated && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 15, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.96, filter: 'blur(4px)' }}
+                    className="absolute bottom-[calc(100%+8px)] left-0 w-full rounded-2xl border border-white/20 bg-brand-primary/95 backdrop-blur-md p-4 shadow-2xl z-30 text-white select-none overflow-hidden"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-[150%] animate-[shimmer_3s_infinite]" />
+                    <div className="flex items-start gap-3 relative z-10 w-full">
+                      <div className="mt-0.5 rounded-full bg-white/20 p-1.5 animate-pulse shrink-0">
+                        <Sparkles size={16} className="text-amber-300" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-bold tracking-tight">Still deciding?</p>
+                        <p className="text-xs text-white/90 mt-1 leading-[1.6]">
+                          Checkout in the next <span className="font-mono font-bold text-amber-300 bg-black/20 px-1 py-0.5 mx-0.5 rounded">{Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}</span> to instantly unlock <span className="font-bold underline decoration-amber-300 decoration-2 underline-offset-2">10% OFF</span>.
+                        </p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => {
+                        clearHesitation();
+                        addItem(product, quantity);
+                        navigate('/checkout?promo=HESITATE10'); 
+                      }}
+                      className="mt-4 w-full h-10 rounded-xl border border-white/30 bg-white/15 hover:bg-white/25 active:bg-white/30 text-xs font-bold transition-all flex items-center justify-center gap-2 relative z-10"
+                    >
+                      Claim 10% Off & Checkout
+                      <ChevronRight size={14} />
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               <AnimatePresence>
                 {showFloatingIcon && (
                   <motion.div
@@ -281,6 +357,7 @@ const ProductDetail = () => {
 
               <button
                 onClick={() => {
+                  clearHesitation();
                   addItem(product, quantity);
                   setShowFloatingIcon(true);
                   setTimeout(() => setShowFloatingIcon(false), 800);
@@ -293,6 +370,7 @@ const ProductDetail = () => {
               </button>
               <button
                 onClick={() => {
+                  clearHesitation();
                   addItem(product, quantity);
                   navigate('/checkout');
                 }}

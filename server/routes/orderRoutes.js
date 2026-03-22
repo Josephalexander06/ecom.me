@@ -11,7 +11,8 @@ const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const VALID_STATUS = ['pending', 'confirmed', 'packed', 'shipped', 'delivered'];
 const COUPONS = {
   SAVE10: 10,
-  WELCOME5: 5
+  WELCOME5: 5,
+  HESITATE10: 10
 };
 const HUB_NETWORK = [
   { city: 'Mumbai', pincode: '400001' },
@@ -159,6 +160,27 @@ router.post('/', protect, async (req, res) => {
 
     const savedOrder = await newOrder.save();
 
+    // 1.5 Auto-Save New Address to User Profile
+    let updatedAddresses = [];
+    if (shippingAddress && shippingAddress.street && shippingAddress.city && shippingAddress.zip) {
+      const dbUser = await User.findById(userId);
+      if (dbUser) {
+        const addrExists = dbUser.savedAddresses.some(addr => 
+          addr.street === shippingAddress.street && addr.zip === shippingAddress.zip
+        );
+        if (!addrExists) {
+          dbUser.savedAddresses.push({
+            street: shippingAddress.street,
+            city: shippingAddress.city,
+            zip: shippingAddress.zip,
+            isDefault: dbUser.savedAddresses.length === 0
+          });
+          await dbUser.save();
+        }
+        updatedAddresses = dbUser.savedAddresses;
+      }
+    }
+
     // 2. Reduce Stock
     const bulkOps = normalizedItems.map(item => ({
       updateOne: {
@@ -186,7 +208,8 @@ router.post('/', protect, async (req, res) => {
         totalAmount,
         subtotalAmount,
         discountAmount,
-        couponCode: discountPct ? normalizedCoupon : null
+        couponCode: discountPct ? normalizedCoupon : null,
+        updatedAddresses
     });
   } catch (err) {
     res.status(500).json({ message: 'Order Sync Failed', error: err.message });
@@ -196,8 +219,12 @@ router.post('/', protect, async (req, res) => {
 // Create Stripe Checkout Session
 router.post('/create-stripe-session', protect, async (req, res) => {
   try {
-    const { items, totalAmount } = req.body;
+    const { items, totalAmount, couponCode } = req.body;
     
+    const normalizedCoupon = couponCode ? String(couponCode).toUpperCase().trim() : '';
+    const discountPct = COUPONS[normalizedCoupon] || 0;
+    const discountMultiplier = 1 - (discountPct / 100);
+
     const lineItems = items.map(item => ({
       price_data: {
         currency: 'inr',
@@ -205,10 +232,31 @@ router.post('/create-stripe-session', protect, async (req, res) => {
           name: item.name,
           images: [item.image]
         },
-        unit_amount: Math.round(item.price * 100),
+        unit_amount: Math.round((item.price * discountMultiplier) * 100),
       },
       quantity: item.quantity,
     }));
+
+    const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const discountedSubtotal = subtotal * discountMultiplier;
+    const shipping = discountedSubtotal >= 5000 ? 0 : 499;
+    const tax = discountedSubtotal * 0.18;
+    const backendDerivedTotal = discountedSubtotal + shipping + tax;
+
+    const sumOfLineItems = lineItems.reduce((acc, item) => acc + (item.price_data.unit_amount * item.quantity), 0);
+    const expectedTotalPaise = Math.round(backendDerivedTotal * 100);
+    const difference = expectedTotalPaise - sumOfLineItems;
+
+    if (difference > 0) {
+      lineItems.push({
+        price_data: {
+          currency: 'inr',
+          product_data: { name: 'Taxes and Shipping' },
+          unit_amount: difference
+        },
+        quantity: 1
+      });
+    }
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
