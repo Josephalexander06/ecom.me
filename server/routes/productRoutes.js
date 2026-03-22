@@ -38,7 +38,7 @@ router.post('/', protect, authorize('seller', 'admin'), async (req, res) => {
       images: Array.isArray(images) ? images : [],
       tags: Array.isArray(tags) ? tags : [],
       variants: Array.isArray(variants) ? variants : [],
-      features: Array.isArray(features) ? features : [],
+      features: Array.isArray(features) ? features.map(f => typeof f === 'string' ? { name: f } : f) : [],
       isDeal: Boolean(isDeal),
       dealPrice: dealPrice !== undefined && dealPrice !== '' ? Number(dealPrice) : undefined,
       dealExpiresAt: dealExpiresAt || undefined
@@ -81,7 +81,11 @@ router.put('/:id', protect, authorize('seller', 'admin'), async (req, res) => {
 
     updatableFields.forEach((field) => {
       if (req.body[field] !== undefined) {
-        product[field] = req.body[field];
+        if (field === 'features' && Array.isArray(req.body[field])) {
+          product[field] = req.body[field].map(f => typeof f === 'string' ? { name: f } : f);
+        } else {
+          product[field] = req.body[field];
+        }
       }
     });
 

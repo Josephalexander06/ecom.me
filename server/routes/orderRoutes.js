@@ -66,8 +66,20 @@ router.post('/', protect, async (req, res) => {
     let subtotalAmount = 0;
     const normalizedItems = [];
 
+    const productIds = items.map(item => item.productId);
+    const validProductIds = productIds.filter(id => mongoose.Types.ObjectId.isValid(id));
+    
+    if (validProductIds.length !== productIds.length) {
+      return res.status(400).json({ 
+        message: 'Invalid product detected in cart. Please clear your cart and try adding the item again.' 
+      });
+    }
+
+    const products = await Product.find({ _id: { $in: validProductIds } });
+    const productMap = new Map(products.map(p => [p._id.toString(), p]));
+
     for (const item of items) {
-      const product = await Product.findById(item.productId);
+      const product = productMap.get(String(item.productId));
       if (!product) {
         throw new Error(`Product not found: ${item.productId}`);
       }
@@ -148,11 +160,15 @@ router.post('/', protect, async (req, res) => {
     const savedOrder = await newOrder.save();
 
     // 2. Reduce Stock
-    for (const item of normalizedItems) {
-      await Product.findByIdAndUpdate(
-        item.productId, 
-        { $inc: { stock: -item.quantity, soldCount: item.quantity } }
-      );
+    const bulkOps = normalizedItems.map(item => ({
+      updateOne: {
+        filter: { _id: item.productId },
+        update: { $inc: { stock: -item.quantity, soldCount: item.quantity } }
+      }
+    }));
+    
+    if (bulkOps.length > 0) {
+      await Product.bulkWrite(bulkOps);
     }
 
     // 3. Broadcast to Socket.io
